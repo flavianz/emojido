@@ -51,13 +51,13 @@ export class Tokenizer {
         let buffer: string = "";
 
         //loop over every char of source
-        while (this.peek() !== null) {
+        while (this.peek()) {
             //identifier or keyword
             if (isAlphabetic(this.peek())) {
                 buffer += this.consume();
 
                 // only the first char of identifier or keyword can't be numeric
-                while (this.peek() && isAlphanumeric(this.peek())) {
+                while (isAlphanumeric(this.peek() ?? null)) {
                     buffer += this.consume();
                 }
 
@@ -65,8 +65,13 @@ export class Tokenizer {
                 if (buffer === "exit") {
                     tokens.push({ type: TokenType.exit });
                     buffer = "";
+                } else if (buffer === "let") {
+                    tokens.push({ type: TokenType.let });
+                    buffer = "";
                 } else {
-                    throw new Error();
+                    //identifier
+                    tokens.push({ type: TokenType.ident, value: buffer });
+                    buffer = "";
                 }
             }
             //number
@@ -74,7 +79,7 @@ export class Tokenizer {
                 buffer += this.consume();
 
                 //get entire number
-                while (this.peek() && isNumeric(this.peek())) {
+                while (isNumeric(this.peek() ?? null)) {
                     buffer += this.consume();
                 }
 
@@ -82,6 +87,15 @@ export class Tokenizer {
                 buffer = "";
             } else if (this.peek() == ";") {
                 tokens.push({ type: TokenType.semi });
+                this.consume();
+            } else if (this.peek() == "(") {
+                tokens.push({ type: TokenType.open_paren });
+                this.consume();
+            } else if (this.peek() == "=") {
+                tokens.push({ type: TokenType.equals });
+                this.consume();
+            } else if (this.peek() == ")") {
+                tokens.push({ type: TokenType.close_paren });
                 this.consume();
             }
             //whitespace
