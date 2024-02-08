@@ -1,28 +1,20 @@
-import {Token, TokenType} from "./types";
+import { NodeExit } from "./types";
 
-/** Generate asm from the token array
- * @param {Token[]} tokens the to be generated tokens
- * @returns {string} the asm
- * */
-export function generate(tokens: Token[]): string
-{
-    let output = "global _start\n_start:\n";
-    for(let i = 0; i < tokens.length; i++)
-    {
-        const token = tokens[i]
-        if(token.type === TokenType.exit)
-        {
-            if(i + 1 < tokens.length && tokens[i + 1].type === TokenType.int_lit)
-            {
-                if(i + 2 < tokens.length && tokens[i + 2].type === TokenType.semi)
-                {
-                    output += "    mov rax, 60\n"
-                    output += `    mov rdi, ${tokens[i + 1].value}\n`
-                    output += "    syscall\n"
-                }
-            }
-        }
+export class Generator {
+    private readonly root: NodeExit;
+    constructor(root: NodeExit) {
+        this.root = root;
     }
 
-    return output;
+    /** Generate asm from the token array
+     * @returns {string} the asm
+     * */
+    generate(): string {
+        let output = "global _start\n_start:\n";
+        output += "    mov rax, 60\n";
+        output += `    mov rdi, ${this.root.expr.int_lit.value}\n`;
+        output += "    syscall\n";
+
+        return output;
+    }
 }

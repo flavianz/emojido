@@ -1,23 +1,28 @@
-import {tokenize} from "./tokenization";
-import {demoji} from "./demoji";
-import {generate} from "./generator";
-import * as fs from "node:fs"
+import { Tokenizer } from "./tokenization";
+import { demoji } from "./demoji";
+import { Parser } from "./parser";
+import { Generator } from "./generator";
 
 /**compile emojido source code to nasm asm
  *
  * @param {string} source the source code
  * @returns {string} the asm
  * */
-export function compile(source: string): string
-{
-    source = demoji(source)
+export function compile(source: string): string {
+    const start = Date.now();
 
-    const tokens = tokenize(source)
+    source = demoji(source);
 
-    const asm = generate(tokens)
+    const tokenizer = new Tokenizer(source);
+    const tokens = tokenizer.tokenize();
 
-    console.log(asm)
+    const parser = new Parser(tokens);
+    const program = parser.parse();
 
+    const generator = new Generator(program);
+    const asm = generator.generate();
 
-    return asm
+    console.log(`\nCompiled in ${Date.now() - start} ms`);
+
+    return asm;
 }
