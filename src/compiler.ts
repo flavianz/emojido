@@ -18,7 +18,6 @@ export function compile(source: string): string
 
     console.log(asm)
 
-    fs.writeFileSync("C:\\Users\\flavi\\Documents\\WebProjects\\emojido\\out.asm", asm)
 
     return asm
 }
