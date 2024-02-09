@@ -86,6 +86,12 @@ export class Tokenizer {
                 } else if (buffer === "if") {
                     tokens.push({ type: TokenType.if });
                     buffer = "";
+                } else if (buffer === "elseif") {
+                    tokens.push({ type: TokenType.elseif });
+                    buffer = "";
+                } else if (buffer === "else") {
+                    tokens.push({ type: TokenType.else });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({ type: TokenType.ident, value: buffer });

@@ -15,6 +15,8 @@ export enum TokenType {
     open_curly = "open_curly",
     close_curly = "close_curly",
     if = "if",
+    elseif = "elseif",
+    else = "else",
 }
 
 export interface Token {
@@ -95,9 +97,26 @@ export namespace Nodes {
     export interface Scope {
         statements: Statement[];
     }
+
+    export interface IfPredicate {
+        variant: ElseIf | Else;
+        type: "elseIf" | "else";
+    }
+
+    export interface ElseIf {
+        expr: Expr;
+        scope: Scope;
+        predicate?: IfPredicate;
+    }
+
+    export interface Else {
+        scope: Scope;
+    }
+
     export interface StatementIf {
         expr: Expr;
         scope: Scope;
+        predicate?: IfPredicate;
     }
 }
 

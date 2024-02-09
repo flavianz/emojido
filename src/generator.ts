@@ -109,6 +109,31 @@ export class Generator {
         }
     }
 
+    private generateIfPredicate(
+        ifPredicate: Nodes.IfPredicate,
+        endLabel: string,
+    ) {
+        if (ifPredicate.type === "elseIf") {
+            //@ts-ignore
+            const elif: Nodes.ElseIf = ifPredicate.variant;
+
+            this.generateExpr(elif.expr);
+            this.pop("rax");
+            const label = this.createLabel();
+            this.output += `    test rax, rax\n    jz ${label}\n`;
+            this.generateScope(elif.scope);
+            this.output += `    jmp ${endLabel}\n`;
+            if (elif.predicate) {
+                this.output += `${label}:\n`;
+                this.generateIfPredicate(elif.predicate, endLabel);
+            }
+        } else if (ifPredicate.type === "else") {
+            //@ts-ignore
+            const else_: Nodes.Else = ifPredicate.variant;
+            this.generateScope(else_.scope);
+        }
+    }
+
     /** generate the asm for a single expression
      * @param {Nodes.Expr} expr the expr to generate
      * */
@@ -146,13 +171,20 @@ export class Generator {
         } else if (statement.type === "scope") {
             this.generateScope(statement.variant["scope"]);
         } else if (statement.type === "if") {
-            this.generateExpr(statement.variant["expr"]);
+            //@ts-ignore
+            const statementIf: Nodes.StatementIf = statement.variant;
+            this.generateExpr(statementIf.expr);
             this.pop("rax");
+            //if the test is false, we jump to the label created after generating the scope
             const label = this.createLabel();
             this.output += `    test rax, rax\n    jz ${label}\n`;
-            //@ts-ignore
-            this.generateScope(statement.variant["scope"]);
+            this.generateScope(statementIf.scope);
             this.output += `${label}:\n`;
+            if (statementIf.predicate) {
+                const endLabel = this.createLabel();
+                this.generateIfPredicate(statementIf.predicate, endLabel);
+                this.output += `${endLabel}:\n`;
+            }
         }
     }
 

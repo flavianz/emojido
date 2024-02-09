@@ -60,6 +60,38 @@ export class Parser {
         }
     }
 
+    private parseIfPredicate(): Nodes.IfPredicate {
+        const predicate = this.consume();
+        if (predicate.type === TokenType.elseif) {
+            //get the expression
+            const expr = this.parseExpr();
+            if (!expr) {
+                throw new Error("Expected expression");
+            }
+            this.tryConsume(TokenType.elseif, "Expected '📐'");
+
+            //get the scope
+            const scope = this.parseScope();
+            if (!scope) {
+                throw new Error("Invalid scope");
+            }
+            //get the optional next predicate
+            const predicate = this.parseIfPredicate();
+
+            return {
+                variant: { expr: expr, scope: scope, predicate },
+                type: "elseIf",
+            };
+        } else if (predicate.type === TokenType.else) {
+            //get the scope
+            const scope = this.parseScope();
+            if (!scope) {
+                throw new Error("Invalid scope");
+            }
+            return { variant: { scope: scope }, type: "else" };
+        }
+    }
+
     /** Parse the next token(s) to a statement
      * @returns {Nodes.Statement | null} the create statement
      * */
@@ -114,16 +146,26 @@ export class Parser {
             }
             return { variant: statementLet, type: "let" };
         } else if (this.tryConsume(TokenType.if)) {
+            //get expr
             const exprIf = this.parseExpr();
             if (!exprIf) {
                 throw new Error("invalid expression");
             }
             this.tryConsume(TokenType.if, "Expected '✂️'");
+            //get scope
             const scope = this.parseScope();
             if (!scope) {
                 throw new Error("Invalid scope");
             }
-            return { type: "if", variant: { expr: exprIf, scope: scope } };
+            return {
+                type: "if",
+                variant: {
+                    expr: exprIf,
+                    scope: scope,
+                    //can be undefined
+                    predicate: this.parseIfPredicate(),
+                },
+            };
         } else {
             return null;
         }
