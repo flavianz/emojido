@@ -1,5 +1,20 @@
 import { Token, TokenType } from "./types.js";
 
+export function getBinaryPrecedence(type: TokenType) {
+    switch (type) {
+        case TokenType.pow:
+            return 2;
+        case TokenType.star:
+        case TokenType.slash:
+            return 1;
+        case TokenType.plus:
+        case TokenType.minus:
+            return 0;
+        default:
+            return null;
+    }
+}
+
 /**Check if string is alphanumeric
  * @param {string} str the char
  * @returns {boolean} true if provided string is alphanumeric
@@ -68,6 +83,9 @@ export class Tokenizer {
                 } else if (buffer === "let") {
                     tokens.push({ type: TokenType.let });
                     buffer = "";
+                } else if (buffer === "if") {
+                    tokens.push({ type: TokenType._if });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({ type: TokenType.ident, value: buffer });
@@ -85,18 +103,42 @@ export class Tokenizer {
 
                 tokens.push({ type: TokenType.int_lit, value: buffer });
                 buffer = "";
-            } else if (this.peek() == ";") {
+            } else if (this.peek() === ";") {
                 tokens.push({ type: TokenType.semi });
                 this.consume();
-            } else if (this.peek() == "(") {
+            } else if (this.peek() === "(") {
                 tokens.push({ type: TokenType.open_paren });
                 this.consume();
-            } else if (this.peek() == "=") {
+            } else if (this.peek() === "=") {
                 tokens.push({ type: TokenType.equals });
                 this.consume();
-            } else if (this.peek() == ")") {
+            } else if (this.peek() === ")") {
                 tokens.push({ type: TokenType.close_paren });
                 this.consume();
+            } else if (this.peek() === "{") {
+                tokens.push({ type: TokenType.open_curly });
+                this.consume();
+            } else if (this.peek() === "}") {
+                tokens.push({ type: TokenType.close_curly });
+                this.consume();
+            } else if (this.peek() === "+") {
+                tokens.push({ type: TokenType.plus });
+                this.consume();
+            } else if (this.peek() === "-") {
+                tokens.push({ type: TokenType.minus });
+                this.consume();
+            } else if (this.peek() === "/") {
+                tokens.push({ type: TokenType.slash });
+                this.consume();
+            } else if (this.peek() === "*") {
+                if (this.peek(1) === "*") {
+                    tokens.push({ type: TokenType.pow });
+                    this.consume();
+                    this.consume();
+                } else {
+                    tokens.push({ type: TokenType.close_curly });
+                    this.consume();
+                }
             }
             //whitespace
             else if (

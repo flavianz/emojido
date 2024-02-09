@@ -2,8 +2,8 @@
  * */
 export function demoji(source: string) {
     return source
-        .replaceAll("🚪", "exit")
+        .replaceAll("🚪", "exit ")
         .replaceAll("🚀", ";")
-        .replaceAll("📦", "let")
+        .replaceAll("📦", "let ")
         .replaceAll("🪢", "=");
 }

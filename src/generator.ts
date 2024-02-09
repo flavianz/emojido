@@ -1,12 +1,13 @@
-import { NodeExpr, NodeProgram, NodeStatement, Var } from "./types";
+import { Nodes, Var } from "./types";
 
 export class Generator {
-    private readonly program: NodeProgram;
+    private readonly program: Nodes.Program;
     private output: string = "global _start\n_start:\n";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
+    private scopes: number[];
 
-    constructor(program: NodeProgram) {
+    constructor(program: Nodes.Program) {
         this.program = program;
     }
 
@@ -23,56 +24,127 @@ export class Generator {
         this.stackSize--;
     }
 
-    /** generate the asm for a single expression
-     * @param {NodeExpr} expr the expr to generate
-     * */
-    private generate_expr(expr: NodeExpr) {
-        if (expr.variant.type === "intLit") {
-            this.output += `    mov rax, ${expr.variant.intLit.value}\n`;
+    private beginScope() {
+        this.scopes.push(this.vars.size);
+    }
+
+    private endScope() {
+        const popCount = this.vars.size - this.scopes[-1];
+        this.output += `    add rsp, ${popCount * 8}\n`;
+        this.stackSize -= popCount;
+        let keys = Array.from(this.vars.keys());
+        for (let i = 0; i < popCount; i++) {
+            keys.pop();
+        }
+        keys.pop();
+        this.vars = new Map(
+            [...this.vars.entries()].filter(([key, _value]) =>
+                keys.includes(key),
+            ),
+        );
+    }
+
+    private generateScope(scope: Nodes.Scope) {
+        this.beginScope();
+        for (const statement of scope.statements) {
+            this.generateStatement(statement);
+        }
+        this.endScope();
+    }
+
+    private generateTerm(term: Nodes.Term) {
+        if (term.type === "intLit") {
+            const intLit: Nodes.TermIntLit = term.variant["intLit"];
+            this.output += `    mov rax, ${intLit.intLit.value}\n`;
             this.push("rax");
-        } else if (expr.variant.type === "ident") {
-            //check if variable exists
-            if (!this.vars.has(expr.variant.identifier.value)) {
+        } else if (term.type === "ident") {
+            const ident: Nodes.TermIdent = term.variant["ident"];
+            if (!this.vars.has(ident.identifier.value)) {
                 throw new Error("Undeclared identifier");
             }
-
-            const _var = this.vars.get(expr.variant.identifier.value);
             this.push(
-                `QWORD [rsp + ${(this.stackSize - _var.stackLocation - 1) * 8}]`,
+                `QWORD [rsp + ${(this.stackSize - this.vars.get(ident.identifier.value).stackLocation - 1) * 8}]`,
             );
+        } else if (term.type === "parens") {
+            this.generateExpr(term.variant["expr"]);
+        }
+    }
+
+    private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr) {
+        if (binaryExpr.type === "sub") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    sub rax, rbx\n";
+            this.push("rax");
+        } else if (binaryExpr.type === "add") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    add rax, rbx\n";
+            this.push("rax");
+        } else if (binaryExpr.type === "mul") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    mul rbx\n";
+            this.push("rax");
+        } else if (binaryExpr.type === "div") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    div rbx\n";
+            this.push("rax");
+        }
+    }
+
+    /** generate the asm for a single expression
+     * @param {Nodes.Expr} expr the expr to generate
+     * */
+    private generateExpr(expr: Nodes.Expr) {
+        if (expr.type === "term") {
+            //@ts-ignore
+            this.generateTerm(expr.variant);
+        } else if (expr.type === "binExpr") {
+            //@ts-ignore
+            this.generateBinaryExpr(expr.variant);
         }
     }
 
     /**generate the asm for a single statement
-     * @param {NodeStatement} statement the statement to generate
+     * @param {Nodes.Statement} statement the statement to generate
      * */
-    private generate_statement(statement: NodeStatement) {
-        if (statement.variant.type === "exit") {
-            this.generate_expr(statement.variant.expr);
+    private generateStatement(statement: Nodes.Statement) {
+        if (statement.type === "exit") {
+            this.generateExpr(statement.variant["expr"]);
             this.output += "    mov rax, 60\n";
             this.pop("rdi");
             this.output += "    syscall\n";
-        } else if (statement.variant.type === "let") {
+        } else if (statement.type === "let") {
             //check for already assigned variables
-            if (this.vars.has(statement.variant.ident.value)) {
+            if (this.vars.has(statement.variant["ident"].value)) {
                 throw new Error(
-                    `Identifier already used: ${statement.variant.ident.value}`,
+                    `Identifier already used: ${statement.variant.value}`,
                 );
             }
 
             this.vars.set(statement.variant.ident.value, {
                 stackLocation: this.stackSize,
             });
-            this.generate_expr(statement.variant.expr);
+            this.generateExpr(statement.variant.expr);
         }
     }
 
     /** Generate asm from the token array
      * @returns {string} the asm
      * */
-    generate_program(): string {
+    generateProgram(): string {
         for (const statement of this.program.statements) {
-            this.generate_statement(statement);
+            this.generateStatement(statement);
         }
 
         this.output += "    mov rax, 60\n";

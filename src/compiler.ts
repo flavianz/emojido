@@ -17,10 +17,10 @@ export function compile(source: string): string {
     const tokens = tokenizer.tokenize();
 
     const parser = new Parser(tokens);
-    const program = parser.parse_program();
+    const program = parser.parseProgram();
 
     const generator = new Generator(program);
-    const asm = generator.generate_program();
+    const asm = generator.generateProgram();
 
     console.log(`\nCompiled in ${Date.now() - start} ms`);
 
