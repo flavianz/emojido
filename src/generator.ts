@@ -37,7 +37,6 @@ export class Generator {
         for (let i = 0; i < popCount; i++) {
             keys.pop();
         }
-        keys.pop();
         this.vars = new Map(
             [...this.vars.entries()].filter(([key, _value]) =>
                 keys.includes(key),
@@ -64,7 +63,7 @@ export class Generator {
             this.push("rax");
         } else if (term.type === "ident") {
             //@ts-ignore
-            const value = term.variant.identifier.value;
+            const value = term.variant.ident.value;
             if (!this.vars.has(value)) {
                 throw new Error("Undeclared identifier");
             }
@@ -168,6 +167,17 @@ export class Generator {
                 stackLocation: this.stackSize,
             });
             this.generateExpr(statement.variant["expr"]);
+        } else if (statement.type === "assign") {
+            //@ts-ignore
+            const assign: Nodes.StatementAssign = statement.variant;
+            if (!this.vars.has(assign.ident.value)) {
+                throw new Error(
+                    `undeclared identifier '${assign.ident.value}'`,
+                );
+            }
+            this.generateExpr(assign.expr);
+            this.pop("rax");
+            this.output += `    mov [rsp + ${(this.stackSize - this.vars.get(assign.ident.value).stackLocation - 1) * 8}], rax\n`;
         } else if (statement.type === "scope") {
             this.generateScope(statement.variant["scope"]);
         } else if (statement.type === "if") {
@@ -179,9 +189,13 @@ export class Generator {
             const label = this.createLabel();
             this.output += `    test rax, rax\n    jz ${label}\n`;
             this.generateScope(statementIf.scope);
+            let endLabel;
+            if (statementIf.predicate) {
+                endLabel = this.createLabel();
+                this.output += `    jmp ${endLabel}\n`;
+            }
             this.output += `${label}:\n`;
             if (statementIf.predicate) {
-                const endLabel = this.createLabel();
                 this.generateIfPredicate(statementIf.predicate, endLabel);
                 this.output += `${endLabel}:\n`;
             }

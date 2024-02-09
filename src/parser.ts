@@ -47,7 +47,7 @@ export class Parser {
         if (token.type === TokenType.int_lit) {
             return { variant: { intLit: token }, type: "intLit" };
         } else if (token.type === TokenType.ident) {
-            return { variant: { identifier: token }, type: "ident" };
+            return { variant: { ident: token }, type: "ident" };
         } else if (token.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
@@ -145,6 +145,20 @@ export class Parser {
                 throw new Error("Expected '🚀'");
             }
             return { variant: statementLet, type: "let" };
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.equals
+        ) {
+            const ident = this.consume();
+            //the equals
+            this.consume();
+
+            const expr = this.parseExpr();
+            if (!expr) {
+                throw new Error("Expected expression");
+            }
+            this.tryConsume(TokenType.semi, "Expected '🚀'");
+            return { type: "assign", variant: { expr: expr, ident: ident } };
         } else if (this.tryConsume(TokenType.if)) {
             //get expr
             const exprIf = this.parseExpr();

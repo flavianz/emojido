@@ -30,8 +30,13 @@ export namespace Nodes {
     }
 
     export interface Statement {
-        variant: StatementExit | StatementLet | StatementIf | Scope;
-        type: "exit" | "let" | "if" | "scope";
+        variant:
+            | StatementExit
+            | StatementLet
+            | StatementIf
+            | Scope
+            | StatementAssign;
+        type: "exit" | "let" | "if" | "scope" | "assign";
     }
 
     export interface StatementExit {
@@ -39,6 +44,11 @@ export namespace Nodes {
     }
 
     export interface StatementLet {
+        ident: Token;
+        expr: Expr;
+    }
+
+    export interface StatementAssign {
         ident: Token;
         expr: Expr;
     }
@@ -53,7 +63,7 @@ export namespace Nodes {
     }
 
     export interface TermIdent {
-        identifier: Token;
+        ident: Token;
     }
 
     export interface TermParens {
