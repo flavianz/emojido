@@ -22,14 +22,21 @@ export class Parser {
      * If the function should not throw an error, leave the error empty
      * @returns {}
      * */
-    private tryConsume(type: TokenType, error: string = ""): Token | null {
+    private tryConsume(
+        type: TokenType,
+        error: { error: string; line: number } = { error: "", line: 0 },
+    ): Token | null {
         if (this.peek()?.type === type) {
             return this.consume();
-        } else if (error === "") {
+        } else if (error.line === 0) {
             return null;
         } else {
-            throw new Error(error);
+            this.error(error.error, error.line);
         }
+    }
+
+    private error(error: string, line: number) {
+        throw new Error(`[Parse Error]: ${error} on line ${line}`);
     }
 
     /** go to next token
@@ -51,9 +58,12 @@ export class Parser {
         } else if (token.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
-                throw new Error("Invalid expression!");
+                this.error("Invalid expression", token.line);
             }
-            this.tryConsume(TokenType.close_paren, "Expected '🧱'");
+            this.tryConsume(TokenType.close_paren, {
+                error: "Expected '🧱'",
+                line: token.line,
+            });
             return { variant: { expr: expr }, type: "parens" };
         } else {
             return null;
@@ -66,27 +76,30 @@ export class Parser {
             //get the expression
             const expr = this.parseExpr();
             if (!expr) {
-                throw new Error("Expected expression");
+                this.error("Expected expression", predicate.line);
             }
-            this.tryConsume(TokenType.elseif, "Expected '📐'");
+            this.tryConsume(TokenType.elseif, {
+                error: "Expected '📐'",
+                line: predicate.line,
+            });
 
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
-                throw new Error("Invalid scope");
+                this.error("Invalid scope", predicate.line);
             }
             //get the optional next predicate
-            const predicate = this.parseIfPredicate();
+            const ifPredicate = this.parseIfPredicate();
 
             return {
-                variant: { expr: expr, scope: scope, predicate },
+                variant: { expr: expr, scope: scope, predicate: ifPredicate },
                 type: "elseIf",
             };
         } else if (predicate.type === TokenType.else) {
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
-                throw new Error("Invalid scope");
+                this.error("Invalid scope", predicate.line);
             }
             return { variant: { scope: scope }, type: "else" };
         }
@@ -97,7 +110,7 @@ export class Parser {
      * */
     private parseStatement(): Nodes.Statement | null {
         if (this.peek()?.type === TokenType.exit) {
-            this.consume();
+            const line = this.consume().line;
             let statementExit: Nodes.StatementExit;
 
             //get expr inside exit
@@ -105,13 +118,13 @@ export class Parser {
             if (expr) {
                 statementExit = { expr: expr };
             } else {
-                throw new Error("Invalid expression");
+                this.error("Invalid expression", line);
             }
             //missing semi
             if (this.peek()?.type === TokenType.semi) {
                 this.consume();
             } else {
-                throw new Error("Missing '🚀'");
+                this.error("Missing '🚀'", line);
             }
 
             return { variant: statementExit, type: "exit" };
@@ -123,7 +136,7 @@ export class Parser {
             this.peek(2)?.type === TokenType.equals
         ) {
             //let
-            this.consume();
+            const line = this.consume().line;
 
             const ident = this.consume();
             let statementLet: Nodes.StatementLet;
@@ -135,14 +148,14 @@ export class Parser {
             if (expr) {
                 statementLet = { ident: ident, expr: expr };
             } else {
-                throw new Error("Invalid expression");
+                this.error("Invalid expression", line);
             }
 
             //missing semi
             if (this.peek()?.type === TokenType.semi) {
                 this.consume();
             } else {
-                throw new Error("Expected '🚀'");
+                this.error("Expected '🚀'", line);
             }
             return { variant: statementLet, type: "let" };
         } else if (
@@ -155,21 +168,28 @@ export class Parser {
 
             const expr = this.parseExpr();
             if (!expr) {
-                throw new Error("Expected expression");
+                this.error("Expected expression", ident.line);
             }
-            this.tryConsume(TokenType.semi, "Expected '🚀'");
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: ident.line,
+            });
             return { type: "assign", variant: { expr: expr, ident: ident } };
-        } else if (this.tryConsume(TokenType.if)) {
+        } else if (this.peek()?.type === TokenType.if) {
+            const line = this.consume().line;
             //get expr
             const exprIf = this.parseExpr();
             if (!exprIf) {
-                throw new Error("invalid expression");
+                this.error("Invalid expression", line);
             }
-            this.tryConsume(TokenType.if, "Expected '✂️'");
+            this.tryConsume(TokenType.if, {
+                error: "Expected '✂️'",
+                line: line,
+            });
             //get scope
             const scope = this.parseScope();
             if (!scope) {
-                throw new Error("Invalid scope");
+                this.error("Invalid scope", line);
             }
             return {
                 type: "if",
@@ -216,7 +236,7 @@ export class Parser {
             const nextMinPrecedence = precedence + 1;
             const exprRhs = this.parseExpr(nextMinPrecedence);
             if (!exprRhs) {
-                throw new Error("Invalid expression!");
+                this.error("Invalid expression", operator.line);
             }
             let expr: Nodes.BinaryExpr;
             if (operator.type === TokenType.plus) {
@@ -256,14 +276,20 @@ export class Parser {
      * @returns {Nodes.Scope} the created scope
      * */
     parseScope(): Nodes.Scope {
-        this.tryConsume(TokenType.open_curly, "Expected '⚽'");
+        this.tryConsume(TokenType.open_curly, {
+            error: "Expected '⚽'",
+            line: this.peek()?.line ?? -1,
+        });
         let scope: Nodes.Scope = { statements: [] };
         let statement = this.parseStatement();
         while (statement) {
             scope.statements.push(statement);
             statement = this.parseStatement();
         }
-        this.tryConsume(TokenType.close_curly, "Expected '🥅'");
+        this.tryConsume(TokenType.close_curly, {
+            error: "Expected '🥅'",
+            line: this.peek()?.line ?? -1,
+        });
         return scope;
     }
 

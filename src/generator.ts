@@ -48,6 +48,10 @@ export class Generator {
         return `label${this.labelCount++}`;
     }
 
+    private error(error: string, line: number) {
+        throw new Error(`[Parse Error]: ${error} on line ${line}`);
+    }
+
     private generateScope(scope: Nodes.Scope) {
         this.beginScope();
         for (const statement of scope.statements) {
@@ -65,7 +69,8 @@ export class Generator {
             //@ts-ignore
             const value = term.variant.ident.value;
             if (!this.vars.has(value)) {
-                throw new Error("Undeclared identifier");
+                //@ts-ignore
+                this.error("Undeclared identifier", term.variant.ident.line);
             }
 
             this.push(
@@ -158,8 +163,9 @@ export class Generator {
         } else if (statement.type === "let") {
             //check for already assigned variables
             if (this.vars.has(statement.variant["ident"].value)) {
-                throw new Error(
-                    `Identifier already used: ${statement.variant["ident"].value}`,
+                this.error(
+                    `Identifier ${statement.variant["ident"].value} already used`,
+                    statement.variant["ident"].line,
                 );
             }
 
@@ -171,8 +177,9 @@ export class Generator {
             //@ts-ignore
             const assign: Nodes.StatementAssign = statement.variant;
             if (!this.vars.has(assign.ident.value)) {
-                throw new Error(
-                    `undeclared identifier '${assign.ident.value}'`,
+                this.error(
+                    `Undeclared identifier '${assign.ident.value}'`,
+                    assign.ident.line,
                 );
             }
             this.generateExpr(assign.expr);
@@ -189,7 +196,7 @@ export class Generator {
             const label = this.createLabel();
             this.output += `    test rax, rax\n    jz ${label}\n`;
             this.generateScope(statementIf.scope);
-            let endLabel;
+            let endLabel: string;
             if (statementIf.predicate) {
                 endLabel = this.createLabel();
                 this.output += `    jmp ${endLabel}\n`;

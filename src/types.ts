@@ -22,6 +22,7 @@ export enum TokenType {
 export interface Token {
     type: TokenType;
     value?: string;
+    line: number;
 }
 
 export namespace Nodes {

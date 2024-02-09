@@ -40,6 +40,7 @@ function isAlphabetic(str: string): boolean {
 export class Tokenizer {
     private readonly source: string;
     private index: number = 0;
+    private lineCount: number = 1;
     constructor(source: string) {
         this.source = source;
     }
@@ -56,6 +57,10 @@ export class Tokenizer {
      * */
     private consume(): string {
         return this.source[this.index++];
+    }
+
+    private error(error: string, line: number) {
+        throw new Error(`[Parse Error]: ${error} on line ${line}`);
     }
 
     /** Turn the source into meaningful tokens
@@ -78,23 +83,30 @@ export class Tokenizer {
 
                 //check keywords
                 if (buffer === "exit") {
-                    tokens.push({ type: TokenType.exit });
+                    tokens.push({ type: TokenType.exit, line: this.lineCount });
                     buffer = "";
                 } else if (buffer === "let") {
-                    tokens.push({ type: TokenType.let });
+                    tokens.push({ type: TokenType.let, line: this.lineCount });
                     buffer = "";
                 } else if (buffer === "if") {
-                    tokens.push({ type: TokenType.if });
+                    tokens.push({ type: TokenType.if, line: this.lineCount });
                     buffer = "";
                 } else if (buffer === "elseif") {
-                    tokens.push({ type: TokenType.elseif });
+                    tokens.push({
+                        type: TokenType.elseif,
+                        line: this.lineCount,
+                    });
                     buffer = "";
                 } else if (buffer === "else") {
-                    tokens.push({ type: TokenType.else });
+                    tokens.push({ type: TokenType.else, line: this.lineCount });
                     buffer = "";
                 } else {
                     //identifier
-                    tokens.push({ type: TokenType.ident, value: buffer });
+                    tokens.push({
+                        type: TokenType.ident,
+                        value: buffer,
+                        line: this.lineCount,
+                    });
                     buffer = "";
                 }
             }
@@ -107,31 +119,47 @@ export class Tokenizer {
                     buffer += this.consume();
                 }
 
-                tokens.push({ type: TokenType.int_lit, value: buffer });
+                tokens.push({
+                    type: TokenType.int_lit,
+                    value: buffer,
+                    line: this.lineCount,
+                });
                 buffer = "";
             } else if (this.peek() === ";") {
-                tokens.push({ type: TokenType.semi });
+                tokens.push({ type: TokenType.semi, line: this.lineCount });
                 this.consume();
             } else if (this.peek() === "(") {
-                tokens.push({ type: TokenType.open_paren });
+                tokens.push({
+                    type: TokenType.open_paren,
+                    line: this.lineCount,
+                });
                 this.consume();
             } else if (this.peek() === "=") {
-                tokens.push({ type: TokenType.equals });
+                tokens.push({ type: TokenType.equals, line: this.lineCount });
                 this.consume();
             } else if (this.peek() === ")") {
-                tokens.push({ type: TokenType.close_paren });
+                tokens.push({
+                    type: TokenType.close_paren,
+                    line: this.lineCount,
+                });
                 this.consume();
             } else if (this.peek() === "{") {
-                tokens.push({ type: TokenType.open_curly });
+                tokens.push({
+                    type: TokenType.open_curly,
+                    line: this.lineCount,
+                });
                 this.consume();
             } else if (this.peek() === "}") {
-                tokens.push({ type: TokenType.close_curly });
+                tokens.push({
+                    type: TokenType.close_curly,
+                    line: this.lineCount,
+                });
                 this.consume();
             } else if (this.peek() === "+") {
-                tokens.push({ type: TokenType.plus });
+                tokens.push({ type: TokenType.plus, line: this.lineCount });
                 this.consume();
             } else if (this.peek() === "-") {
-                tokens.push({ type: TokenType.minus });
+                tokens.push({ type: TokenType.minus, line: this.lineCount });
                 this.consume();
             } else if (this.peek() === "/") {
                 this.consume();
@@ -152,25 +180,29 @@ export class Tokenizer {
                     this.consume();
                     this.consume();
                 } else {
-                    tokens.push({ type: TokenType.slash });
+                    tokens.push({
+                        type: TokenType.slash,
+                        line: this.lineCount,
+                    });
                 }
             } else if (this.peek() === "*") {
                 if (this.peek(1) === "*") {
-                    tokens.push({ type: TokenType.pow });
+                    tokens.push({ type: TokenType.pow, line: this.lineCount });
                     this.consume();
                     this.consume();
                 } else {
-                    tokens.push({ type: TokenType.star });
+                    tokens.push({ type: TokenType.star, line: this.lineCount });
                     this.consume();
                 }
+            } else if (this.peek() === "\n") {
+                this.consume();
+                this.lineCount++;
             }
             //whitespace
-            else if (
-                [" ", "\f", "\n", "\r", "\t", "\v"].includes(this.peek())
-            ) {
+            else if ([" ", "\f", "\r", "\t", "\v"].includes(this.peek())) {
                 this.consume();
             } else {
-                throw new Error();
+                this.error("Invalid token", this.lineCount);
             }
         }
         this.index = 0;
