@@ -131,14 +131,20 @@ export class Tokenizer {
                 this.consume();
                 if (this.peek() === "/") {
                     this.consume();
-                    while (this.peek() !== "\n") {
+                    while (this.peek() !== "\n" && this.peek()) {
                         this.consume();
                     }
                     this.consume();
-                    // } else if (this.peek() === "." && this.peek(1) === "/") {
-                    //     tokens.push({ type: TokenType.triple_slash });
-                    //     this.consume();
-                    //     this.consume();
+                } else if (this.peek() === "$") {
+                    this.consume();
+                    while (
+                        !(this.peek() === "/" && this.peek(1) === "$") &&
+                        this.peek()
+                    ) {
+                        this.consume();
+                    }
+                    this.consume();
+                    this.consume();
                 } else {
                     tokens.push({ type: TokenType.slash });
                 }

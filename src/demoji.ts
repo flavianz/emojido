@@ -16,5 +16,5 @@ export function demoji(source: string) {
         .replaceAll("⚽", "{")
         .replaceAll("🥅", "}")
         .replaceAll("📣", "//")
-        .replaceAll("📯", "/./");
+        .replaceAll("📯", "/$");
 }
