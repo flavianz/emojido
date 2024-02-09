@@ -53,7 +53,7 @@ export class Parser {
             if (!expr) {
                 throw new Error("Invalid expression!");
             }
-            this.tryConsume(TokenType.close_paren, "Expected ')'");
+            this.tryConsume(TokenType.close_paren, "Expected '🧱'");
             return { variant: { expr: expr }, type: "parens" };
         } else {
             return null;
@@ -113,18 +113,17 @@ export class Parser {
                 throw new Error("Expected '🚀'");
             }
             return { variant: statementLet, type: "let" };
-        } else if (this.tryConsume(TokenType._if)) {
-            this.tryConsume(TokenType.open_paren, "Expected '('");
+        } else if (this.tryConsume(TokenType.if)) {
             const exprIf = this.parseExpr();
             if (!exprIf) {
                 throw new Error("invalid expression");
             }
-            this.tryConsume(TokenType.open_paren, "Expected '('");
+            this.tryConsume(TokenType.if, "Expected '✂️'");
             const scope = this.parseScope();
             if (!scope) {
                 throw new Error("Invalid scope");
             }
-            return { type: "scope", variant: { expr: exprIf, scope: scope } };
+            return { type: "if", variant: { expr: exprIf, scope: scope } };
         } else {
             return null;
         }
@@ -149,7 +148,7 @@ export class Parser {
             //check if the precedence of current expr is smaller than minPrecedence
             if (currentToken) {
                 precedence = getBinaryPrecedence(currentToken.type);
-                if (!precedence || precedence < minPrecedence) {
+                if (precedence === null || precedence < minPrecedence) {
                     break;
                 }
             } else {
@@ -201,14 +200,14 @@ export class Parser {
      * @returns {Nodes.Scope} the created scope
      * */
     parseScope(): Nodes.Scope {
-        this.tryConsume(TokenType.open_curly, "Expected '{'");
+        this.tryConsume(TokenType.open_curly, "Expected '⚽'");
         let scope: Nodes.Scope = { statements: [] };
         let statement = this.parseStatement();
         while (statement) {
             scope.statements.push(statement);
             statement = this.parseStatement();
         }
-        this.tryConsume(TokenType.close_curly, "Expected '}'");
+        this.tryConsume(TokenType.close_curly, "Expected '🥅'");
         return scope;
     }
 

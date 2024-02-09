@@ -5,5 +5,14 @@ export function demoji(source: string) {
         .replaceAll("🚪", "exit ")
         .replaceAll("🚀", ";")
         .replaceAll("📦", "let ")
-        .replaceAll("🪢", "=");
+        .replaceAll("🪢", "=")
+        .replaceAll("🚧", "(")
+        .replaceAll("🧱", ")")
+        .replaceAll("➖", "-")
+        .replaceAll("✖️", "*")
+        .replaceAll("➕", "+")
+        .replaceAll("➗", "/")
+        .replaceAll("✂️", " if ")
+        .replaceAll("⚽", "{")
+        .replaceAll("🥅", "}");
 }

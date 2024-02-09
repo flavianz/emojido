@@ -84,7 +84,7 @@ export class Tokenizer {
                     tokens.push({ type: TokenType.let });
                     buffer = "";
                 } else if (buffer === "if") {
-                    tokens.push({ type: TokenType._if });
+                    tokens.push({ type: TokenType.if });
                     buffer = "";
                 } else {
                     //identifier
@@ -136,7 +136,7 @@ export class Tokenizer {
                     this.consume();
                     this.consume();
                 } else {
-                    tokens.push({ type: TokenType.close_curly });
+                    tokens.push({ type: TokenType.star });
                     this.consume();
                 }
             }

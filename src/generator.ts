@@ -5,7 +5,8 @@ export class Generator {
     private output: string = "global _start\n_start:\n";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
-    private scopes: number[];
+    private scopes: number[] = [];
+    private labelCount = 0;
 
     constructor(program: Nodes.Program) {
         this.program = program;
@@ -29,7 +30,7 @@ export class Generator {
     }
 
     private endScope() {
-        const popCount = this.vars.size - this.scopes[-1];
+        const popCount = this.vars.size - this.scopes[this.scopes.length - 1];
         this.output += `    add rsp, ${popCount * 8}\n`;
         this.stackSize -= popCount;
         let keys = Array.from(this.vars.keys());
@@ -44,6 +45,10 @@ export class Generator {
         );
     }
 
+    private createLabel() {
+        return `label${this.labelCount++}`;
+    }
+
     private generateScope(scope: Nodes.Scope) {
         this.beginScope();
         for (const statement of scope.statements) {
@@ -54,16 +59,18 @@ export class Generator {
 
     private generateTerm(term: Nodes.Term) {
         if (term.type === "intLit") {
-            const intLit: Nodes.TermIntLit = term.variant["intLit"];
-            this.output += `    mov rax, ${intLit.intLit.value}\n`;
+            //@ts-ignore
+            this.output += `    mov rax, ${term.variant.intLit.value}\n`;
             this.push("rax");
         } else if (term.type === "ident") {
-            const ident: Nodes.TermIdent = term.variant["ident"];
-            if (!this.vars.has(ident.identifier.value)) {
+            //@ts-ignore
+            const value = term.variant.identifier.value;
+            if (!this.vars.has(value)) {
                 throw new Error("Undeclared identifier");
             }
+
             this.push(
-                `QWORD [rsp + ${(this.stackSize - this.vars.get(ident.identifier.value).stackLocation - 1) * 8}]`,
+                `QWORD [rsp + ${(this.stackSize - this.vars.get(value).stackLocation - 1) * 8}]`,
             );
         } else if (term.type === "parens") {
             this.generateExpr(term.variant["expr"]);
@@ -128,14 +135,24 @@ export class Generator {
             //check for already assigned variables
             if (this.vars.has(statement.variant["ident"].value)) {
                 throw new Error(
-                    `Identifier already used: ${statement.variant.value}`,
+                    `Identifier already used: ${statement.variant["ident"].value}`,
                 );
             }
 
-            this.vars.set(statement.variant.ident.value, {
+            this.vars.set(statement.variant["ident"].value, {
                 stackLocation: this.stackSize,
             });
-            this.generateExpr(statement.variant.expr);
+            this.generateExpr(statement.variant["expr"]);
+        } else if (statement.type === "scope") {
+            this.generateScope(statement.variant["scope"]);
+        } else if (statement.type === "if") {
+            this.generateExpr(statement.variant["expr"]);
+            this.pop("rax");
+            const label = this.createLabel();
+            this.output += `    test rax, rax\n    jz ${label}\n`;
+            //@ts-ignore
+            this.generateScope(statement.variant["scope"]);
+            this.output += `${label}:\n`;
         }
     }
 
