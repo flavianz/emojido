@@ -128,8 +128,20 @@ export class Tokenizer {
                 tokens.push({ type: TokenType.minus });
                 this.consume();
             } else if (this.peek() === "/") {
-                tokens.push({ type: TokenType.slash });
                 this.consume();
+                if (this.peek() === "/") {
+                    this.consume();
+                    while (this.peek() !== "\n") {
+                        this.consume();
+                    }
+                    this.consume();
+                    // } else if (this.peek() === "." && this.peek(1) === "/") {
+                    //     tokens.push({ type: TokenType.triple_slash });
+                    //     this.consume();
+                    //     this.consume();
+                } else {
+                    tokens.push({ type: TokenType.slash });
+                }
             } else if (this.peek() === "*") {
                 if (this.peek(1) === "*") {
                     tokens.push({ type: TokenType.pow });
