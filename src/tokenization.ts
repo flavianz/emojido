@@ -143,6 +143,12 @@ export class Tokenizer {
                         value: "int",
                     });
                     buffer = "";
+                } else if (buffer === "print") {
+                    tokens.push({
+                        type: TokenType.print,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({
@@ -270,6 +276,20 @@ export class Tokenizer {
                 this.consume();
                 this.consume();
                 tokens.push({ type: TokenType.and, line: this.lineCount });
+            } else if (this.peek() === '"') {
+                this.consume();
+                tokens.push({ type: TokenType.quotes, line: this.lineCount });
+                while (this.peek() !== '"' && this.peek()) {
+                    buffer += this.consume();
+                }
+                this.consume();
+                tokens.push({
+                    type: TokenType.string,
+                    line: this.lineCount,
+                    value: buffer,
+                });
+                tokens.push({ type: TokenType.quotes, line: this.lineCount });
+                buffer = "";
             } else if (this.peek() === "\n") {
                 this.consume();
                 this.lineCount++;

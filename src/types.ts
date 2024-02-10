@@ -24,6 +24,9 @@ export enum TokenType {
     or = "or",
     xor = "xor",
     type = "type",
+    quotes = "quotes",
+    string = "string",
+    print = "print",
 }
 
 export interface Token {
@@ -40,14 +43,18 @@ export namespace Nodes {
     export interface Statement {
         variant:
             | StatementExit
+            | StatementPrint
             | StatementLet
             | StatementIf
             | Scope
             | StatementAssign;
-        type: "exit" | "let" | "if" | "scope" | "assign";
+        type: "exit" | "let" | "if" | "scope" | "assign" | "print";
     }
 
     export interface StatementExit {
+        expr: Expr;
+    }
+    export interface StatementPrint {
         expr: Expr;
     }
 
@@ -72,6 +79,10 @@ export namespace Nodes {
 
     export interface TermBool {
         bool: Token;
+    }
+
+    export interface TermString {
+        string: Token;
     }
 
     export interface TermIdent {
@@ -142,8 +153,8 @@ export namespace Nodes {
     }
 
     export interface Term {
-        variant: TermIntLit | TermIdent | TermParens | TermBool;
-        type: "intLit" | "ident" | "parens" | "boolLit";
+        variant: TermIntLit | TermIdent | TermParens | TermBool | TermString;
+        type: "intLit" | "ident" | "parens" | "boolLit" | "string";
     }
     export interface Scope {
         statements: Statement[];
@@ -173,5 +184,5 @@ export namespace Nodes {
 
 export interface Var {
     stackLocation: number;
-    type: "int" | "bool";
+    type: "int" | "bool" | "string";
 }
