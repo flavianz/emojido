@@ -51,13 +51,23 @@ export class Parser {
      * */
     private parseTerm(): Nodes.Term | null {
         const token = this.consume();
-        if (token.type === TokenType.int_lit) {
+        if (token?.type === TokenType.int_lit) {
             return { variant: { intLit: token }, type: "intLit" };
-        } else if (token.type === TokenType.ident) {
+        } else if (token?.type === TokenType.ident) {
             return { variant: { ident: token }, type: "ident" };
-        } else if (token.type === TokenType.boolean_lit) {
+        } else if (token?.type === TokenType.quotes) {
+            const value = this.tryConsume(TokenType.string, {
+                error: "Expected string",
+                line: token.line,
+            });
+            this.tryConsume(TokenType.quotes, {
+                error: "Expected '🔠'",
+                line: token.line,
+            });
+            return { variant: { string: value }, type: "string" };
+        } else if (token?.type === TokenType.boolean_lit) {
             return { variant: { bool: token }, type: "boolLit" };
-        } else if (token.type === TokenType.open_paren) {
+        } else if (token?.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
                 this.error("Invalid expression", token.line);
@@ -125,13 +135,24 @@ export class Parser {
                 this.error("Invalid expression", line);
             }
             //missing semi
-            if (this.peek()?.type === TokenType.semi) {
-                this.consume();
-            } else {
-                this.error("Missing '🚀'", line);
-            }
+            this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
 
             return { variant: statementExit, type: "exit" };
+        } else if (this.peek()?.type === TokenType.print) {
+            const line = this.consume().line;
+
+            let statementPrint: Nodes.StatementPrint;
+
+            const expr = this.parseExpr();
+            if (expr) {
+                statementPrint = { expr: expr };
+            } else {
+                this.error("Invalid expression", line);
+            }
+
+            this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
+
+            return { variant: statementPrint, type: "print" };
         }
         //case let statement
         else if (this.peek()?.type === TokenType.let) {

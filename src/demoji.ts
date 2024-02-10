@@ -26,5 +26,6 @@ export function demoji(source: string) {
         .replaceAll("🔗", "==")
         .replaceAll("🪇", "&&")
         .replaceAll("🪜", "||")
-        .replaceAll("🖨️", "print");
+        .replaceAll("🖨️", "print ")
+        .replaceAll("🔠", '"');
 }

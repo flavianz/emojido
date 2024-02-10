@@ -2,11 +2,13 @@ import { Nodes, Var } from "./types";
 
 export class Generator {
     private readonly program: Nodes.Program;
-    private output: string = "global _start\n_start:\n";
+    private text: string = "";
+    private data: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
     private scopes: number[] = [];
     private labelCount = 0;
+    private identCount = 0;
 
     constructor(program: Nodes.Program) {
         this.program = program;
@@ -16,12 +18,12 @@ export class Generator {
      * @param {string} reg the register to be pushed
      * */
     private push(reg: string) {
-        this.output += `    push ${reg}\n`;
+        this.text += `    push ${reg}\n`;
         this.stackSize++;
     }
 
     private pop(reg: string) {
-        this.output += `    pop ${reg}\n`;
+        this.text += `    pop ${reg}\n`;
         this.stackSize--;
     }
 
@@ -31,7 +33,7 @@ export class Generator {
 
     private endScope() {
         const popCount = this.vars.size - this.scopes[this.scopes.length - 1];
-        this.output += `    add rsp, ${popCount * 8}\n`;
+        this.text += `    add rsp, ${popCount * 8}\n`;
         this.stackSize -= popCount;
         let keys = Array.from(this.vars.keys());
         for (let i = 0; i < popCount; i++) {
@@ -52,6 +54,10 @@ export class Generator {
         throw new Error(`[Parse Error]: ${error} on line ${line ?? "unknown"}`);
     }
 
+    private generateIdentifier() {
+        return `ident${this.identCount++}`;
+    }
+
     private generateScope(scope: Nodes.Scope) {
         this.beginScope();
         for (const statement of scope.statements) {
@@ -60,10 +66,10 @@ export class Generator {
         this.endScope();
     }
 
-    private generateTerm(term: Nodes.Term): "int" | "bool" {
+    private generateTerm(term: Nodes.Term): "int" | "bool" | "string" {
         if (term.type === "intLit") {
             //@ts-ignore
-            this.output += `    mov rax, ${term.variant.intLit.value}\n`;
+            this.text += `    mov rax, ${term.variant.intLit.value}\n`;
             this.push("rax");
             return "int";
         } else if (term.type === "ident") {
@@ -82,13 +88,21 @@ export class Generator {
             return this.generateExpr(term.variant["expr"]);
         } else if (term.type === "boolLit") {
             //@ts-ignore
-            this.output += `    mov rax, ${term.variant.bool.value}\n`;
+            this.text += `    mov rax, ${term.variant.bool.value}\n`;
             this.push("rax");
             return "bool";
+        } else if (term.type === "string") {
+            //@ts-ignore
+            const string: Nodes.TermString = term.variant;
+            const ident = this.generateIdentifier();
+            this.data += `    ${ident} db "${string.string.value}", 0ah\n`;
+            this.text += `    mov rax, ${ident}\n`;
+            this.push("rax");
+            return "string";
         }
     }
 
-    private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr) {
+    private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr): "int" | "bool" {
         if (binaryExpr.type === "sub") {
             const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
             const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
@@ -97,7 +111,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    sub rax, rbx\n";
+            this.text += "    sub rax, rbx\n";
             this.push("rax");
             return "int";
         } else if (binaryExpr.type === "add") {
@@ -108,7 +122,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    add rax, rbx\n";
+            this.text += "    add rax, rbx\n";
             this.push("rax");
             return "int";
         } else if (binaryExpr.type === "mul") {
@@ -119,7 +133,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    mul rbx\n";
+            this.text += "    mul rbx\n";
             this.push("rax");
             return "int";
         } else if (binaryExpr.type === "div") {
@@ -130,7 +144,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    div rbx\n";
+            this.text += "    div rbx\n";
             this.push("rax");
             return "int";
         } else if (binaryExpr.type === "comp") {
@@ -144,7 +158,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    cmp rax, rbx\n    setz al\n";
+            this.text += "    cmp rax, rbx\n    setz al\n";
             this.push("rax");
             return "bool";
         } else if (binaryExpr.type === "notComp") {
@@ -158,7 +172,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    cmp rax, rbx\n    setnz al\n";
+            this.text += "    cmp rax, rbx\n    setnz al\n";
             this.push("rax");
             return "bool";
         } else if (binaryExpr.type === "or") {
@@ -169,7 +183,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    or rax, rbx\n";
+            this.text += "    or rax, rbx\n";
             this.push("rax");
             return "bool";
         } else if (binaryExpr.type === "and") {
@@ -180,7 +194,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    and rax, rbx\n";
+            this.text += "    and rax, rbx\n";
             this.push("rax");
             return "bool";
         } else if (binaryExpr.type === "xor") {
@@ -191,7 +205,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.output += "    xor rax, rbx\n";
+            this.text += "    xor rax, rbx\n";
             this.push("rax");
             return "bool";
         }
@@ -211,11 +225,11 @@ export class Generator {
             }
             this.pop("rax");
             const label = this.createLabel();
-            this.output += `    test rax, rax\n    jz ${label}\n`;
+            this.text += `    test rax, rax\n    jz ${label}\n`;
             this.generateScope(elif.scope);
-            this.output += `    jmp ${endLabel}\n`;
+            this.text += `    jmp ${endLabel}\n`;
             if (elif.predicate) {
-                this.output += `${label}:\n`;
+                this.text += `${label}:\n`;
                 this.generateIfPredicate(elif.predicate, endLabel);
             }
         } else if (ifPredicate.type === "else") {
@@ -228,7 +242,7 @@ export class Generator {
     /** generate the asm for a single expression
      * @param {Nodes.Expr} expr the expr to generate
      * */
-    private generateExpr(expr: Nodes.Expr): "int" | "bool" {
+    private generateExpr(expr: Nodes.Expr): "int" | "bool" | "string" {
         if (expr.type === "term") {
             //@ts-ignore
             return this.generateTerm(expr.variant);
@@ -247,9 +261,18 @@ export class Generator {
             if (type !== "int") {
                 this.error("Expected type '🧮'", undefined);
             }
-            this.output += "    mov rax, 60\n";
+            this.text += "    mov rax, 60\n";
             this.pop("rdi");
-            this.output += "    syscall\n";
+            this.text += "    syscall\n";
+        } else if (statement.type === "print") {
+            const type = this.generateExpr(statement.variant["expr"]);
+            this.text += "    mov rax, 1\n    mov rdi, 1\n";
+            this.pop("rsi");
+            this.text +=
+                "    xor rcx, rcx\n__calc_length_loop:\n" +
+                "    cmp byte [rsi + rcx], 0\n    je __calc_length_done\n" +
+                "    inc rcx\n    jmp __calc_length_loop\n__calc_length_done:\n" +
+                "    mov rdx, rcx\n    syscall\n";
         } else if (statement.type === "let") {
             //check for already assigned variables
             const ident = statement.variant["ident"];
@@ -283,7 +306,7 @@ export class Generator {
                 );
             }
             this.pop("rax");
-            this.output += `    mov [rsp + ${(this.stackSize - var_.stackLocation - 1) * 8}], rax\n`;
+            this.text += `    mov [rsp + ${(this.stackSize - var_.stackLocation - 1) * 8}], rax\n`;
         } else if (statement.type === "scope") {
             this.generateScope(statement.variant["scope"]);
         } else if (statement.type === "if") {
@@ -296,17 +319,17 @@ export class Generator {
             this.pop("rax");
             //if the test is false, we jump to the label created after generating the scope
             const label = this.createLabel();
-            this.output += `    test rax, rax\n    jz ${label}\n`;
+            this.text += `    test rax, rax\n    jz ${label}\n`;
             this.generateScope(statementIf.scope);
             let endLabel: string;
             if (statementIf.predicate) {
                 endLabel = this.createLabel();
-                this.output += `    jmp ${endLabel}\n`;
+                this.text += `    jmp ${endLabel}\n`;
             }
-            this.output += `${label}:\n`;
+            this.text += `${label}:\n`;
             if (statementIf.predicate) {
                 this.generateIfPredicate(statementIf.predicate, endLabel);
-                this.output += `${endLabel}:\n`;
+                this.text += `${endLabel}:\n`;
             }
         }
     }
@@ -319,10 +342,15 @@ export class Generator {
             this.generateStatement(statement);
         }
 
-        this.output += "    mov rax, 60\n";
-        this.output += "    mov rdi, 0\n";
-        this.output += "    syscall\n";
+        this.text += "    mov rax, 60\n";
+        this.text += "    mov rdi, 0\n";
+        this.text += "    syscall\n";
 
-        return this.output;
+        return (
+            "section .data\n" +
+            this.data +
+            "\nsection .text\n    global _start\n_start:\n" +
+            this.text
+        );
     }
 }
