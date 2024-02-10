@@ -110,6 +110,20 @@ export class Generator {
             this.pop("rbx");
             this.output += "    div rbx\n";
             this.push("rax");
+        } else if (binaryExpr.type === "comp") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    cmp rax, rbx\n    setz al\n";
+            this.push("rax");
+        } else if (binaryExpr.type === "notComp") {
+            this.generateExpr(binaryExpr.variant.rhs);
+            this.generateExpr(binaryExpr.variant.lhs);
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    cmp rax, rbx\n    setnz al\n";
+            this.push("rax");
         }
     }
 

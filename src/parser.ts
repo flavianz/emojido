@@ -264,6 +264,16 @@ export class Parser {
                     variant: { lhs: exprLhs, rhs: exprRhs },
                     type: "pow",
                 };
+            } else if (operator.type === TokenType.double_equals) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "comp",
+                };
+            } else if (operator.type === TokenType.not_equals) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "notComp",
+                };
             } else {
                 console.assert(false);
             }

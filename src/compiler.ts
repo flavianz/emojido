@@ -12,7 +12,7 @@ export function compile(source: string): string {
     const start = Date.now();
 
     source = demoji(source);
-
+    console.log(`Compiling\n${source}`);
     const tokenizer = new Tokenizer(source);
     const tokens = tokenizer.tokenize();
 

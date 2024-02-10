@@ -17,6 +17,8 @@ export enum TokenType {
     if = "if",
     elseif = "elseif",
     else = "else",
+    double_equals = "double_equals",
+    not_equals = "",
 }
 
 export interface Token {
@@ -92,14 +94,25 @@ export namespace Nodes {
         rhs: Expr;
     }
 
+    export interface BinaryExprCompare {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BinaryExprNotCompare {
+        lhs: Expr;
+        rhs: Expr;
+    }
+
     export interface BinaryExpr {
         variant:
             | BinaryExprAdd
             | BinaryExprSub
             | BinaryExprMul
             | BinaryExprDiv
-            | BinaryExprPow;
-        type: "add" | "sub" | "mul" | "div" | "pow";
+            | BinaryExprPow
+            | BinaryExprCompare
+            | BinaryExprNotCompare;
+        type: "add" | "sub" | "mul" | "div" | "pow" | "comp" | "notComp";
     }
     export interface Term {
         variant: TermIntLit | TermIdent | TermParens;

@@ -2,6 +2,9 @@ import { Token, TokenType } from "./types.js";
 
 export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
+        case TokenType.double_equals:
+        case TokenType.not_equals:
+            return 3;
         case TokenType.pow:
             return 2;
         case TokenType.star:
@@ -135,8 +138,19 @@ export class Tokenizer {
                 });
                 this.consume();
             } else if (this.peek() === "=") {
-                tokens.push({ type: TokenType.equals, line: this.lineCount });
                 this.consume();
+                if (this.peek() === "=") {
+                    tokens.push({
+                        type: TokenType.double_equals,
+                        line: this.lineCount,
+                    });
+                    this.consume();
+                } else {
+                    tokens.push({
+                        type: TokenType.equals,
+                        line: this.lineCount,
+                    });
+                }
             } else if (this.peek() === ")") {
                 tokens.push({
                     type: TokenType.close_paren,
@@ -193,6 +207,17 @@ export class Tokenizer {
                 } else {
                     tokens.push({ type: TokenType.star, line: this.lineCount });
                     this.consume();
+                }
+            } else if (this.peek() === "!") {
+                this.consume();
+                if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.not_equals,
+                        line: this.lineCount,
+                    });
+                } else {
+                    // !
                 }
             } else if (this.peek() === "\n") {
                 this.consume();
