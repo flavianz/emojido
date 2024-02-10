@@ -19,6 +19,11 @@ export enum TokenType {
     else = "else",
     double_equals = "double_equals",
     not_equals = "",
+    boolean_lit = "bool_lit",
+    and = "and",
+    or = "or",
+    xor = "xor",
+    type = "type",
 }
 
 export interface Token {
@@ -65,6 +70,10 @@ export namespace Nodes {
         intLit: Token;
     }
 
+    export interface TermBool {
+        bool: Token;
+    }
+
     export interface TermIdent {
         ident: Token;
     }
@@ -94,15 +103,6 @@ export namespace Nodes {
         rhs: Expr;
     }
 
-    export interface BinaryExprCompare {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BinaryExprNotCompare {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
     export interface BinaryExpr {
         variant:
             | BinaryExprAdd
@@ -110,13 +110,40 @@ export namespace Nodes {
             | BinaryExprMul
             | BinaryExprDiv
             | BinaryExprPow
-            | BinaryExprCompare
-            | BinaryExprNotCompare;
-        type: "add" | "sub" | "mul" | "div" | "pow" | "comp" | "notComp";
+            | BoolBinaryExprAnd
+            | BoolBinaryExprOr
+            | BoolBinaryExprXor;
+        type:
+            | "add"
+            | "sub"
+            | "mul"
+            | "div"
+            | "pow"
+            | "comp"
+            | "notComp"
+            | "and"
+            | "or"
+            | "xor";
     }
+
+    export interface BoolBinaryExprAnd {
+        lhs: Expr;
+        rhs: Expr;
+    }
+
+    export interface BoolBinaryExprOr {
+        lhs: Expr;
+        rhs: Expr;
+    }
+
+    export interface BoolBinaryExprXor {
+        lhs: Expr;
+        rhs: Expr;
+    }
+
     export interface Term {
-        variant: TermIntLit | TermIdent | TermParens;
-        type: "intLit" | "ident" | "parens";
+        variant: TermIntLit | TermIdent | TermParens | TermBool;
+        type: "intLit" | "ident" | "parens" | "boolLit";
     }
     export interface Scope {
         statements: Statement[];
@@ -146,4 +173,5 @@ export namespace Nodes {
 
 export interface Var {
     stackLocation: number;
+    type: "int" | "bool";
 }

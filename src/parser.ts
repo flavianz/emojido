@@ -55,6 +55,8 @@ export class Parser {
             return { variant: { intLit: token }, type: "intLit" };
         } else if (token.type === TokenType.ident) {
             return { variant: { ident: token }, type: "ident" };
+        } else if (token.type === TokenType.boolean_lit) {
+            return { variant: { bool: token }, type: "boolLit" };
         } else if (token.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
@@ -70,6 +72,8 @@ export class Parser {
         }
     }
 
+    /**Parse the else if or else statement
+     * */
     private parseIfPredicate(): Nodes.IfPredicate {
         const predicate = this.consume();
         if (predicate.type === TokenType.elseif) {
@@ -130,11 +134,7 @@ export class Parser {
             return { variant: statementExit, type: "exit" };
         }
         //case let statement
-        else if (
-            this.peek()?.type === TokenType.let &&
-            this.peek(1)?.type === TokenType.ident &&
-            this.peek(2)?.type === TokenType.equals
-        ) {
+        else if (this.peek()?.type === TokenType.let) {
             //let
             const line = this.consume().line;
 
@@ -219,7 +219,7 @@ export class Parser {
 
         while (true) {
             const currentToken = this.peek();
-            let precedence = 0;
+            let precedence: number;
 
             //check if the precedence of current expr is smaller than minPrecedence
             if (currentToken) {
@@ -238,6 +238,7 @@ export class Parser {
             if (!exprRhs) {
                 this.error("Invalid expression", operator.line);
             }
+
             let expr: Nodes.BinaryExpr;
             if (operator.type === TokenType.plus) {
                 expr = {
@@ -273,6 +274,21 @@ export class Parser {
                 expr = {
                     variant: { lhs: exprLhs, rhs: exprRhs },
                     type: "notComp",
+                };
+            } else if (operator.type === TokenType.or) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "or",
+                };
+            } else if (operator.type === TokenType.and) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "and",
+                };
+            } else if (operator.type === TokenType.xor) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "xor",
                 };
             } else {
                 console.assert(false);

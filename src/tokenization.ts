@@ -2,20 +2,32 @@ import { Token, TokenType } from "./types.js";
 
 export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
-        case TokenType.double_equals:
-        case TokenType.not_equals:
-            return 3;
         case TokenType.pow:
-            return 2;
+            return 4;
         case TokenType.star:
         case TokenType.slash:
-            return 1;
+            return 3;
         case TokenType.plus:
         case TokenType.minus:
+            return 2;
+        case TokenType.double_equals:
+        case TokenType.not_equals:
+            return 1;
+        case TokenType.and:
+        case TokenType.or:
+        case TokenType.xor:
             return 0;
         default:
             return null;
     }
+}
+
+export function isBoolBinaryOperator(type: TokenType) {
+    return (
+        type === TokenType.and ||
+        type === TokenType.or ||
+        type === TokenType.xor
+    );
 }
 
 /**Check if string is alphanumeric
@@ -102,6 +114,34 @@ export class Tokenizer {
                     buffer = "";
                 } else if (buffer === "else") {
                     tokens.push({ type: TokenType.else, line: this.lineCount });
+                    buffer = "";
+                } else if (buffer === "true") {
+                    tokens.push({
+                        type: TokenType.boolean_lit,
+                        line: this.lineCount,
+                        value: "1",
+                    });
+                    buffer = "";
+                } else if (buffer === "false") {
+                    tokens.push({
+                        type: TokenType.boolean_lit,
+                        line: this.lineCount,
+                        value: "0",
+                    });
+                    buffer = "";
+                } else if (buffer === "bool") {
+                    tokens.push({
+                        type: TokenType.type,
+                        line: this.lineCount,
+                        value: "bool",
+                    });
+                    buffer = "";
+                } else if (buffer === "int") {
+                    tokens.push({
+                        type: TokenType.type,
+                        line: this.lineCount,
+                        value: "int",
+                    });
                     buffer = "";
                 } else {
                     //identifier
@@ -216,9 +256,20 @@ export class Tokenizer {
                         type: TokenType.not_equals,
                         line: this.lineCount,
                     });
+                } else if (this.peek() === "|") {
+                    this.consume();
+                    tokens.push({ type: TokenType.xor, line: this.lineCount });
                 } else {
                     // !
                 }
+            } else if (this.peek() === "|" && this.peek(1) === "|") {
+                this.consume();
+                this.consume();
+                tokens.push({ type: TokenType.or, line: this.lineCount });
+            } else if (this.peek() === "&" && this.peek(1) === "&") {
+                this.consume();
+                this.consume();
+                tokens.push({ type: TokenType.and, line: this.lineCount });
             } else if (this.peek() === "\n") {
                 this.consume();
                 this.lineCount++;

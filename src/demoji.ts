@@ -19,8 +19,12 @@ export function demoji(source: string) {
         .replaceAll("📯", "/$")
         .replaceAll("📐", " elseif ")
         .replaceAll("🗑️", " else ")
-        .replaceAll("✅", "1")
+        .replaceAll("✅", "true")
         .replaceAll("❌🔗", "!=")
-        .replaceAll("❌", "0")
-        .replaceAll("🔗", "==");
+        .replaceAll("❌🪜", "!|")
+        .replaceAll("❌", "false")
+        .replaceAll("🔗", "==")
+        .replaceAll("🪇", "&&")
+        .replaceAll("🪜", "||")
+        .replaceAll("🖨️", "print");
 }

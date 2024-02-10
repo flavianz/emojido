@@ -49,7 +49,7 @@ export class Generator {
     }
 
     private error(error: string, line: number) {
-        throw new Error(`[Parse Error]: ${error} on line ${line}`);
+        throw new Error(`[Parse Error]: ${error} on line ${line ?? "unknown"}`);
     }
 
     private generateScope(scope: Nodes.Scope) {
@@ -60,11 +60,12 @@ export class Generator {
         this.endScope();
     }
 
-    private generateTerm(term: Nodes.Term) {
+    private generateTerm(term: Nodes.Term): "int" | "bool" {
         if (term.type === "intLit") {
             //@ts-ignore
             this.output += `    mov rax, ${term.variant.intLit.value}\n`;
             this.push("rax");
+            return "int";
         } else if (term.type === "ident") {
             //@ts-ignore
             const value = term.variant.ident.value;
@@ -76,54 +77,123 @@ export class Generator {
             this.push(
                 `QWORD [rsp + ${(this.stackSize - this.vars.get(value).stackLocation - 1) * 8}]`,
             );
+            return this.vars.get(value).type;
         } else if (term.type === "parens") {
-            this.generateExpr(term.variant["expr"]);
+            return this.generateExpr(term.variant["expr"]);
+        } else if (term.type === "boolLit") {
+            //@ts-ignore
+            this.output += `    mov rax, ${term.variant.bool.value}\n`;
+            this.push("rax");
+            return "bool";
         }
     }
 
     private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr) {
         if (binaryExpr.type === "sub") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    sub rax, rbx\n";
             this.push("rax");
+            return "int";
         } else if (binaryExpr.type === "add") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    add rax, rbx\n";
             this.push("rax");
+            return "int";
         } else if (binaryExpr.type === "mul") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    mul rbx\n";
             this.push("rax");
+            return "int";
         } else if (binaryExpr.type === "div") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    div rbx\n";
             this.push("rax");
+            return "int";
         } else if (binaryExpr.type === "comp") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs) {
+                this.error(
+                    "Expected type same type on both sides of comparison",
+                    undefined,
+                );
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    cmp rax, rbx\n    setz al\n";
             this.push("rax");
+            return "bool";
         } else if (binaryExpr.type === "notComp") {
-            this.generateExpr(binaryExpr.variant.rhs);
-            this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs) {
+                this.error(
+                    "Expected type same type on both sides of comparison",
+                    undefined,
+                );
+            }
             this.pop("rax");
             this.pop("rbx");
             this.output += "    cmp rax, rbx\n    setnz al\n";
             this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "or") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "bool") {
+                this.error("Expected type '⚜️'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    or rax, rbx\n";
+            this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "and") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "bool") {
+                this.error("Expected type '⚜️'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    and rax, rbx\n";
+            this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "xor") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "bool") {
+                this.error("Expected type '⚜️'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.output += "    xor rax, rbx\n";
+            this.push("rax");
+            return "bool";
         }
     }
 
@@ -135,7 +205,10 @@ export class Generator {
             //@ts-ignore
             const elif: Nodes.ElseIf = ifPredicate.variant;
 
-            this.generateExpr(elif.expr);
+            const type = this.generateExpr(elif.expr);
+            if (type !== "bool") {
+                this.error("Expected type '⚜️'", undefined);
+            }
             this.pop("rax");
             const label = this.createLabel();
             this.output += `    test rax, rax\n    jz ${label}\n`;
@@ -155,13 +228,13 @@ export class Generator {
     /** generate the asm for a single expression
      * @param {Nodes.Expr} expr the expr to generate
      * */
-    private generateExpr(expr: Nodes.Expr) {
+    private generateExpr(expr: Nodes.Expr): "int" | "bool" {
         if (expr.type === "term") {
             //@ts-ignore
-            this.generateTerm(expr.variant);
+            return this.generateTerm(expr.variant);
         } else if (expr.type === "binExpr") {
             //@ts-ignore
-            this.generateBinaryExpr(expr.variant);
+            return this.generateBinaryExpr(expr.variant);
         }
     }
 
@@ -170,23 +243,28 @@ export class Generator {
      * */
     private generateStatement(statement: Nodes.Statement) {
         if (statement.type === "exit") {
-            this.generateExpr(statement.variant["expr"]);
+            const type = this.generateExpr(statement.variant["expr"]);
+            if (type !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
             this.output += "    mov rax, 60\n";
             this.pop("rdi");
             this.output += "    syscall\n";
         } else if (statement.type === "let") {
             //check for already assigned variables
-            if (this.vars.has(statement.variant["ident"].value)) {
+            const ident = statement.variant["ident"];
+            if (this.vars.has(ident.value)) {
                 this.error(
-                    `Identifier ${statement.variant["ident"].value} already used`,
+                    `Identifier ${ident.value} already used`,
                     statement.variant["ident"].line,
                 );
             }
-
-            this.vars.set(statement.variant["ident"].value, {
-                stackLocation: this.stackSize,
+            const stackSize = this.stackSize;
+            const type = this.generateExpr(statement.variant["expr"]);
+            this.vars.set(ident.value, {
+                stackLocation: stackSize,
+                type: type,
             });
-            this.generateExpr(statement.variant["expr"]);
         } else if (statement.type === "assign") {
             //@ts-ignore
             const assign: Nodes.StatementAssign = statement.variant;
@@ -196,15 +274,25 @@ export class Generator {
                     assign.ident.line,
                 );
             }
-            this.generateExpr(assign.expr);
+            const type = this.generateExpr(assign.expr);
+            const var_ = this.vars.get(assign.ident.value);
+            if (type !== var_.type) {
+                this.error(
+                    `Expected type '${{ bool: "⚜️", int: "🧮" }[var_.type]}'`,
+                    undefined,
+                );
+            }
             this.pop("rax");
-            this.output += `    mov [rsp + ${(this.stackSize - this.vars.get(assign.ident.value).stackLocation - 1) * 8}], rax\n`;
+            this.output += `    mov [rsp + ${(this.stackSize - var_.stackLocation - 1) * 8}], rax\n`;
         } else if (statement.type === "scope") {
             this.generateScope(statement.variant["scope"]);
         } else if (statement.type === "if") {
             //@ts-ignore
             const statementIf: Nodes.StatementIf = statement.variant;
-            this.generateExpr(statementIf.expr);
+            const type = this.generateExpr(statementIf.expr);
+            if (type !== "bool") {
+                this.error("Expected type '⚜️'", undefined);
+            }
             this.pop("rax");
             //if the test is false, we jump to the label created after generating the scope
             const label = this.createLabel();
