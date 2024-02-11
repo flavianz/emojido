@@ -22,7 +22,7 @@ export function compile(source: string): string {
     const generator = new Generator(program);
     const asm = generator.generateProgram();
 
-    console.log(`compiled in ${Date.now() - start} ms`);
+    console.log(`compiled in ${Date.now() - start} ms}`);
 
     return asm;
 }

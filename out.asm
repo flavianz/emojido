@@ -1,21 +1,24 @@
 section .data
-    ident0 db "a", 0ah
-    ident1 db "c", 0ah
 section .bss
 section .text
     global _start
 _start:
-    mov rax, ident0
+    mov rax, 3
     push rax
+    mov rax, 5
+    push rax
+    pop rbx
+    pop rcx
     mov rax, 1
+    jmp __pow
+__pow:
+    cmp rbx, 0
+    jle __pow_end
+    mul rcx
+    dec rbx
+    jmp __pow
+__pow_end:
     push rax
-    mov rax, ident1
-    push rax
-    mov rax, 2
-    push rax
-    pop rax
-    mov [rsp + 8], rax
-    push QWORD [rsp + 8]
     mov rax, 60
     pop rdi
     syscall

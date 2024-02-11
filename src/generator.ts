@@ -148,6 +148,22 @@ export class Generator {
             this.text += "    xor rdx, rdx\n    div rbx\n";
             this.push("rax");
             return "int";
+        } else if (binaryExpr.type === "pow") {
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
+            this.pop("rbx");
+            this.pop("rcx");
+            this.text += "    mov rax, 1\n    jmp __pow\n";
+            if (!this.text.includes("__pow:")) {
+                this.text +=
+                    "__pow:\n    cmp rbx, 0\n    jle __pow_end\n    mul rcx\n    dec rbx\n    jmp __pow\n";
+            }
+            this.text += "__pow_end:\n";
+            this.push("rax");
+            return "int";
         } else if (binaryExpr.type === "comp") {
             const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
             const typeLhs = this.generateExpr(binaryExpr.variant.lhs);

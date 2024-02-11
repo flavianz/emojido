@@ -46,7 +46,7 @@ function isAlphanumeric(str: string): boolean {
  * @returns {boolean} true if provided string is numeric
  * */
 function isNumeric(str: string): boolean {
-    return /^\d+$/.test(str);
+    return /^[\d-]+$/.test(str);
 }
 /**Check if string is alphabetic
  * @param {string} str the char

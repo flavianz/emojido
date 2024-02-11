@@ -80,6 +80,9 @@ export namespace Nodes {
     export interface TermIntLit {
         intLit: Token;
     }
+    export interface TermFloat {
+        intLit: Token;
+    }
 
     export interface TermBool {
         bool: Token;
@@ -193,7 +196,7 @@ export namespace Nodes {
 
     export interface Term {
         variant: TermIntLit | TermIdent | TermParens | TermBool | TermString;
-        type: "intLit" | "ident" | "parens" | "boolLit" | "string";
+        type: "intLit" | "ident" | "parens" | "boolLit" | "string" | "float";
     }
     export interface Scope {
         statements: Statement[];
