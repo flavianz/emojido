@@ -23,9 +23,13 @@ export function demoji(source: string) {
         .replaceAll("❌🔗", "!=")
         .replaceAll("❌🪜", "!|")
         .replaceAll("❌", "false")
+        .replaceAll("↘️🔗", "<=")
+        .replaceAll("↗️🔗", ">=")
         .replaceAll("🔗", "==")
         .replaceAll("🪇", "&&")
         .replaceAll("🪜", "||")
         .replaceAll("🖨️", "print ")
-        .replaceAll("🔠", '"');
+        .replaceAll("🔠", '"')
+        .replaceAll("↘️", "<")
+        .replaceAll("↗️", ">");
 }

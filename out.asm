@@ -1,23 +1,23 @@
 section .data
-    ident0 db "Hello, World!ssefwsefsdvsae er fwerihvbiu bqiwueb fiuwv fiuaeofuhaboihjbawouehb fowuehb fouwevf uiewvf 9ouhewvf uiqwv eifuqvhw efuohqvwe oufhoqweff", 0ah
-
+    ident0 db "a", 0ah
+    ident1 db "c", 0ah
+section .bss
 section .text
     global _start
 _start:
     mov rax, ident0
     push rax
-    push QWORD [rsp + 0]
     mov rax, 1
-    mov rdi, 1
-    pop rsi
-    xor rcx, rcx
-__calc_length_loop:
-    cmp byte [rsi + rcx], 0
-    je __calc_length_done
-    inc rcx
-    jmp __calc_length_loop
-__calc_length_done:
-    mov rdx, rcx
+    push rax
+    mov rax, ident1
+    push rax
+    mov rax, 2
+    push rax
+    pop rax
+    mov [rsp + 8], rax
+    push QWORD [rsp + 8]
+    mov rax, 60
+    pop rdi
     syscall
     mov rax, 60
     mov rdi, 0

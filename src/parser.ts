@@ -86,7 +86,7 @@ export class Parser {
      * */
     private parseIfPredicate(): Nodes.IfPredicate {
         const predicate = this.consume();
-        if (predicate.type === TokenType.elseif) {
+        if (predicate?.type === TokenType.elseif) {
             //get the expression
             const expr = this.parseExpr();
             if (!expr) {
@@ -109,7 +109,7 @@ export class Parser {
                 variant: { expr: expr, scope: scope, predicate: ifPredicate },
                 type: "elseIf",
             };
-        } else if (predicate.type === TokenType.else) {
+        } else if (predicate?.type === TokenType.else) {
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
@@ -310,6 +310,26 @@ export class Parser {
                 expr = {
                     variant: { lhs: exprLhs, rhs: exprRhs },
                     type: "xor",
+                };
+            } else if (operator.type === TokenType.smaller) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "smaller",
+                };
+            } else if (operator.type === TokenType.smallerEquals) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "smallerEquals",
+                };
+            } else if (operator.type === TokenType.greater) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "grater",
+                };
+            } else if (operator.type === TokenType.greaterEquals) {
+                expr = {
+                    variant: { lhs: exprLhs, rhs: exprRhs },
+                    type: "greaterEquals",
                 };
             } else {
                 console.assert(false);

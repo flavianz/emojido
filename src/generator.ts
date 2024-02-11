@@ -4,6 +4,7 @@ export class Generator {
     private readonly program: Nodes.Program;
     private text: string = "";
     private data: string = "";
+    private bss: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
     private scopes: number[] = [];
@@ -144,7 +145,7 @@ export class Generator {
             }
             this.pop("rax");
             this.pop("rbx");
-            this.text += "    div rbx\n";
+            this.text += "    xor rdx, rdx\n    div rbx\n";
             this.push("rax");
             return "int";
         } else if (binaryExpr.type === "comp") {
@@ -208,6 +209,50 @@ export class Generator {
             this.text += "    xor rax, rbx\n";
             this.push("rax");
             return "bool";
+        } else if (binaryExpr.type === "smaller") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.text += "    cmp rax, rbx\n    setl al\n";
+            this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "smallerEquals") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.text += "    cmp rax, rbx\n    setle al\n";
+            this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "grater") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.text += "    cmp rax, rbx\n    setg al\n";
+            this.push("rax");
+            return "bool";
+        } else if (binaryExpr.type === "greaterEquals") {
+            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
+            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
+            if (typeRhs !== typeLhs || typeRhs !== "int") {
+                this.error("Expected type '🧮'", undefined);
+            }
+            this.pop("rax");
+            this.pop("rbx");
+            this.text += "    cmp rax, rbx\n    setge al\n";
+            this.push("rax");
+            return "bool";
         }
     }
 
@@ -266,6 +311,9 @@ export class Generator {
             this.text += "    syscall\n";
         } else if (statement.type === "print") {
             const type = this.generateExpr(statement.variant["expr"]);
+            if (type !== "string") {
+                this.error("Expected type string", undefined);
+            }
             this.text += "    mov rax, 1\n    mov rdi, 1\n";
             this.pop("rsi");
             this.text +=
@@ -349,6 +397,8 @@ export class Generator {
         return (
             "section .data\n" +
             this.data +
+            "section .bss" +
+            this.bss +
             "\nsection .text\n    global _start\n_start:\n" +
             this.text
         );

@@ -27,6 +27,10 @@ export enum TokenType {
     quotes = "quotes",
     string = "string",
     print = "print",
+    smaller = "smaller",
+    smallerEquals = "smallerEquals",
+    greater = "greater",
+    greaterEquals = "greaterEquals",
 }
 
 export interface Token {
@@ -114,6 +118,31 @@ export namespace Nodes {
         rhs: Expr;
     }
 
+    export interface BoolBinaryExprComp {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BoolBinaryExprNotComp {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BoolBinaryExprGreaterThan {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BoolBinaryExprGreaterEquals {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BoolBinaryExprSmallerThan {
+        lhs: Expr;
+        rhs: Expr;
+    }
+    export interface BoolBinaryExprSmallerEquals {
+        lhs: Expr;
+        rhs: Expr;
+    }
+
     export interface BinaryExpr {
         variant:
             | BinaryExprAdd
@@ -123,7 +152,13 @@ export namespace Nodes {
             | BinaryExprPow
             | BoolBinaryExprAnd
             | BoolBinaryExprOr
-            | BoolBinaryExprXor;
+            | BoolBinaryExprXor
+            | BoolBinaryExprComp
+            | BoolBinaryExprNotComp
+            | BoolBinaryExprSmallerThan
+            | BoolBinaryExprSmallerEquals
+            | BoolBinaryExprGreaterEquals
+            | BoolBinaryExprGreaterThan;
         type:
             | "add"
             | "sub"
@@ -134,7 +169,11 @@ export namespace Nodes {
             | "notComp"
             | "and"
             | "or"
-            | "xor";
+            | "xor"
+            | "grater"
+            | "greaterEquals"
+            | "smaller"
+            | "smallerEquals";
     }
 
     export interface BoolBinaryExprAnd {

@@ -16,6 +16,10 @@ export function getBinaryPrecedence(type: TokenType) {
         case TokenType.and:
         case TokenType.or:
         case TokenType.xor:
+        case TokenType.smaller:
+        case TokenType.smallerEquals:
+        case TokenType.greater:
+        case TokenType.greaterEquals:
             return 0;
         default:
             return null;
@@ -290,6 +294,34 @@ export class Tokenizer {
                 });
                 tokens.push({ type: TokenType.quotes, line: this.lineCount });
                 buffer = "";
+            } else if (this.peek() === "<") {
+                this.consume();
+                if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.smallerEquals,
+                        line: this.lineCount,
+                    });
+                } else {
+                    tokens.push({
+                        type: TokenType.smaller,
+                        line: this.lineCount,
+                    });
+                }
+            } else if (this.peek() === ">") {
+                this.consume();
+                if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.greaterEquals,
+                        line: this.lineCount,
+                    });
+                } else {
+                    tokens.push({
+                        type: TokenType.greater,
+                        line: this.lineCount,
+                    });
+                }
             } else if (this.peek() === "\n") {
                 this.consume();
                 this.lineCount++;
