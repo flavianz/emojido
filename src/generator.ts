@@ -1,9 +1,9 @@
-import { Nodes, Var } from "./types";
+import { GenToken, Nodes, Token, Var } from "./types";
 
 export class Generator {
     private readonly program: Nodes.Program;
     private text: string = "";
-    private data: string = "";
+    private data: string = "    _float_1 dq 0.0\n    _float_2 dq 0.0\n";
     private bss: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
@@ -67,95 +67,185 @@ export class Generator {
         this.endScope();
     }
 
-    private generateTerm(term: Nodes.Term): "int" | "bool" | "string" {
+    private generateTerm(term: Nodes.Term): GenToken {
         if (term.type === "intLit") {
             //@ts-ignore
-            this.text += `    mov rax, ${term.variant.intLit.value}\n`;
+            const token: Token = term.variant.intLit;
+            this.text += `    mov rax, ${token.value}\n`;
             this.push("rax");
-            return "int";
+            return { type: "int", line: token.line };
+        } else if (term.type === "float") {
+            //@ts-ignore
+            const token: Token = term.variant.float;
+            const ident = this.generateIdentifier();
+            this.data += `    ${ident} dq ${token.value}    ;prepare float\n`; //store value in memory
+            this.text += `    mov rax, ${ident}\n`; //mov float into sse reg
+            this.push("rax");
+            return { type: "float", line: token.line };
         } else if (term.type === "ident") {
             //@ts-ignore
-            const value = term.variant.ident.value;
-            if (!this.vars.has(value)) {
+            const token: Token = term.variant.ident;
+            if (!this.vars.has(token.value)) {
                 //@ts-ignore
-                this.error("Undeclared identifier", term.variant.ident.line);
+                this.error("Undeclared identifier", token.line);
             }
-
             this.push(
-                `QWORD [rsp + ${(this.stackSize - this.vars.get(value).stackLocation - 1) * 8}]`,
+                `QWORD [rsp + ${(this.stackSize - this.vars.get(token.value).stackLocation - 1) * 8}]`,
             );
-            return this.vars.get(value).type;
+            return { type: this.vars.get(token.value).type, line: token.line };
         } else if (term.type === "parens") {
             return this.generateExpr(term.variant["expr"]);
         } else if (term.type === "boolLit") {
             //@ts-ignore
-            this.text += `    mov rax, ${term.variant.bool.value}\n`;
+            const token: Token = term.variant.bool;
+            this.text += `    mov rax, ${token.value}\n`;
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: token.line };
         } else if (term.type === "string") {
             //@ts-ignore
-            const string: Nodes.TermString = term.variant;
+            const string: Token = term.variant.string;
             const ident = this.generateIdentifier();
-            this.data += `    ${ident} db "${string.string.value}", 0ah\n`;
+            this.data += `    ${ident} db "${string.value}", 0ah\n`;
             this.text += `    mov rax, ${ident}\n`;
             this.push("rax");
-            return "string";
+            return { type: "string", line: string.line };
         }
     }
 
-    private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr): "int" | "bool" {
+    private generateNumber(lhs: GenToken, rhs: GenToken): string {
+        const ident = this.generateIdentifier();
+        this.data += `    ${ident} dq 0\n`;
+        if (lhs.type === "int") {
+            this.text += `    movq xmm0, rax\n`;
+        } else {
+            this.text += `    movsd xmm0, [rax]\n`;
+        }
+        if (rhs.type === "int") {
+            this.text += `    movq xmm1, rbx\n`;
+        } else {
+            this.text += `    movsd xmm1, [rbx]\n`;
+        }
+        return ident;
+    }
+
+    private generateBinaryExpr(binaryExpr: Nodes.BinaryExpr): GenToken {
         if (binaryExpr.type === "sub") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (
+                rhs.type === "bool" ||
+                rhs.type === "string" ||
+                lhs.type == "bool" ||
+                lhs.type === "string"
+            ) {
+                this.error("Expected type '🧮''", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
-            this.text += "    sub rax, rbx\n";
-            this.push("rax");
-            return "int";
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
+            if (lhs.type === "int" && rhs.type === "int") {
+                //sub two integers
+                this.text += "    sub rax, rbx\n";
+                this.push("rax");
+                return { type: "int", line: lhs.line };
+            } else {
+                //min one float involved
+                const ident = this.generateNumber(lhs, rhs);
+
+                this.text += "    subsd xmm0, xmm1\n";
+                this.text += `    movq qword [${ident}], xmm0\n`;
+                this.text += `    mov rax, [${ident}]\n`;
+                this.push("rax");
+                return { type: "float", line: lhs.line };
+            }
         } else if (binaryExpr.type === "add") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (
+                rhs.type === "bool" ||
+                rhs.type === "string" ||
+                lhs.type == "bool" ||
+                lhs.type === "string"
+            ) {
+                this.error("Expected type '🧮''", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
-            this.text += "    add rax, rbx\n";
-            this.push("rax");
-            return "int";
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
+            if (lhs.type === "int" && rhs.type === "int") {
+                //sub two integers
+                this.text += "    add rax, rbx\n";
+                this.push("rax");
+                return { type: "int", line: lhs.line };
+            } else {
+                //min one float involved
+                const ident = this.generateNumber(lhs, rhs);
+
+                this.text += "    addsd xmm0, xmm1\n";
+                this.text += `    movq qword [${ident}], xmm0\n`;
+                this.text += `    mov rax, [${ident}]\n`;
+                this.push("rax");
+                return { type: "float", line: lhs.line };
+            }
         } else if (binaryExpr.type === "mul") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (
+                rhs.type === "bool" ||
+                rhs.type === "string" ||
+                lhs.type == "bool" ||
+                lhs.type === "string"
+            ) {
+                this.error("Expected type '🧮''", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    mul rbx\n";
-            this.push("rax");
-            return "int";
+            if (lhs.type === "int" && rhs.type === "int") {
+                //sub two integers
+                this.text += "    mul rbx\n";
+                this.push("rax");
+                return { type: "int", line: lhs.line };
+            } else {
+                //min one float involved
+                const ident = this.generateNumber(lhs, rhs);
+
+                this.text += "    mulsd xmm0, xmm1\n";
+                this.text += `    movq qword [${ident}], xmm0\n`;
+                this.text += `    mov rax, [${ident}]\n`;
+                this.push("rax");
+                return { type: "float", line: lhs.line };
+            }
         } else if (binaryExpr.type === "div") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (
+                rhs.type === "bool" ||
+                rhs.type === "string" ||
+                lhs.type == "bool" ||
+                lhs.type === "string"
+            ) {
+                this.error("Expected type '🧮''", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
-            this.text += "    xor rdx, rdx\n    div rbx\n";
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
+            this.text += "    xor rdx, rdx\n";
+            this.text += "    div rbx\n";
+
+            //min one float involved
+            const ident = this.generateNumber(lhs, rhs);
+
+            this.text += "    divsd xmm0, xmm1\n";
+            this.text += `    movq qword [${ident}], xmm0\n`;
+            this.text += `    mov rax, [${ident}]\n`;
             this.push("rax");
-            return "int";
+            return { type: "float", line: lhs.line };
         } else if (binaryExpr.type === "pow") {
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "int") {
+                this.error("Expected type '🧮'", lhs.line);
             }
-            this.pop("rbx");
-            this.pop("rcx");
+            this.pop("rbx"); //Exponent
+            this.pop("rcx"); //Base
             this.text += "    mov rax, 1\n    jmp __pow\n";
             if (!this.text.includes("__pow:")) {
                 this.text +=
@@ -163,112 +253,112 @@ export class Generator {
             }
             this.text += "__pow_end:\n";
             this.push("rax");
-            return "int";
+            return { type: "int", line: lhs.line };
         } else if (binaryExpr.type === "comp") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs) {
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type) {
                 this.error(
                     "Expected type same type on both sides of comparison",
-                    undefined,
+                    lhs.line,
                 );
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    cmp rax, rbx\n    setz al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "notComp") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs) {
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type) {
                 this.error(
                     "Expected type same type on both sides of comparison",
-                    undefined,
+                    lhs.line,
                 );
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    cmp rax, rbx\n    setnz al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "or") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "bool") {
-                this.error("Expected type '⚜️'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "bool") {
+                this.error("Expected type '⚜️'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    or rax, rbx\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "and") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "bool") {
-                this.error("Expected type '⚜️'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "bool") {
+                this.error("Expected type '⚜️'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    and rax, rbx\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "xor") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "bool") {
-                this.error("Expected type '⚜️'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "bool") {
+                this.error("Expected type '⚜️'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    xor rax, rbx\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "smaller") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "int") {
+                this.error("Expected type '🧮'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    cmp rax, rbx\n    setl al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "smallerEquals") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "int") {
+                this.error("Expected type '🧮'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    cmp rax, rbx\n    setle al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "grater") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "int") {
+                this.error("Expected type '🧮'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rax"); //Lhs
             this.text += "    cmp rax, rbx\n    setg al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         } else if (binaryExpr.type === "greaterEquals") {
-            const typeRhs = this.generateExpr(binaryExpr.variant.rhs);
-            const typeLhs = this.generateExpr(binaryExpr.variant.lhs);
-            if (typeRhs !== typeLhs || typeRhs !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            const lhs = this.generateExpr(binaryExpr.variant.lhs);
+            const rhs = this.generateExpr(binaryExpr.variant.rhs);
+            if (rhs.type !== lhs.type || rhs.type !== "int") {
+                this.error("Expected type '🧮'", lhs.line);
             }
-            this.pop("rax");
-            this.pop("rbx");
+            this.pop("rbx"); //Rhs
+            this.pop("rxx"); //Lhs
             this.text += "    cmp rax, rbx\n    setge al\n";
             this.push("rax");
-            return "bool";
+            return { type: "bool", line: lhs.line };
         }
     }
 
@@ -281,8 +371,8 @@ export class Generator {
             const elif: Nodes.ElseIf = ifPredicate.variant;
 
             const type = this.generateExpr(elif.expr);
-            if (type !== "bool") {
-                this.error("Expected type '⚜️'", undefined);
+            if (type.type !== "bool") {
+                this.error("Expected type '⚜️'", type.line);
             }
             this.pop("rax");
             const label = this.createLabel();
@@ -303,7 +393,7 @@ export class Generator {
     /** generate the asm for a single expression
      * @param {Nodes.Expr} expr the expr to generate
      * */
-    private generateExpr(expr: Nodes.Expr): "int" | "bool" | "string" {
+    private generateExpr(expr: Nodes.Expr): GenToken {
         if (expr.type === "term") {
             //@ts-ignore
             return this.generateTerm(expr.variant);
@@ -319,16 +409,16 @@ export class Generator {
     private generateStatement(statement: Nodes.Statement) {
         if (statement.type === "exit") {
             const type = this.generateExpr(statement.variant["expr"]);
-            if (type !== "int") {
-                this.error("Expected type '🧮'", undefined);
+            if (type.type !== "int") {
+                this.error("Expected type '🧮'", type.line);
             }
             this.text += "    mov rax, 60\n";
             this.pop("rdi");
             this.text += "    syscall\n";
         } else if (statement.type === "print") {
             const type = this.generateExpr(statement.variant["expr"]);
-            if (type !== "string") {
-                this.error("Expected type string", undefined);
+            if (type.type !== "string") {
+                this.error("Expected type string", type.line);
             }
             this.text += "    mov rax, 1\n    mov rdi, 1\n";
             this.pop("rsi");
@@ -350,7 +440,7 @@ export class Generator {
             const type = this.generateExpr(statement.variant["expr"]);
             this.vars.set(ident.value, {
                 stackLocation: stackSize,
-                type: type,
+                type: type.type,
             });
         } else if (statement.type === "assign") {
             //@ts-ignore
@@ -363,10 +453,10 @@ export class Generator {
             }
             const type = this.generateExpr(assign.expr);
             const var_ = this.vars.get(assign.ident.value);
-            if (type !== var_.type) {
+            if (type.type !== var_.type) {
                 this.error(
-                    `Expected type '${{ bool: "⚜️", int: "🧮" }[var_.type]}'`,
-                    undefined,
+                    `Expected type '${{ bool: "⚜️", int: "🧮", string: "🔠" }[var_.type]}'`,
+                    type.line,
                 );
             }
             this.pop("rax");
@@ -377,8 +467,8 @@ export class Generator {
             //@ts-ignore
             const statementIf: Nodes.StatementIf = statement.variant;
             const type = this.generateExpr(statementIf.expr);
-            if (type !== "bool") {
-                this.error("Expected type '⚜️'", undefined);
+            if (type.type !== "bool") {
+                this.error("Expected type '⚜️'", type.line);
             }
             this.pop("rax");
             //if the test is false, we jump to the label created after generating the scope

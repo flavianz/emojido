@@ -53,6 +53,8 @@ export class Parser {
         const token = this.consume();
         if (token?.type === TokenType.int_lit) {
             return { variant: { intLit: token }, type: "intLit" };
+        } else if (token?.type === TokenType.float) {
+            return { variant: { float: token }, type: "float" };
         } else if (token?.type === TokenType.ident) {
             return { variant: { ident: token }, type: "ident" };
         } else if (token?.type === TokenType.quotes) {

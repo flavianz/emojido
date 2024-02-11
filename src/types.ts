@@ -31,11 +31,16 @@ export enum TokenType {
     smallerEquals = "smallerEquals",
     greater = "greater",
     greaterEquals = "greaterEquals",
+    float = "float",
 }
 
 export interface Token {
     type: TokenType;
     value?: string;
+    line: number;
+}
+export interface GenToken {
+    type: "int" | "float" | "string" | "bool";
     line: number;
 }
 
@@ -81,7 +86,7 @@ export namespace Nodes {
         intLit: Token;
     }
     export interface TermFloat {
-        intLit: Token;
+        float: Token;
     }
 
     export interface TermBool {
@@ -195,7 +200,13 @@ export namespace Nodes {
     }
 
     export interface Term {
-        variant: TermIntLit | TermIdent | TermParens | TermBool | TermString;
+        variant:
+            | TermIntLit
+            | TermIdent
+            | TermParens
+            | TermBool
+            | TermString
+            | TermFloat;
         type: "intLit" | "ident" | "parens" | "boolLit" | "string" | "float";
     }
     export interface Scope {
@@ -226,5 +237,5 @@ export namespace Nodes {
 
 export interface Var {
     stackLocation: number;
-    type: "int" | "bool" | "string";
+    type: "int" | "bool" | "string" | "float";
 }

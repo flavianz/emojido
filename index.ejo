@@ -1,1 +1,2 @@
-exit 2;
+let a = 0.9 + 0.1;
+exit a;

@@ -1,24 +1,19 @@
 section .data
+    _float_1 dq 0.0
+    _float_2 dq 0.0
 section .bss
 section .text
     global _start
 _start:
-    mov rax, 3
+    mov rax, 1
     push rax
-    mov rax, 5
+    mov rax, 1
     push rax
     pop rbx
-    pop rcx
-    mov rax, 1
-    jmp __pow
-__pow:
-    cmp rbx, 0
-    jle __pow_end
-    mul rcx
-    dec rbx
-    jmp __pow
-__pow_end:
+    pop rax
+    add rax, rbx
     push rax
+    push QWORD [rsp + 0]
     mov rax, 60
     pop rdi
     syscall

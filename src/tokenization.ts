@@ -26,14 +26,6 @@ export function getBinaryPrecedence(type: TokenType) {
     }
 }
 
-export function isBoolBinaryOperator(type: TokenType) {
-    return (
-        type === TokenType.and ||
-        type === TokenType.or ||
-        type === TokenType.xor
-    );
-}
-
 /**Check if string is alphanumeric
  * @param {string} str the char
  * @returns {boolean} true if provided string is alphanumeric
@@ -46,7 +38,7 @@ function isAlphanumeric(str: string): boolean {
  * @returns {boolean} true if provided string is numeric
  * */
 function isNumeric(str: string): boolean {
-    return /^[\d-]+$/.test(str);
+    return /^[\d-.]+$/.test(str);
 }
 /**Check if string is alphabetic
  * @param {string} str the char
@@ -173,7 +165,9 @@ export class Tokenizer {
                 }
 
                 tokens.push({
-                    type: TokenType.int_lit,
+                    type: buffer.includes(".")
+                        ? TokenType.float
+                        : TokenType.int_lit,
                     value: buffer,
                     line: this.lineCount,
                 });
