@@ -1,2 +1,2 @@
-let a = 0.9 + 0.1;
-exit a;
+let x = 3 / 3;
+print x;

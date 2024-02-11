@@ -2,9 +2,42 @@ import { GenToken, Nodes, Token, Var } from "./types";
 
 export class Generator {
     private readonly program: Nodes.Program;
+    private routines = `__printInt:
+    mov rcx, _digitSpace
+    mov rbx, 10
+    mov [rcx], rbx
+    inc rcx
+    mov [_digitSpacePos], rcx
+__printIntLoop:
+    mov rdx, 0
+    mov rbx, 10
+    div rbx
+    push rax
+    add rdx, 48
+    mov rcx, [_digitSpacePos]
+    mov [rcx], dl
+    inc rcx
+    mov [_digitSpacePos], rcx
+    pop rax
+    cmp rax, 0
+    jne __printIntLoop
+__printIntLoop2:
+    mov rcx, [_digitSpacePos]
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, rcx
+    mov rdx, 1
+    syscall
+    mov rcx, [_digitSpacePos]
+    dec rcx
+    mov [_digitSpacePos], rcx
+    cmp rcx, _digitSpace
+    jge __printIntLoop2
+    ret\n`;
     private text: string = "";
     private data: string = "    _float_1 dq 0.0\n    _float_2 dq 0.0\n";
-    private bss: string = "";
+    private bss: string =
+        "    _digitSpace resb 100\n    _digitSpacePos resb 8\n";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
     private scopes: number[] = [];
@@ -198,7 +231,6 @@ export class Generator {
             }
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-            this.text += "    mul rbx\n";
             if (lhs.type === "int" && rhs.type === "int") {
                 //sub two integers
                 this.text += "    mul rbx\n";
@@ -417,16 +449,19 @@ export class Generator {
             this.text += "    syscall\n";
         } else if (statement.type === "print") {
             const type = this.generateExpr(statement.variant["expr"]);
-            if (type.type !== "string") {
-                this.error("Expected type string", type.line);
+            if (type.type === "string") {
+                this.text += "    mov rax, 1\n    mov rdi, 1\n";
+                this.pop("rsi");
+                this.text +=
+                    "    xor rcx, rcx\n__calc_length_loop:\n" +
+                    "    cmp byte [rsi + rcx], 0\n    je __calc_length_done\n" +
+                    "    inc rcx\n    jmp __calc_length_loop\n__calc_length_done:\n" +
+                    "    mov rdx, rcx\n    syscall\n";
+            } else if (type.type === "int") {
+                this.text += "    pop rax\n    call __printInt\n";
+            } else {
+                this.error("Expected type string or int", type.line);
             }
-            this.text += "    mov rax, 1\n    mov rdi, 1\n";
-            this.pop("rsi");
-            this.text +=
-                "    xor rcx, rcx\n__calc_length_loop:\n" +
-                "    cmp byte [rsi + rcx], 0\n    je __calc_length_done\n" +
-                "    inc rcx\n    jmp __calc_length_loop\n__calc_length_done:\n" +
-                "    mov rdx, rcx\n    syscall\n";
         } else if (statement.type === "let") {
             //check for already assigned variables
             const ident = statement.variant["ident"];
@@ -503,10 +538,11 @@ export class Generator {
         return (
             "section .data\n" +
             this.data +
-            "section .bss" +
+            "section .bss\n" +
             this.bss +
             "\nsection .text\n    global _start\n_start:\n" +
-            this.text
+            this.text +
+            this.routines
         );
     }
 }
