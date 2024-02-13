@@ -46,7 +46,7 @@ import {
 
 export class Generator {
     private readonly program: Program;
-    private routines = "";
+    private routines = "\n    ; routines\n";
     private text: string = "";
     private data: string = "";
     private bss: string = "";
@@ -165,35 +165,37 @@ __calc_string_length_return:
     }
 
     private generateScope(scope: Scope) {
+        this.text += "    ; start scope\n";
         this.beginScope();
         for (const statement of scope.statements) {
             this.generateStatement(statement);
         }
         this.endScope();
+        this.text += "    ; end scope\n";
     }
 
     private generateTerm(term: Term) {
         if (term instanceof TermInteger) {
-            this.text += `    mov rax, ${term.integerValue}\n`;
+            this.text += `    mov rax, ${term.integerValue} ; generate term integer\n`;
             this.push("rax");
         } else if (term instanceof TermFloat) {
             const ident = this.generateIdentifier();
-            this.data += `    ${ident} dq ${term.floatValue}    ;prepare float\n`; //store value in memory
+            this.data += `    ${ident} dq ${term.floatValue} ; generate term float\n`; //store value in memory
             this.text += `    mov rax, ${ident}\n`; //mov float into sse reg
             this.push("rax");
         } else if (term instanceof TermIdentifier) {
             this.push(
-                `QWORD [rsp + ${(this.stackSize - this.vars.get(term.identifier).stackLocation - 1) * 8}]`,
+                `QWORD [rsp + ${(this.stackSize - this.vars.get(term.identifier).stackLocation - 1) * 8}] ; generate term from identifier`,
             );
         } else if (term instanceof TermParens) {
             this.generateExpr(term.expression);
         } else if (term instanceof TermBoolean) {
-            this.text += `    mov rax, ${term.booleanValue}\n`;
+            this.text += `    mov rax, ${term.booleanValue} ; generate term boolean\n`;
             this.push("rax");
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} db "${term.stringValue}", 0ah\n`;
-            this.text += `    mov rax, ${ident}\n`;
+            this.text += `    mov rax, ${ident} ; generate term string\n`;
             this.push("rax");
         }
     }
@@ -216,11 +218,12 @@ __calc_string_length_return:
 
     private generateBinaryExpr(binaryExpr: BinaryExpression) {
         if (binaryExpr instanceof BinaryExpressionSub) {
+            this.text += "    ; binary subtract\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
+
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-
             if (
                 binaryExpr.lhsExpression.literalType ===
                     LiteralType.integerLiteral &&
@@ -243,11 +246,12 @@ __calc_string_length_return:
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionAdd) {
+            this.text += "    ; binary add\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
+
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-
             if (
                 binaryExpr.lhsExpression.literalType ===
                     LiteralType.integerLiteral &&
@@ -270,11 +274,12 @@ __calc_string_length_return:
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionMul) {
+            this.text += "    ; binary multiply\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
+
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-
             if (
                 binaryExpr.lhsExpression.literalType ===
                     LiteralType.integerLiteral &&
@@ -297,11 +302,12 @@ __calc_string_length_return:
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionDiv) {
+            this.text += "    ; binary divide\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
+
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-
             if (
                 binaryExpr.lhsExpression.literalType ===
                     LiteralType.integerLiteral &&
@@ -324,6 +330,7 @@ __calc_string_length_return:
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionPow) {
+            this.text += "    ; binary pow\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             checkLiteralType(
@@ -331,12 +338,14 @@ __calc_string_length_return:
                 [LiteralType.integerLiteral, LiteralType.floatLiteral],
                 binaryExpr.line,
             );
+
             this.pop("rbx"); //Exponent
             this.pop("rcx"); //Base
             this.text += "    mov rax, 1\n    call __pow\n";
             this.generatePow();
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionCompare) {
+            this.text += "    ; binary compare\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx");
@@ -344,6 +353,7 @@ __calc_string_length_return:
             this.text += "    cmp rax, rbx\n    setz al\n";
             this.pop("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionNotCompare) {
+            this.text += "    ; binary not compare\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx");
@@ -351,6 +361,7 @@ __calc_string_length_return:
             this.text += "    cmp rax, rbx\n    setnz al\n";
             this.pop("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionOr) {
+            this.text += "    ; binary or\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -358,6 +369,7 @@ __calc_string_length_return:
             this.text += "    or rax, rbx\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionAnd) {
+            this.text += "    ; binary and\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -365,6 +377,7 @@ __calc_string_length_return:
             this.text += "    and rax, rbx\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionXor) {
+            this.text += "    ; binary xor\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -372,6 +385,7 @@ __calc_string_length_return:
             this.text += "    xor rax, rbx\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionLessThan) {
+            this.text += "    ; binary '<'\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -379,6 +393,7 @@ __calc_string_length_return:
             this.text += "    cmp rax, rbx\n    setl al\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionLessEquals) {
+            this.text += "    ; binary '<='\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -386,6 +401,7 @@ __calc_string_length_return:
             this.text += "    cmp rax, rbx\n    setle al\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionGreaterThan) {
+            this.text += "    ; binary '>'\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -393,6 +409,7 @@ __calc_string_length_return:
             this.text += "    cmp rax, rbx\n    setg al\n";
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionGreaterEquals) {
+            this.text += "    ; binary '>='\n";
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
@@ -404,6 +421,7 @@ __calc_string_length_return:
 
     private generateIfPredicate(ifPredicate: IfPredicate, endLabel: string) {
         if (ifPredicate instanceof ElseIfPredicate) {
+            this.text += "    ; start elseif statement\n";
             this.generateExpr(ifPredicate.expression);
             this.pop("rax");
             const label = this.createLabel();
@@ -415,6 +433,7 @@ __calc_string_length_return:
                 this.generateIfPredicate(ifPredicate.predicate, endLabel);
             }
         } else if (ifPredicate instanceof ElsePredicate) {
+            this.text += "    ; start else statement\n";
             this.generateScope(ifPredicate.scope);
         }
     }
@@ -435,11 +454,13 @@ __calc_string_length_return:
      * */
     private generateStatement(statement: Statement) {
         if (statement instanceof StatementExit) {
+            this.text += "    ; start exit statement\n";
             this.generateExpr(statement.expression);
             this.text += "    mov rax, 60\n";
             this.pop("rdi");
             this.text += "    syscall\n";
         } else if (statement instanceof StatementPrint) {
+            this.text += "    ; start print statement\n";
             this.generateExpr(statement.expression);
             //check type
             let literalType: LiteralType;
@@ -453,7 +474,8 @@ __calc_string_length_return:
             if (literalType === LiteralType.stringLiteral) {
                 this.text += "    mov rax, 1\n    mov rdi, 1\n";
                 this.pop("rsi");
-                this.text += "    xor rcx, rcx\n";
+                this.text +=
+                    "    xor rcx, rcx\n    call __calc_string_length\n";
                 this.generateCalcStringLength();
                 this.text += "    mov rdx, rcx\n    syscall\n";
             } else if (literalType === LiteralType.integerLiteral) {
@@ -461,12 +483,14 @@ __calc_string_length_return:
                 this.text += "    pop rax\n    call __printInt\n";
             }
         } else if (statement instanceof StatementLet) {
+            this.text += "    ; start let statement\n";
             this.vars.set(statement.identifier, {
                 stackLocation: this.stackSize,
                 type: statement.expression.literalType,
             });
             this.generateExpr(statement.expression);
         } else if (statement instanceof StatementAssign) {
+            this.text += "    ; start reassign statement\n";
             this.generateExpr(statement.expression);
             const var_ = this.vars.get(statement.identifier);
             this.pop("rax");
@@ -474,6 +498,7 @@ __calc_string_length_return:
         } else if (statement instanceof StatementScope) {
             this.generateScope(statement.scope);
         } else if (statement instanceof StatementIf) {
+            this.text += "    ; start if statement\n";
             this.generateExpr(statement.expression);
             this.pop("rax");
             const label = this.createLabel();
