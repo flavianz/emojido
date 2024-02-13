@@ -26,6 +26,10 @@ export function getBinaryPrecedence(type: TokenType) {
     }
 }
 
+export function error(error: string, line: number) {
+    throw new Error(`[Parse 💥]: ${error} on line ${line}`);
+}
+
 /**Check if string is alphanumeric
  * @param {string} str the char
  * @returns {boolean} true if provided string is alphanumeric
@@ -68,10 +72,6 @@ export class Tokenizer {
      * */
     private consume(): string {
         return this.source[this.index++];
-    }
-
-    private error(error: string, line: number) {
-        throw new Error(`[Parse Error]: ${error} on line ${line}`);
     }
 
     /** Turn the source into meaningful tokens
@@ -142,6 +142,36 @@ export class Tokenizer {
                 } else if (buffer === "print") {
                     tokens.push({
                         type: TokenType.print,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "minus") {
+                    tokens.push({
+                        type: TokenType.minus,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "int") {
+                    tokens.push({
+                        type: TokenType.typeInt,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "float") {
+                    tokens.push({
+                        type: TokenType.typeFloat,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "bool") {
+                    tokens.push({
+                        type: TokenType.typeBool,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "function") {
+                    tokens.push({
+                        type: TokenType.function,
                         line: this.lineCount,
                     });
                     buffer = "";
@@ -324,7 +354,7 @@ export class Tokenizer {
             else if ([" ", "\f", "\r", "\t", "\v"].includes(this.peek())) {
                 this.consume();
             } else {
-                this.error("Invalid token", this.lineCount);
+                error("Invalid token", this.lineCount);
             }
         }
         this.index = 0;

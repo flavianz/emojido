@@ -32,6 +32,17 @@ export enum TokenType {
     greater = "greater",
     greaterEquals = "greaterEquals",
     float = "float",
+    typeInt = "typeInt",
+    typeFloat = "typeFloat",
+    typeBool = "typeBool",
+    function = "function",
+}
+
+export enum LiteralType {
+    integerLiteral = "integerLiteral",
+    floatLiteral = "floatLiteral",
+    stringLiteral = "stringLiteral",
+    booleanLiteral = "booleanLiteral",
 }
 
 export interface Token {
@@ -39,203 +50,8 @@ export interface Token {
     value?: string;
     line: number;
 }
-export interface GenToken {
-    type: "int" | "float" | "string" | "bool";
-    line: number;
-}
-
-export namespace Nodes {
-    export interface Program {
-        statements: Statement[];
-    }
-
-    export interface Statement {
-        variant:
-            | StatementExit
-            | StatementPrint
-            | StatementLet
-            | StatementIf
-            | Scope
-            | StatementAssign;
-        type: "exit" | "let" | "if" | "scope" | "assign" | "print";
-    }
-
-    export interface StatementExit {
-        expr: Expr;
-    }
-    export interface StatementPrint {
-        expr: Expr;
-    }
-
-    export interface StatementLet {
-        ident: Token;
-        expr: Expr;
-    }
-
-    export interface StatementAssign {
-        ident: Token;
-        expr: Expr;
-    }
-
-    export interface Expr {
-        variant: Term | BinaryExpr;
-        type: "term" | "binExpr";
-    }
-
-    export interface TermIntLit {
-        intLit: Token;
-    }
-    export interface TermFloat {
-        float: Token;
-    }
-
-    export interface TermBool {
-        bool: Token;
-    }
-
-    export interface TermString {
-        string: Token;
-    }
-
-    export interface TermIdent {
-        ident: Token;
-    }
-
-    export interface TermParens {
-        expr: Expr;
-    }
-
-    export interface BinaryExprAdd {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BinaryExprSub {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BinaryExprMul {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BinaryExprDiv {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BinaryExprPow {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
-    export interface BoolBinaryExprComp {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BoolBinaryExprNotComp {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BoolBinaryExprGreaterThan {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BoolBinaryExprGreaterEquals {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BoolBinaryExprSmallerThan {
-        lhs: Expr;
-        rhs: Expr;
-    }
-    export interface BoolBinaryExprSmallerEquals {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
-    export interface BinaryExpr {
-        variant:
-            | BinaryExprAdd
-            | BinaryExprSub
-            | BinaryExprMul
-            | BinaryExprDiv
-            | BinaryExprPow
-            | BoolBinaryExprAnd
-            | BoolBinaryExprOr
-            | BoolBinaryExprXor
-            | BoolBinaryExprComp
-            | BoolBinaryExprNotComp
-            | BoolBinaryExprSmallerThan
-            | BoolBinaryExprSmallerEquals
-            | BoolBinaryExprGreaterEquals
-            | BoolBinaryExprGreaterThan;
-        type:
-            | "add"
-            | "sub"
-            | "mul"
-            | "div"
-            | "pow"
-            | "comp"
-            | "notComp"
-            | "and"
-            | "or"
-            | "xor"
-            | "grater"
-            | "greaterEquals"
-            | "smaller"
-            | "smallerEquals";
-    }
-
-    export interface BoolBinaryExprAnd {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
-    export interface BoolBinaryExprOr {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
-    export interface BoolBinaryExprXor {
-        lhs: Expr;
-        rhs: Expr;
-    }
-
-    export interface Term {
-        variant:
-            | TermIntLit
-            | TermIdent
-            | TermParens
-            | TermBool
-            | TermString
-            | TermFloat;
-        type: "intLit" | "ident" | "parens" | "boolLit" | "string" | "float";
-    }
-    export interface Scope {
-        statements: Statement[];
-    }
-
-    export interface IfPredicate {
-        variant: ElseIf | Else;
-        type: "elseIf" | "else";
-    }
-
-    export interface ElseIf {
-        expr: Expr;
-        scope: Scope;
-        predicate?: IfPredicate;
-    }
-
-    export interface Else {
-        scope: Scope;
-    }
-
-    export interface StatementIf {
-        expr: Expr;
-        scope: Scope;
-        predicate?: IfPredicate;
-    }
-}
 
 export interface Var {
     stackLocation: number;
-    type: "int" | "bool" | "string" | "float";
+    type: LiteralType;
 }

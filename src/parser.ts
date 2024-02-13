@@ -1,9 +1,92 @@
-import { Nodes, Token, TokenType } from "./types";
-import { getBinaryPrecedence } from "./tokenization";
+import { LiteralType, Token, TokenType } from "./types";
+import { error, getBinaryPrecedence } from "./tokenization";
+import {
+    Term,
+    TermBoolean,
+    TermFloat,
+    TermIdentifier,
+    TermInteger,
+    TermParens,
+    TermString,
+} from "./classes/Terms";
+import { Expression } from "./classes/Expressions";
+import {
+    ElseIfPredicate,
+    ElsePredicate,
+    IfPredicate,
+} from "./classes/IfPredicates";
+import { Scope } from "./classes/Scope";
+import {
+    Statement,
+    StatementAssign,
+    StatementExit,
+    StatementIf,
+    StatementLet,
+    StatementPrint,
+} from "./classes/Statements";
+import {
+    BinaryExpression,
+    BinaryExpressionAdd,
+    BinaryExpressionDiv,
+    BinaryExpressionMul,
+    BinaryExpressionPow,
+    BinaryExpressionSub,
+    BooleanBinaryExpressionAnd,
+    BooleanBinaryExpressionCompare,
+    BooleanBinaryExpressionGreaterEquals,
+    BooleanBinaryExpressionGreaterThan,
+    BooleanBinaryExpressionLessEquals,
+    BooleanBinaryExpressionLessThan,
+    BooleanBinaryExpressionNotCompare,
+    BooleanBinaryExpressionOr,
+    BooleanBinaryExpressionXor,
+} from "./classes/BinaryExpressions";
+import { Program } from "./classes/Program";
+
+const literalTypeToEmoji = {
+    integerLiteral: "🔢",
+    floatLiteral: "🧮",
+    stringLiteral: "🔠",
+    booleanLiteral: "⚜️",
+};
+
+export function getEmojiFromLiteralType(literalType: LiteralType) {
+    return literalTypeToEmoji[literalType];
+}
+
+export function checkLiteralType(
+    provided: LiteralType,
+    required: LiteralType[],
+    line: number,
+) {
+    if (!required.includes(provided)) {
+        let expected = "";
+        required.forEach((literalType, index) => {
+            expected += ` '${getEmojiFromLiteralType(literalType)}' ${index === required.length - 1 ? "" : " or"}`;
+        });
+        error(
+            `Expected type${expected}, but got type ${getEmojiFromLiteralType(provided)}`,
+            line,
+        );
+    }
+}
 
 export class Parser {
     private index: number = 0;
     private readonly tokens: Token[];
+    private vars = new Map<string, LiteralType>();
+
+    private removeVars(count: number) {
+        let keys = Array.from(this.vars.keys());
+        for (let i = 0; i < count; i++) {
+            keys.pop();
+        }
+        this.vars = new Map<string, LiteralType>(
+            [...this.vars.entries()].filter(([key, _value]) =>
+                keys.includes(key),
+            ),
+        );
+    }
 
     constructor(tokens: Token[]) {
         this.tokens = tokens;
@@ -47,16 +130,23 @@ export class Parser {
     }
 
     /** Parse the term coming up in tokens
-     * @returns {Nodes.Term | null} the parsed term
+     * @returns {Term | null} the parsed term
      * */
-    private parseTerm(): Nodes.Term | null {
+    private parseTerm(): Term | null {
         const token = this.consume();
         if (token?.type === TokenType.int_lit) {
-            return { variant: { intLit: token }, type: "intLit" };
+            return new TermInteger(token.line, token.value);
         } else if (token?.type === TokenType.float) {
-            return { variant: { float: token }, type: "float" };
+            return new TermFloat(token.line, token.value);
         } else if (token?.type === TokenType.ident) {
-            return { variant: { ident: token }, type: "ident" };
+            if (!this.vars.has(token.value)) {
+                error(`Undeclared identifier '${token.value}'`, token.line);
+            }
+            return new TermIdentifier(
+                token.line,
+                token.value,
+                this.vars.get(token.value),
+            );
         } else if (token?.type === TokenType.quotes) {
             const value = this.tryConsume(TokenType.string, {
                 error: "Expected string",
@@ -66,9 +156,9 @@ export class Parser {
                 error: "Expected '🔠'",
                 line: token.line,
             });
-            return { variant: { string: value }, type: "string" };
+            return new TermString(token.line, value.value);
         } else if (token?.type === TokenType.boolean_lit) {
-            return { variant: { bool: token }, type: "boolLit" };
+            return new TermBoolean(token.line, token.value);
         } else if (token?.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
@@ -78,7 +168,7 @@ export class Parser {
                 error: "Expected '🧱'",
                 line: token.line,
             });
-            return { variant: { expr: expr }, type: "parens" };
+            return new TermParens(expr, token.line);
         } else {
             return null;
         }
@@ -86,7 +176,7 @@ export class Parser {
 
     /**Parse the else if or else statement
      * */
-    private parseIfPredicate(): Nodes.IfPredicate {
+    private parseIfPredicate(): IfPredicate {
         const predicate = this.consume();
         if (predicate?.type === TokenType.elseif) {
             //get the expression
@@ -107,54 +197,55 @@ export class Parser {
             //get the optional next predicate
             const ifPredicate = this.parseIfPredicate();
 
-            return {
-                variant: { expr: expr, scope: scope, predicate: ifPredicate },
-                type: "elseIf",
-            };
+            return new ElseIfPredicate(
+                expr,
+                scope,
+                predicate.line,
+                ifPredicate,
+            );
         } else if (predicate?.type === TokenType.else) {
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
                 this.error("Invalid scope", predicate.line);
             }
-            return { variant: { scope: scope }, type: "else" };
+            return new ElsePredicate(scope, predicate.line);
         }
     }
 
     /** Parse the next token(s) to a statement
-     * @returns {Nodes.Statement | null} the create statement
+     * @returns {Statement | null} the create statement
      * */
-    private parseStatement(): Nodes.Statement | null {
+    private parseStatement(): Statement | null {
         if (this.peek()?.type === TokenType.exit) {
             const line = this.consume().line;
-            let statementExit: Nodes.StatementExit;
+            let statementExit: StatementExit;
 
             //get expr inside exit
             const expr = this.parseExpr();
             if (expr) {
-                statementExit = { expr: expr };
+                statementExit = new StatementExit(expr, line);
             } else {
                 this.error("Invalid expression", line);
             }
             //missing semi
             this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
-
-            return { variant: statementExit, type: "exit" };
+            return statementExit;
         } else if (this.peek()?.type === TokenType.print) {
             const line = this.consume().line;
 
-            let statementPrint: Nodes.StatementPrint;
+            let statementPrint: StatementPrint;
 
             const expr = this.parseExpr();
             if (expr) {
-                statementPrint = { expr: expr };
+                statementPrint = new StatementPrint(expr, line);
             } else {
                 this.error("Invalid expression", line);
             }
 
             this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
 
-            return { variant: statementPrint, type: "print" };
+            return statementPrint;
         }
         //case let statement
         else if (this.peek()?.type === TokenType.let) {
@@ -162,14 +253,14 @@ export class Parser {
             const line = this.consume().line;
 
             const ident = this.consume();
-            let statementLet: Nodes.StatementLet;
+            let statementLet: StatementLet;
             //equals
             this.consume();
 
             //parse expression
             const expr = this.parseExpr();
             if (expr) {
-                statementLet = { ident: ident, expr: expr };
+                statementLet = new StatementLet(expr, ident, line);
             } else {
                 this.error("Invalid expression", line);
             }
@@ -180,7 +271,11 @@ export class Parser {
             } else {
                 this.error("Expected '🚀'", line);
             }
-            return { variant: statementLet, type: "let" };
+            if (this.vars.has(ident.value)) {
+                error(`Identifier ${ident.value} already in use`, line);
+            }
+            this.vars.set(ident.value, expr.literalType);
+            return statementLet;
         } else if (
             this.peek()?.type === TokenType.ident &&
             this.peek(1)?.type === TokenType.equals
@@ -197,7 +292,15 @@ export class Parser {
                 error: "Expected '🚀'",
                 line: ident.line,
             });
-            return { type: "assign", variant: { expr: expr, ident: ident } };
+            if (!this.vars.has(ident.value)) {
+                error(`Variable '${ident.value}' does not exist`, ident.line);
+            }
+            checkLiteralType(
+                expr.literalType,
+                [this.vars.get(ident.value)],
+                ident.line,
+            );
+            return new StatementAssign(expr, ident, ident.line);
         } else if (this.peek()?.type === TokenType.if) {
             const line = this.consume().line;
             //get expr
@@ -214,15 +317,12 @@ export class Parser {
             if (!scope) {
                 this.error("Invalid scope", line);
             }
-            return {
-                type: "if",
-                variant: {
-                    expr: exprIf,
-                    scope: scope,
-                    //can be undefined
-                    predicate: this.parseIfPredicate(),
-                },
-            };
+            return new StatementIf(
+                exprIf,
+                scope,
+                line,
+                this.parseIfPredicate(),
+            );
         } else {
             return null;
         }
@@ -230,15 +330,13 @@ export class Parser {
 
     /** Parse the next token(s) to an expr
      * @param {number} minPrecedence the minimal precedence of this expression
-     * @returns {Nodes.Expr | null} the created expr
+     * @returns {Expression | null} the created expr
      * */
-    private parseExpr(minPrecedence: number = 0): Nodes.Expr | null {
-        const termLhs = this.parseTerm();
-        if (!termLhs) {
+    private parseExpr(minPrecedence: number = 0): Expression | null {
+        let exprLhs: Expression = this.parseTerm();
+        if (!exprLhs) {
             return null;
         }
-
-        let exprLhs: Nodes.Expr = { variant: termLhs, type: "term" };
 
         while (true) {
             const currentToken = this.peek();
@@ -253,7 +351,6 @@ export class Parser {
             } else {
                 break;
             }
-
             //get operator and second expr
             const operator: Token = this.consume();
             const nextMinPrecedence = precedence + 1;
@@ -262,111 +359,110 @@ export class Parser {
                 this.error("Invalid expression", operator.line);
             }
 
-            let expr: Nodes.BinaryExpr;
+            let expr: BinaryExpression;
             if (operator.type === TokenType.plus) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "add",
-                };
+                expr = new BinaryExpressionAdd(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.minus) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "sub",
-                };
+                expr = new BinaryExpressionSub(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.star) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "mul",
-                };
+                expr = new BinaryExpressionMul(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.slash) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "div",
-                };
+                expr = new BinaryExpressionDiv(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.pow) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "pow",
-                };
+                expr = new BinaryExpressionPow(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.double_equals) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "comp",
-                };
+                expr = new BooleanBinaryExpressionCompare(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.not_equals) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "notComp",
-                };
+                expr = new BooleanBinaryExpressionNotCompare(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.or) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "or",
-                };
+                expr = new BooleanBinaryExpressionOr(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.and) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "and",
-                };
+                expr = new BooleanBinaryExpressionAnd(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.xor) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "xor",
-                };
+                expr = new BooleanBinaryExpressionXor(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.smaller) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "smaller",
-                };
+                expr = new BooleanBinaryExpressionLessThan(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.smallerEquals) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "smallerEquals",
-                };
+                expr = new BooleanBinaryExpressionLessEquals(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.greater) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "grater",
-                };
+                expr = new BooleanBinaryExpressionGreaterThan(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else if (operator.type === TokenType.greaterEquals) {
-                expr = {
-                    variant: { lhs: exprLhs, rhs: exprRhs },
-                    type: "greaterEquals",
-                };
+                expr = new BooleanBinaryExpressionGreaterEquals(
+                    exprLhs,
+                    exprRhs,
+                    operator.line,
+                );
             } else {
                 console.assert(false);
             }
-            exprLhs = { type: "binExpr", variant: expr };
+            exprLhs = expr;
         }
         return exprLhs;
     }
 
     /**parse the coming scope in from the tokens
-     * @returns {Nodes.Scope} the created scope
+     * @returns {Scope} the created scope
      * */
-    parseScope(): Nodes.Scope {
-        this.tryConsume(TokenType.open_curly, {
+    parseScope(): Scope {
+        const line = this.tryConsume(TokenType.open_curly, {
             error: "Expected '⚽'",
             line: this.peek()?.line ?? -1,
-        });
-        let scope: Nodes.Scope = { statements: [] };
+        }).line;
+        let scope: Scope = new Scope([], line);
         let statement = this.parseStatement();
+        let count = 0;
         while (statement) {
             scope.statements.push(statement);
+            if (statement instanceof StatementLet) {
+                count++;
+            }
             statement = this.parseStatement();
         }
         this.tryConsume(TokenType.close_curly, {
             error: "Expected '🥅'",
             line: this.peek()?.line ?? -1,
         });
+        this.removeVars(count);
         return scope;
     }
 
     /**Parse the tokens to an understandable parse tree
-     * @returns {Nodes.Program | null} the root node of the parse tree
+     * @returns {Program | null} the root node of the parse tree
      * */
-    parseProgram(): Nodes.Program | null {
-        let program: Nodes.Program = { statements: [] };
+    parseProgram(): Program | null {
+        let program: Program = new Program([]);
         while (this.peek()) {
             const statement = this.parseStatement();
             if (statement) {

@@ -8,7 +8,7 @@ export function demoji(source: string) {
         .replaceAll("🪢", "=")
         .replaceAll("🚧", "(")
         .replaceAll("🧱", ")")
-        .replaceAll("➖", "-")
+        .replaceAll("➖", " minus ")
         .replaceAll("✖️", "*")
         .replaceAll("➕", "+")
         .replaceAll("➗", "/")
@@ -31,5 +31,9 @@ export function demoji(source: string) {
         .replaceAll("🖨️", "print ")
         .replaceAll("🔠", '"')
         .replaceAll("↘️", "<")
-        .replaceAll("↗️", ">");
+        .replaceAll("↗️", ">")
+        .replaceAll("🔢", " int ")
+        .replaceAll("🧮", " float ")
+        .replaceAll("🛒", " function ")
+        .replaceAll("⚜️", " bool ");
 }
