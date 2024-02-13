@@ -36,6 +36,9 @@ export enum TokenType {
     typeFloat = "typeFloat",
     typeBool = "typeBool",
     function = "function",
+    return = "return",
+    comma = "comma",
+    callFunction = "callFunction",
 }
 
 export enum LiteralType {

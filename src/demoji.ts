@@ -35,5 +35,7 @@ export function demoji(source: string) {
         .replaceAll("🔢", " int ")
         .replaceAll("🧮", " float ")
         .replaceAll("🛒", " function ")
-        .replaceAll("⚜️", " bool ");
+        .replaceAll("⚜️", " bool ")
+        .replaceAll("🌶️", ",")
+        .replaceAll("🔫", " call ");
 }

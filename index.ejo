@@ -1,15 +1,6 @@
-let x = 2;
-if x > 1 if {
-    if x == 2 if {
-        print "sm2";
-    } else
-    {
-        print "greater than 0";
-    }
-    exit 2;
-} elseif x <= 1 elseif {
-    exit 24;
-}
-else {
-    exit 69;
-}
+🛒🔠foo🛒🔠arg1🔢arg2 ⚽
+    🖨️arg2🚀
+    🚪arg1🚀
+🥅
+
+foo🔫1🌶️🔠bye bye🔠🔫

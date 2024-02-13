@@ -175,6 +175,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "call") {
+                    tokens.push({
+                        type: TokenType.callFunction,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({
@@ -346,6 +352,9 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                 }
+            } else if (this.peek() === ",") {
+                this.consume();
+                tokens.push({ type: TokenType.comma, line: this.lineCount });
             } else if (this.peek() === "\n") {
                 this.consume();
                 this.lineCount++;

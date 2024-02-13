@@ -42,6 +42,11 @@ import {
     BooleanBinaryExpressionXor,
 } from "./classes/BinaryExpressions";
 import { Program } from "./classes/Program";
+import {
+    FunctionArgument,
+    FunctionCall,
+    StatementFunctionDefinition,
+} from "./classes/Functions";
 
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
@@ -52,6 +57,21 @@ const literalTypeToEmoji = {
 
 export function getEmojiFromLiteralType(literalType: LiteralType) {
     return literalTypeToEmoji[literalType];
+}
+
+export function getLiteralTypeFromTokenType(tokenType: TokenType) {
+    switch (tokenType) {
+        case TokenType.typeBool:
+            return LiteralType.booleanLiteral;
+        case TokenType.typeInt:
+            return LiteralType.integerLiteral;
+        case TokenType.quotes:
+            return LiteralType.stringLiteral;
+        case TokenType.typeFloat:
+            return LiteralType.floatLiteral;
+        default:
+            return null;
+    }
 }
 
 export function checkLiteralType(
@@ -141,6 +161,22 @@ export class Parser {
         } else if (token?.type === TokenType.ident) {
             if (!this.vars.has(token.value)) {
                 error(`Undeclared identifier '${token.value}'`, token.line);
+            }
+            if (this.peek()?.type === TokenType.callFunction) {
+                let arguments_: Expression[] = [];
+                while (this.peek()?.type !== TokenType.callFunction) {
+                    arguments_.push(this.parseExpr());
+                    this.tryConsume(TokenType.comma, {
+                        error: "Expected '🌶️'",
+                        line: this.peek(-1)?.line,
+                    });
+                }
+                return new FunctionCall(
+                    token.value,
+                    this.vars.get(token.value),
+                    arguments_,
+                    this.peek(-1).line,
+                );
             }
             return new TermIdentifier(
                 token.line,
@@ -322,6 +358,45 @@ export class Parser {
                 scope,
                 line,
                 this.parseIfPredicate(),
+            );
+        } else if (this.peek()?.type === TokenType.function) {
+            const line = this.consume().line;
+            const type = getLiteralTypeFromTokenType(this.consume()?.type);
+            if (!type) {
+                error("Expected type declaration", line);
+            }
+            const identifier = this.tryConsume(TokenType.ident, {
+                error: "Expected identifier",
+                line: line,
+            }).value;
+            this.tryConsume(TokenType.function, {
+                error: "Expected '🛒'",
+                line: line,
+            });
+            this.vars.set(identifier, type);
+            let arguments_: FunctionArgument[] = [];
+            while (this.peek()?.type !== TokenType.open_curly) {
+                const argType = getLiteralTypeFromTokenType(
+                    this.consume()?.type,
+                );
+                if (!argType) {
+                    error("Expected type declaration", line);
+                }
+                const argIdent = this.tryConsume(TokenType.ident, {
+                    error: "Expected identifier",
+                    line: line,
+                }).value;
+                arguments_.push(new FunctionArgument(argType, argIdent));
+                this.vars.set(argIdent, argType);
+            }
+            const scope = this.parseScope();
+            this.removeVars(arguments_.length);
+            return new StatementFunctionDefinition(
+                type,
+                identifier,
+                arguments_,
+                line,
+                scope,
             );
         } else {
             return null;

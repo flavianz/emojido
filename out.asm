@@ -1,97 +1,87 @@
 section .data
-    ident0 db "sm2", 0ah
-    ident1 db "greater than 0", 0ah
 section .bss
+    _digitSpace resb 100
+    _digitSpacePos resb 8
 
 section .text
     global _start
 _start:
-    mov rax, 2
+    ; start let statement
+    ; binary multiply
+    mov rax, 2 ; generate term integer
     push rax
-    push QWORD [rsp + 0]
-    mov rax, 1
+    ; binary subtract
+    mov rax, 100 ; generate term integer
     push rax
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    setg al
+    ; binary multiply
+    ; binary multiply
+    mov rax, 1 ; generate term integer
     push rax
-    pop rax
-    test rax, rax
-    jz label0
-    push QWORD [rsp + 0]
-    mov rax, 2
+    ; binary multiply
+    mov rax, 3 ; generate term integer
     push rax
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    setz al
-    pop rax
-    pop rax
-    test rax, rax
-    jz label1
-    mov rax, ident0
-    push rax
-    mov rax, 1
-    mov rdi, 1
-    pop rsi
-    xor rcx, rcx
-    mov rdx, rcx
-    syscall
-    add rsp, 0
-    jmp label2
-label1:
-    mov rax, ident1
-    push rax
-    mov rax, 1
-    mov rdi, 1
-    pop rsi
-    xor rcx, rcx
-    mov rdx, rcx
-    syscall
-    add rsp, 0
-label2:
-    mov rax, 2
-    push rax
-    mov rax, 60
-    pop rdi
-    syscall
-    add rsp, 0
-    jmp label3
-label0:
-    push QWORD [rsp + -16]
-    mov rax, 1
+    mov rax, 3 ; generate term integer
     push rax
     pop rbx
     pop rax
-    cmp rax, rbx
-    setle al
+    mul rbx
     push rax
+    pop rbx
     pop rax
-    test rax, rax
-    jz label4
-    mov rax, 24
+    mul rbx
     push rax
-    mov rax, 60
-    pop rdi
-    syscall
-    add rsp, 0
-    jmp label3
-label4:
-    mov rax, 69
+    mov rax, 7 ; generate term integer
     push rax
-    mov rax, 60
-    pop rdi
-    syscall
-    add rsp, 0
-label3:
+    pop rbx
+    pop rax
+    mul rbx
+    push rax
+    pop rbx
+    pop rax
+    sub rax, rbx
+    push rax
+    pop rbx
+    pop rax
+    mul rbx
+    push rax
+    ; start print statement
+    push QWORD [rsp + 0] ; generate term from identifier
+    pop rax
+    call __printInt
     mov rax, 60
     mov rdi, 0
     syscall
-__calc_string_length:
-    cmp byte [rsi + rcx], 0
-    je __calc_string_length_return
+
+    ; routines
+__printInt:
+    mov rcx, _digitSpace
+    mov rbx, 10
+    mov [rcx], rbx
     inc rcx
-    jmp __calc_string_length
-__calc_string_length_return:
+    mov [_digitSpacePos], rcx
+__printIntLoop:
+    mov rdx, 0
+    mov rbx, 10
+    div rbx
+    push rax
+    add rdx, 48
+    mov rcx, [_digitSpacePos]
+    mov [rcx], dl
+    inc rcx
+    mov [_digitSpacePos], rcx
+    pop rax
+    cmp rax, 0
+    jne __printIntLoop
+__printIntLoop2:
+    mov rcx, [_digitSpacePos]
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, rcx
+    mov rdx, 1
+    syscall
+    mov rcx, [_digitSpacePos]
+    dec rcx
+    mov [_digitSpacePos], rcx
+    cmp rcx, _digitSpace
+    jge __printIntLoop2
     ret

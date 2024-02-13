@@ -43,6 +43,7 @@ import {
     StatementPrint,
     StatementScope,
 } from "./classes/Statements";
+import { StatementFunctionDefinition } from "./classes/Functions";
 
 export class Generator {
     private readonly program: Program;
@@ -514,6 +515,7 @@ __calc_string_length_return:
                 this.generateIfPredicate(statement.predicate, endLabel);
                 this.text += `${endLabel}:\n`;
             }
+        } else if (statement instanceof StatementFunctionDefinition) {
         }
     }
 
