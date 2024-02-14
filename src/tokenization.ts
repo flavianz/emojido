@@ -127,14 +127,14 @@ export class Tokenizer {
                     buffer = "";
                 } else if (buffer === "bool") {
                     tokens.push({
-                        type: TokenType.type,
+                        type: TokenType.typeBool,
                         line: this.lineCount,
                         value: "bool",
                     });
                     buffer = "";
                 } else if (buffer === "int") {
                     tokens.push({
-                        type: TokenType.type,
+                        type: TokenType.typeInt,
                         line: this.lineCount,
                         value: "int",
                     });
@@ -178,6 +178,12 @@ export class Tokenizer {
                 } else if (buffer === "call") {
                     tokens.push({
                         type: TokenType.callFunction,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
+                } else if (buffer === "string") {
+                    tokens.push({
+                        type: TokenType.typeString,
                         line: this.lineCount,
                     });
                     buffer = "";
@@ -263,13 +269,17 @@ export class Tokenizer {
                         this.consume();
                     }
                     this.consume();
+                    this.lineCount++;
                 } else if (this.peek() === "$") {
                     this.consume();
                     while (
                         !(this.peek() === "/" && this.peek(1) === "$") &&
                         this.peek()
                     ) {
-                        this.consume();
+                        const char = this.consume();
+                        if (char === "\n") {
+                            this.lineCount++;
+                        }
                     }
                     this.consume();
                     this.consume();

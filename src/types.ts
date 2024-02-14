@@ -1,3 +1,5 @@
+import { FunctionArgument } from "./classes/Functions";
+
 export enum TokenType {
     exit = "exit",
     int_lit = "int_lit",
@@ -39,6 +41,7 @@ export enum TokenType {
     return = "return",
     comma = "comma",
     callFunction = "callFunction",
+    typeString = "typeString",
 }
 
 export enum LiteralType {
@@ -57,4 +60,8 @@ export interface Token {
 export interface Var {
     stackLocation: number;
     type: LiteralType;
+}
+export interface VarFunction {
+    returnType: LiteralType;
+    arguments: FunctionArgument[];
 }

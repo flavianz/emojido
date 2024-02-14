@@ -1,4 +1,4 @@
-import { LiteralType, Token, TokenType } from "./types";
+import { LiteralType, Token, TokenType, VarFunction } from "./types";
 import { error, getBinaryPrecedence } from "./tokenization";
 import {
     Term,
@@ -51,7 +51,7 @@ import {
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
     floatLiteral: "🧮",
-    stringLiteral: "🔠",
+    stringLiteral: "📜",
     booleanLiteral: "⚜️",
 };
 
@@ -65,7 +65,7 @@ export function getLiteralTypeFromTokenType(tokenType: TokenType) {
             return LiteralType.booleanLiteral;
         case TokenType.typeInt:
             return LiteralType.integerLiteral;
-        case TokenType.quotes:
+        case TokenType.typeString:
             return LiteralType.stringLiteral;
         case TokenType.typeFloat:
             return LiteralType.floatLiteral;
@@ -95,6 +95,7 @@ export class Parser {
     private index: number = 0;
     private readonly tokens: Token[];
     private vars = new Map<string, LiteralType>();
+    private functions = new Map<string, VarFunction>();
 
     private removeVars(count: number) {
         let keys = Array.from(this.vars.keys());
@@ -103,6 +104,17 @@ export class Parser {
         }
         this.vars = new Map<string, LiteralType>(
             [...this.vars.entries()].filter(([key, _value]) =>
+                keys.includes(key),
+            ),
+        );
+    }
+    private removeFunctions(count: number) {
+        let keys = Array.from(this.functions.keys());
+        for (let i = 0; i < count; i++) {
+            keys.pop();
+        }
+        this.functions = new Map<string, VarFunction>(
+            [...this.functions.entries()].filter(([key, _value]) =>
                 keys.includes(key),
             ),
         );
@@ -121,25 +133,21 @@ export class Parser {
 
     /** Check the type of the current token and consume if it matches
      * @param {TokenType} type The required type
-     * @param {string} error Error to throw if types don't match.
+     * @param {string} error_ Error to throw if types don't match.
      * If the function should not throw an error, leave the error empty
      * @returns {}
      * */
     private tryConsume(
         type: TokenType,
-        error: { error: string; line: number } = { error: "", line: 0 },
+        error_: { error: string; line: number } = { error: "", line: 0 },
     ): Token | null {
         if (this.peek()?.type === type) {
             return this.consume();
-        } else if (error.line === 0) {
+        } else if (error_.line === 0) {
             return null;
         } else {
-            this.error(error.error, error.line);
+            error(error_.error, error_.line);
         }
-    }
-
-    private error(error: string, line: number) {
-        throw new Error(`[Parse Error]: ${error} on line ${line}`);
     }
 
     /** go to next token
@@ -159,24 +167,57 @@ export class Parser {
         } else if (token?.type === TokenType.float) {
             return new TermFloat(token.line, token.value);
         } else if (token?.type === TokenType.ident) {
-            if (!this.vars.has(token.value)) {
-                error(`Undeclared identifier '${token.value}'`, token.line);
-            }
             if (this.peek()?.type === TokenType.callFunction) {
+                this.consume();
+                if (!this.functions.has(token.value)) {
+                    error("Undeclared function", token.line);
+                }
                 let arguments_: Expression[] = [];
                 while (this.peek()?.type !== TokenType.callFunction) {
                     arguments_.push(this.parseExpr());
-                    this.tryConsume(TokenType.comma, {
-                        error: "Expected '🌶️'",
-                        line: this.peek(-1)?.line,
-                    });
+                    if (
+                        !this.tryConsume(TokenType.comma) &&
+                        this.peek()?.type
+                    ) {
+                        error("Expected '🌶️'", this.peek(-1).line);
+                    }
+                }
+                this.tryConsume(TokenType.callFunction, {
+                    error: "Expected '🔫'",
+                    line: token.line,
+                });
+                const requiredArguments = this.functions.get(
+                    token.value,
+                ).arguments;
+                if (requiredArguments.length !== arguments_.length) {
+                    error(
+                        `Function '${token.value}' expected ${requiredArguments.length} arguments, but got ${arguments_.length}`,
+                        token.line,
+                    );
+                }
+                for (let i = 0; i < requiredArguments.length; i++) {
+                    if (
+                        requiredArguments[i].type !== arguments_[i].literalType
+                    ) {
+                        error(
+                            `Function argument '${
+                                requiredArguments[i].identifier
+                            }' requires type '${getEmojiFromLiteralType(
+                                requiredArguments[i].type,
+                            )}' but got type '${getEmojiFromLiteralType(arguments_[i].literalType)}'`,
+                            token.line,
+                        );
+                    }
                 }
                 return new FunctionCall(
                     token.value,
-                    this.vars.get(token.value),
+                    this.functions.get(token.value).returnType,
                     arguments_,
                     this.peek(-1).line,
                 );
+            }
+            if (!this.vars.has(token.value)) {
+                error(`Undeclared identifier '${token.value}'`, token.line);
             }
             return new TermIdentifier(
                 token.line,
@@ -198,7 +239,7 @@ export class Parser {
         } else if (token?.type === TokenType.open_paren) {
             const expr = this.parseExpr();
             if (!expr) {
-                this.error("Invalid expression", token.line);
+                error("Invalid expression", token.line);
             }
             this.tryConsume(TokenType.close_paren, {
                 error: "Expected '🧱'",
@@ -218,7 +259,7 @@ export class Parser {
             //get the expression
             const expr = this.parseExpr();
             if (!expr) {
-                this.error("Expected expression", predicate.line);
+                error("Expected expression", predicate.line);
             }
             this.tryConsume(TokenType.elseif, {
                 error: "Expected '📐'",
@@ -228,7 +269,7 @@ export class Parser {
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
-                this.error("Invalid scope", predicate.line);
+                error("Invalid scope", predicate.line);
             }
             //get the optional next predicate
             const ifPredicate = this.parseIfPredicate();
@@ -243,7 +284,7 @@ export class Parser {
             //get the scope
             const scope = this.parseScope();
             if (!scope) {
-                this.error("Invalid scope", predicate.line);
+                error("Invalid scope", predicate.line);
             }
             return new ElsePredicate(scope, predicate.line);
         }
@@ -262,7 +303,7 @@ export class Parser {
             if (expr) {
                 statementExit = new StatementExit(expr, line);
             } else {
-                this.error("Invalid expression", line);
+                error("Invalid expression", line);
             }
             //missing semi
             this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
@@ -276,7 +317,7 @@ export class Parser {
             if (expr) {
                 statementPrint = new StatementPrint(expr, line);
             } else {
-                this.error("Invalid expression", line);
+                error("Invalid expression", line);
             }
 
             this.tryConsume(TokenType.semi, { error: "Missing '🚀'", line });
@@ -298,14 +339,14 @@ export class Parser {
             if (expr) {
                 statementLet = new StatementLet(expr, ident, line);
             } else {
-                this.error("Invalid expression", line);
+                error("Invalid expression", line);
             }
 
             //missing semi
             if (this.peek()?.type === TokenType.semi) {
                 this.consume();
             } else {
-                this.error("Expected '🚀'", line);
+                error("Expected '🚀'", line);
             }
             if (this.vars.has(ident.value)) {
                 error(`Identifier ${ident.value} already in use`, line);
@@ -322,7 +363,7 @@ export class Parser {
 
             const expr = this.parseExpr();
             if (!expr) {
-                this.error("Expected expression", ident.line);
+                error("Expected expression", ident.line);
             }
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
@@ -337,12 +378,17 @@ export class Parser {
                 ident.line,
             );
             return new StatementAssign(expr, ident, ident.line);
+        }else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.callFunction
+        ) {
+
         } else if (this.peek()?.type === TokenType.if) {
             const line = this.consume().line;
             //get expr
             const exprIf = this.parseExpr();
             if (!exprIf) {
-                this.error("Invalid expression", line);
+                error("Invalid expression", line);
             }
             this.tryConsume(TokenType.if, {
                 error: "Expected '✂️'",
@@ -351,7 +397,7 @@ export class Parser {
             //get scope
             const scope = this.parseScope();
             if (!scope) {
-                this.error("Invalid scope", line);
+                error("Invalid scope", line);
             }
             return new StatementIf(
                 exprIf,
@@ -373,14 +419,13 @@ export class Parser {
                 error: "Expected '🛒'",
                 line: line,
             });
-            this.vars.set(identifier, type);
             let arguments_: FunctionArgument[] = [];
             while (this.peek()?.type !== TokenType.open_curly) {
                 const argType = getLiteralTypeFromTokenType(
                     this.consume()?.type,
                 );
                 if (!argType) {
-                    error("Expected type declaration", line);
+                    error("Expected type declaration for argument", line);
                 }
                 const argIdent = this.tryConsume(TokenType.ident, {
                     error: "Expected identifier",
@@ -389,6 +434,10 @@ export class Parser {
                 arguments_.push(new FunctionArgument(argType, argIdent));
                 this.vars.set(argIdent, argType);
             }
+            this.functions.set(identifier, {
+                returnType: type,
+                arguments: arguments_,
+            });
             const scope = this.parseScope();
             this.removeVars(arguments_.length);
             return new StatementFunctionDefinition(
@@ -431,7 +480,7 @@ export class Parser {
             const nextMinPrecedence = precedence + 1;
             const exprRhs = this.parseExpr(nextMinPrecedence);
             if (!exprRhs) {
-                this.error("Invalid expression", operator.line);
+                error("Invalid expression", operator.line);
             }
 
             let expr: BinaryExpression;
@@ -517,11 +566,14 @@ export class Parser {
         }).line;
         let scope: Scope = new Scope([], line);
         let statement = this.parseStatement();
-        let count = 0;
+        let varCount = 0;
+        let functionCount = 0;
         while (statement) {
             scope.statements.push(statement);
             if (statement instanceof StatementLet) {
-                count++;
+                varCount++;
+            } else if (statement instanceof StatementFunctionDefinition) {
+                functionCount++;
             }
             statement = this.parseStatement();
         }
@@ -529,7 +581,8 @@ export class Parser {
             error: "Expected '🥅'",
             line: this.peek()?.line ?? -1,
         });
-        this.removeVars(count);
+        this.removeVars(varCount);
+        this.removeFunctions(functionCount);
         return scope;
     }
 

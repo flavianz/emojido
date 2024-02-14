@@ -516,6 +516,8 @@ __calc_string_length_return:
                 this.text += `${endLabel}:\n`;
             }
         } else if (statement instanceof StatementFunctionDefinition) {
+            this.text += `    ; start function definition\n_${statement.identifier}`;
+            this.generateScope(statement.scope);
         }
     }
 
