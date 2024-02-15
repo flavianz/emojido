@@ -23,6 +23,7 @@ import {
     StatementIf,
     StatementLet,
     StatementPrint,
+    StatementTerm,
 } from "./classes/Statements";
 import {
     BinaryExpression,
@@ -161,12 +162,15 @@ export class Parser {
      * @returns {Term | null} the parsed term
      * */
     private parseTerm(): Term | null {
-        const token = this.consume();
+        const token = this.peek();
         if (token?.type === TokenType.int_lit) {
+            this.consume();
             return new TermInteger(token.line, token.value);
         } else if (token?.type === TokenType.float) {
+            this.consume();
             return new TermFloat(token.line, token.value);
         } else if (token?.type === TokenType.ident) {
+            this.consume();
             if (this.peek()?.type === TokenType.callFunction) {
                 this.consume();
                 if (!this.functions.has(token.value)) {
@@ -177,7 +181,7 @@ export class Parser {
                     arguments_.push(this.parseExpr());
                     if (
                         !this.tryConsume(TokenType.comma) &&
-                        this.peek()?.type
+                        this.peek()?.type !== TokenType.callFunction
                     ) {
                         error("Expected '🌶️'", this.peek(-1).line);
                     }
@@ -225,6 +229,7 @@ export class Parser {
                 this.vars.get(token.value),
             );
         } else if (token?.type === TokenType.quotes) {
+            this.consume();
             const value = this.tryConsume(TokenType.string, {
                 error: "Expected string",
                 line: token.line,
@@ -235,8 +240,10 @@ export class Parser {
             });
             return new TermString(token.line, value.value);
         } else if (token?.type === TokenType.boolean_lit) {
+            this.consume();
             return new TermBoolean(token.line, token.value);
         } else if (token?.type === TokenType.open_paren) {
+            this.consume();
             const expr = this.parseExpr();
             if (!expr) {
                 error("Invalid expression", token.line);
@@ -378,11 +385,6 @@ export class Parser {
                 ident.line,
             );
             return new StatementAssign(expr, ident, ident.line);
-        }else if (
-            this.peek()?.type === TokenType.ident &&
-            this.peek(1)?.type === TokenType.callFunction
-        ) {
-
         } else if (this.peek()?.type === TokenType.if) {
             const line = this.consume().line;
             //get expr
@@ -448,7 +450,15 @@ export class Parser {
                 scope,
             );
         } else {
-            return null;
+            //check for StatementExpression
+            try {
+                const term = this.parseTerm();
+                //error caught locally
+                this.tryConsume(TokenType.semi, { error: "", line: 0 });
+                return new StatementTerm(term.line, term);
+            } catch (e) {
+                return null;
+            }
         }
     }
 
@@ -575,7 +585,9 @@ export class Parser {
             } else if (statement instanceof StatementFunctionDefinition) {
                 functionCount++;
             }
+            console.log(this.peek());
             statement = this.parseStatement();
+            console.log(this.peek());
         }
         this.tryConsume(TokenType.close_curly, {
             error: "Expected '🥅'",

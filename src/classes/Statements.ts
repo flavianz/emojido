@@ -3,6 +3,7 @@ import { LiteralType, Token } from "../types";
 import { checkLiteralType } from "../parser";
 import { Scope } from "./Scope";
 import { IfPredicate } from "./IfPredicates";
+import { Term } from "./Terms";
 
 export class Statement {
     readonly line: number;
@@ -90,5 +91,14 @@ export class StatementIf extends Statement {
             [LiteralType.booleanLiteral],
             line,
         );
+    }
+}
+
+export class StatementTerm extends Statement {
+    readonly term: Term;
+
+    constructor(line: number, term: Term) {
+        super(line);
+        this.term = term;
     }
 }
