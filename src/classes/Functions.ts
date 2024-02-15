@@ -25,7 +25,7 @@ export class StatementFunctionDefinition extends Statement {
     }
 }
 
-export class FunctionCall extends TermIdentifier {
+export class TermFunctionCall extends TermIdentifier {
     readonly arguments: Expression[];
     constructor(
         identifier: string,

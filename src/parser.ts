@@ -45,7 +45,7 @@ import {
 import { Program } from "./classes/Program";
 import {
     FunctionArgument,
-    FunctionCall,
+    TermFunctionCall,
     StatementFunctionDefinition,
 } from "./classes/Functions";
 
@@ -213,7 +213,7 @@ export class Parser {
                         );
                     }
                 }
-                return new FunctionCall(
+                return new TermFunctionCall(
                     token.value,
                     this.functions.get(token.value).returnType,
                     arguments_,
