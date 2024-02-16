@@ -61,7 +61,6 @@ export class Generator {
     private scopes: number[] = [];
     private labelCount = 0;
     private identCount = 0;
-    private writeToFunctions: boolean = false;
 
     constructor(program: Program) {
         this.program = program;
@@ -122,11 +121,12 @@ __pow_end:
     generateCalcStringLength() {
         if (!this.routines.includes("__calc_string_length:")) {
             this.routines += `__calc_string_length:
-    cmp byte [rsi + rcx], 0
+    cmp byte [rsi + rcx], 0ah
     je __calc_string_length_return
     inc rcx
     jmp __calc_string_length
 __calc_string_length_return:
+    inc rcx
     ret
 `;
         }
@@ -146,11 +146,7 @@ __calc_string_length_return:
     }
 
     private writeText(text: string) {
-        if (this.writeToFunctions) {
-            this.functions += text;
-        } else {
-            this.text += text;
-        }
+        this.text += text;
     }
 
     private beginScope() {
@@ -159,7 +155,9 @@ __calc_string_length_return:
 
     private endScope() {
         const popCount = this.vars.size - this.scopes[this.scopes.length - 1];
-        this.writeText(`    add rsp, ${popCount * 8}\n`);
+        this.writeText(
+            `    add rsp, ${popCount * 8} ; move stack pointer up for each var in scope\n`,
+        );
         this.stackSize -= popCount;
         let keys = Array.from(this.vars.keys());
         for (let i = 0; i < popCount; i++) {
@@ -226,7 +224,7 @@ __calc_string_length_return:
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} db "${term.stringValue}", 0ah\n`;
-            this.writeText(`    mov rax, ${ident} ; generate term string\n`);
+            this.writeText(`    lea rax, ${ident} ; generate term string\n`);
             this.push("rax");
         }
     }
@@ -549,9 +547,9 @@ __calc_string_length_return:
                 this.writeText(`${endLabel}:\n`);
             }
         } else if (statement instanceof StatementFunctionDefinition) {
-            this.writeToFunctions = true;
+            const label = this.createLabel();
             this.writeText(
-                `    ; start function definition\n_${statement.identifier}:\n`,
+                `    ; start function definition\n    jmp ${label}\n_${statement.identifier}:\n`,
             );
             for (let i = 0; i < statement.arguments.length; i++) {
                 //add arguments to the var map from behind because they are already in the stack
@@ -563,12 +561,15 @@ __calc_string_length_return:
                 });
             }
             this.generateScope(statement.scope);
+            // this.writeText(
+            //     `    add rsp, ${arguments.length * 8} ; move stack pointer down for each arg in function\n`,
+            // );
+            // this.stackSize -= arguments.length;
             //remove arguments from the var map
             for (const arg of statement.arguments) {
                 this.vars.delete(arg.identifier);
             }
-            this.writeText("    ret\n    ; end function\n");
-            this.writeToFunctions = false;
+            this.writeText(`    ret\n    ; end function\n${label}:\n`);
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
         }
