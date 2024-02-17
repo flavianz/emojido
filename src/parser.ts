@@ -23,6 +23,7 @@ import {
     StatementIf,
     StatementLet,
     StatementPrint,
+    StatementReturn,
     StatementTerm,
 } from "./classes/Statements";
 import {
@@ -458,6 +459,11 @@ export class Parser {
             if (!expression) {
                 error("Invalid expression for return", line);
             }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementReturn(expression, line);
         } else {
             //check for StatementExpression
             try {

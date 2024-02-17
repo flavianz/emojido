@@ -136,7 +136,6 @@ export class Tokenizer {
                     tokens.push({
                         type: TokenType.typeInt,
                         line: this.lineCount,
-                        value: "int",
                     });
                     buffer = "";
                 } else if (buffer === "print") {

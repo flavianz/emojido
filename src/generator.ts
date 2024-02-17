@@ -41,6 +41,7 @@ import {
     StatementIf,
     StatementLet,
     StatementPrint,
+    StatementReturn,
     StatementScope,
     StatementTerm,
 } from "./classes/Statements";
@@ -207,7 +208,7 @@ __calc_string_length_return:
                     this.generateExpr(arg);
                 }
                 this.writeText(
-                    `    call _${term.identifier} ; call function ${term.identifier}\n`,
+                    `    call _${term.identifier} ; call function ${term.identifier}\n    push rax ; push return value of function to stack\n`,
                 );
             } else {
                 this.push(
@@ -570,6 +571,11 @@ __calc_string_length_return:
             this.writeText(`    ret\n    ; end function\n${label}:\n`);
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
+        } else if (statement instanceof StatementReturn) {
+            this.generateExpr(statement.expression);
+            this.writeText(
+                "    pop rax ; mov return value into rax\n    ret ; return value\n",
+            );
         }
     }
 

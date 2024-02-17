@@ -25,7 +25,6 @@ export enum TokenType {
     and = "and",
     or = "or",
     xor = "xor",
-    type = "type",
     quotes = "quotes",
     string = "string",
     print = "print",
