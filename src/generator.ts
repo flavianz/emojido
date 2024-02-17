@@ -55,7 +55,6 @@ export class Generator {
     private text: string = "";
     private data: string = "";
     private bss: string = "";
-    private functions: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
     private scopes: number[] = [];
@@ -154,13 +153,14 @@ __calc_string_length_return:
     }
 
     private endScope() {
-        const popCount = this.vars.size - this.scopes[this.scopes.length - 1];
+        const varPopCount =
+            this.vars.size - this.scopes[this.scopes.length - 1];
         this.writeText(
-            `    add rsp, ${popCount * 8} ; move stack pointer up for each var in scope\n`,
+            `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,
         );
-        this.stackSize -= popCount;
+        this.stackSize -= varPopCount;
         let keys = Array.from(this.vars.keys());
-        for (let i = 0; i < popCount; i++) {
+        for (let i = 0; i < varPopCount; i++) {
             keys.pop();
         }
         this.vars = new Map(
@@ -224,7 +224,7 @@ __calc_string_length_return:
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} db "${term.stringValue}", 0ah\n`;
-            this.writeText(`    lea rax, ${ident} ; generate term string\n`);
+            this.writeText(`    mov rax, ${ident} ; generate term string\n`);
             this.push("rax");
         }
     }
@@ -547,7 +547,7 @@ __calc_string_length_return:
                 this.writeText(`${endLabel}:\n`);
             }
         } else if (statement instanceof StatementFunctionDefinition) {
-            const label = this.createLabel();
+            const label = this.createLabel(); //end of function label
             this.writeText(
                 `    ; start function definition\n    jmp ${label}\n_${statement.identifier}:\n`,
             );
@@ -556,15 +556,13 @@ __calc_string_length_return:
                 const arg =
                     statement.arguments[statement.arguments.length - 1 - i];
                 this.vars.set(arg.identifier, {
-                    stackLocation: this.stackSize - 2 - i,
+                    stackLocation: this.stackSize - 1 - i,
                     type: arg.type,
                 });
             }
+            this.stackSize++; // "call" instruction pushed return address onto stack
             this.generateScope(statement.scope);
-            // this.writeText(
-            //     `    add rsp, ${arguments.length * 8} ; move stack pointer down for each arg in function\n`,
-            // );
-            // this.stackSize -= arguments.length;
+            this.stackSize--; //"ret" instruction popped return address from stack
             //remove arguments from the var map
             for (const arg of statement.arguments) {
                 this.vars.delete(arg.identifier);
@@ -594,7 +592,6 @@ __calc_string_length_return:
             this.bss +
             "\nsection .text\n    global _start\n_start:\n" +
             this.text +
-            this.functions +
             this.routines
         );
     }

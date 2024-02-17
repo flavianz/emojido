@@ -45,8 +45,8 @@ import {
 import { Program } from "./classes/Program";
 import {
     FunctionArgument,
-    TermFunctionCall,
     StatementFunctionDefinition,
+    TermFunctionCall,
 } from "./classes/Functions";
 
 const literalTypeToEmoji = {
@@ -434,6 +434,9 @@ export class Parser {
                     line: line,
                 }).value;
                 arguments_.push(new FunctionArgument(argType, argIdent));
+                if (this.vars.has(argIdent)) {
+                    error("Identifier already declared", line);
+                }
                 this.vars.set(argIdent, argType);
             }
             this.functions.set(identifier, {
@@ -449,6 +452,12 @@ export class Parser {
                 line,
                 scope,
             );
+        } else if (this.peek()?.type === TokenType.return) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression for return", line);
+            }
         } else {
             //check for StatementExpression
             try {

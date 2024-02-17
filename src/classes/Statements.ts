@@ -102,3 +102,12 @@ export class StatementTerm extends Statement {
         this.term = term;
     }
 }
+
+export class StatementReturn extends Statement {
+    readonly expression: Expression;
+
+    constructor(expression: Expression, line: number) {
+        super(line);
+        this.expression = expression;
+    }
+}
