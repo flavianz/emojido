@@ -381,7 +381,7 @@ __calc_string_length_return:
             this.pop("rbx");
             this.pop("rax");
             this.writeText("    cmp rax, rbx\n    setz al\n");
-            this.pop("rax");
+            this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionNotCompare) {
             this.writeText("    ; binary not compare\n");
             this.generateExpr(binaryExpr.lhsExpression);
@@ -389,7 +389,7 @@ __calc_string_length_return:
             this.pop("rbx");
             this.pop("rax");
             this.writeText("    cmp rax, rbx\n    setnz al\n");
-            this.pop("rax");
+            this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionOr) {
             this.writeText("    ; binary or\n");
             this.generateExpr(binaryExpr.lhsExpression);
