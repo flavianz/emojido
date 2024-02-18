@@ -1,18 +1,19 @@
-# Functions
-- Reset stack pointer before return statement
+# TODOs
+
+### Functions
 - Add default return of null
 
-# Binary Operations
+### Binary Operations
 - +=, -=, /=, *=
 - x++, x--;
 - convert float to int (possibly implemented in the math standard library)
 - convert string to int / float
 
-# Print
+### Print
 - print negative numbers
 - print floats
 
-# Features
+### Features
 - null
 - Arrays
 - Objects
@@ -47,6 +48,19 @@
 - execution arguments
 - user input
 
-# Interpreter
+### Optimisations
+- check for unused things
+- pre-calculate things like 3 * 2
+- delete things like
+  ```nasm
+  push rax
+  pop rax
+  ; or
+  add rax, 0
+  ; or
+  push QWORD [rsp + 0]
+  ```
 
-# Docs
+### Interpreter
+
+### Docs

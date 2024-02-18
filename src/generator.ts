@@ -208,8 +208,9 @@ __calc_string_length_return:
                     this.generateExpr(arg);
                 }
                 this.writeText(
-                    `    call _${term.identifier} ; call function ${term.identifier}\n    push rax ; push return value of function to stack\n`,
+                    `    call _${term.identifier} ; call function ${term.identifier}\n`,
                 );
+                this.push("rax ; push return value of function to stack");
             } else {
                 this.push(
                     `QWORD [rsp + ${(this.stackSize - this.vars.get(term.identifier).stackLocation - 1) * 8}] ; generate term from identifier ${term.identifier}\n`,
@@ -511,7 +512,8 @@ __calc_string_length_return:
                 this.writeText("    mov rdx, rcx\n    syscall\n");
             } else if (literalType === LiteralType.integerLiteral) {
                 this.generatePrintInt();
-                this.writeText("    pop rax\n    call __printInt\n");
+                this.pop("rax");
+                this.writeText("    call __printInt\n");
             }
         } else if (statement instanceof StatementLet) {
             this.writeText("    ; start let statement\n");
@@ -573,9 +575,13 @@ __calc_string_length_return:
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
             this.generateExpr(statement.expression);
+            const varPopCount =
+                this.vars.size - this.scopes[this.scopes.length - 1];
             this.writeText(
-                "    pop rax ; mov return value into rax\n    ret ; return value\n",
+                `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,
             );
+            this.pop("rax ; mov return value into rax");
+            this.writeText("    ret ; return value\n");
         }
     }
 

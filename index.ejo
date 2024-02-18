@@ -1,6 +1,8 @@
-🛒📜foo🛒🔢arg1📜arg2 ⚽
-    🖨️arg2🚀
-    🚪arg1🚀
+🛒🔢square🛒🔢value ⚽
+    let thi = 39;
+    🪃value✖️value🚀
 🥅
 
-foo🔫1🌶️🔠bye bye🔠🔫
+let val = square🔫15🔫;
+
+exit val;
