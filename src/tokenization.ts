@@ -192,6 +192,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "null") {
+                    tokens.push({
+                        type: TokenType.null,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({

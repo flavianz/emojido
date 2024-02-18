@@ -7,6 +7,7 @@ import {
     TermFloat,
     TermIdentifier,
     TermInteger,
+    TermNull,
     TermParens,
     TermString,
 } from "./classes/Terms";
@@ -228,6 +229,8 @@ __calc_string_length_return:
             this.data += `    ${ident} db "${term.stringValue}", 0ah\n`;
             this.writeText(`    mov rax, ${ident} ; generate term string\n`);
             this.push("rax");
+        } else if (term instanceof TermNull) {
+            this.push("0");
         }
     }
 

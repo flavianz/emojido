@@ -6,6 +6,7 @@ import {
     TermFloat,
     TermIdentifier,
     TermInteger,
+    TermNull,
     TermParens,
     TermString,
 } from "./classes/Terms";
@@ -55,6 +56,7 @@ const literalTypeToEmoji = {
     floatLiteral: "🧮",
     stringLiteral: "📜",
     booleanLiteral: "⚜️",
+    nulLiteral: "🫥",
 };
 
 export function getEmojiFromLiteralType(literalType: LiteralType) {
@@ -71,6 +73,8 @@ export function getLiteralTypeFromTokenType(tokenType: TokenType) {
             return LiteralType.stringLiteral;
         case TokenType.typeFloat:
             return LiteralType.floatLiteral;
+        case TokenType.null:
+            return LiteralType.nullLiteral;
         default:
             return null;
     }
@@ -254,6 +258,8 @@ export class Parser {
                 line: token.line,
             });
             return new TermParens(expr, token.line);
+        } else if (token?.type === TokenType.null) {
+            return new TermNull(this.consume().line);
         } else {
             return null;
         }

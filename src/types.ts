@@ -41,6 +41,7 @@ export enum TokenType {
     comma = "comma",
     callFunction = "callFunction",
     typeString = "typeString",
+    null = "null",
 }
 
 export enum LiteralType {
@@ -48,6 +49,7 @@ export enum LiteralType {
     floatLiteral = "floatLiteral",
     stringLiteral = "stringLiteral",
     booleanLiteral = "booleanLiteral",
+    nullLiteral = "nullLiteral",
 }
 
 export interface Token {

@@ -39,5 +39,6 @@ export function demoji(source: string) {
         .replaceAll("📜", " string ")
         .replaceAll("🌶️", ",")
         .replaceAll("🔫", " call ")
-        .replaceAll("🪃", "return ");
+        .replaceAll("🪃", "return ")
+        .replaceAll("🫥", " null ");
 }

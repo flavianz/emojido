@@ -60,3 +60,9 @@ export class TermParens extends Term {
         this.expression = expression;
     }
 }
+
+export class TermNull extends Term {
+    constructor(line: number) {
+        super(LiteralType.nullLiteral, line);
+    }
+}
