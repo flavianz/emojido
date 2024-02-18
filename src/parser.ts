@@ -469,6 +469,22 @@ export class Parser {
                 error: "Expected '🚀'",
                 line: line,
             });
+            if (this.functions.size === 0) {
+                error("Cannot '🪃' outisde a function", line);
+            }
+            //get innermost function
+            const idents = Array.from(this.functions.keys());
+            const function_ = this.functions.get(idents[idents.length - 1]);
+            if (function_.returnType !== expression.literalType) {
+                error(
+                    `Returend type '${getEmojiFromLiteralType(
+                        expression.literalType,
+                    )}' does not match function type '${getEmojiFromLiteralType(
+                        function_.returnType,
+                    )}'`,
+                    line,
+                );
+            }
             return new StatementReturn(expression, line);
         } else {
             //check for StatementExpression
