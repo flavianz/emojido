@@ -194,10 +194,9 @@ __calc_string_length_return:
 
     private generateTerm(term: Term) {
         if (term instanceof TermInteger) {
-            this.writeText(
-                `    mov rax, ${term.integerValue} ; generate term integer ${term.integerValue}\n`,
+            this.push(
+                `${term.integerValue} ; generate term integer ${term.integerValue}`,
             );
-            this.push("rax");
         } else if (term instanceof TermFloat) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} dq ${term.floatValue} ; generate term float ${term.floatValue}\n`; //store value in memory
@@ -580,10 +579,10 @@ __calc_string_length_return:
             this.generateExpr(statement.expression);
             const varPopCount =
                 this.vars.size - this.scopes[this.scopes.length - 1];
+            this.pop("rax ; mov return value into rax");
             this.writeText(
                 `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,
             );
-            this.pop("rax ; mov return value into rax");
             this.writeText("    ret ; return value\n");
         }
     }
