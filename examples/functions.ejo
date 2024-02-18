@@ -1,0 +1,8 @@
+📣declare function "multiply" as return type integer and two arguments both with type integer
+🛒🔢multiply🛒🔢value1🔢value2 ⚽
+    📣return the result of value1 times value2
+    🪃value1✖️value2🚀
+🥅
+
+📣print the result of function multiply with arguments 3 and 4
+🖨️multiply🔫3🌶️4🔫🚀

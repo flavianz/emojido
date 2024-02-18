@@ -59,6 +59,7 @@ export class Generator {
     private bss: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
+    private functions = new Map<string, LiteralType>();
     private scopes: number[] = [];
     private labelCount = 0;
     private identCount = 0;
@@ -496,14 +497,7 @@ __calc_string_length_return:
             this.writeText("    ; start print statement\n");
             this.generateExpr(statement.expression);
             //check type
-            let literalType: LiteralType;
-            if (statement.expression instanceof TermIdentifier) {
-                literalType = this.vars.get(
-                    statement.expression.identifier,
-                ).type;
-            } else {
-                literalType = statement.expression.literalType;
-            }
+            const literalType = statement.expression.literalType;
             if (literalType === LiteralType.stringLiteral) {
                 this.writeText("    mov rax, 1\n    mov rdi, 1\n");
                 this.pop("rsi");
@@ -565,6 +559,7 @@ __calc_string_length_return:
                     type: arg.type,
                 });
             }
+            this.functions.set(statement.identifier, statement.returnType);
             this.stackSize++; // "call" instruction pushed return address onto stack
             this.generateScope(statement.scope);
             this.stackSize--; //"ret" instruction popped return address from stack

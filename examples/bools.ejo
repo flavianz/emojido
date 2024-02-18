@@ -1,0 +1,29 @@
+📣declare variable x to true
+📦x🪢✅🚀
+
+📣comparison
+x🪢1🔗2🚀
+
+📣inverted comparison
+x🪢1❌🔗2🚀
+
+📣or
+x🪢❌🪜✅🚀
+
+📣and
+x🪢❌🪇✅🚀
+
+📣xor
+x🪢❌❌🪜✅🚀
+
+📣less than
+x🪢1↘️2🚀
+
+📣less than or equal to
+x🪢2↘️🔗2🚀
+
+📣greater than
+x🪢1↗️2🚀
+
+📣greater than or equal to
+x🪢2↗️🔗2🚀
