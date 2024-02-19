@@ -272,8 +272,9 @@ export class Parser {
     /**Parse the else if or else statement
      * */
     private parseIfPredicate(): IfPredicate {
-        const predicate = this.consume();
+        const predicate = this.peek();
         if (predicate?.type === TokenType.elseif) {
+            this.consume();
             //get the expression
             const expr = this.parseExpr();
             if (!expr) {
@@ -299,6 +300,7 @@ export class Parser {
                 ifPredicate,
             );
         } else if (predicate?.type === TokenType.else) {
+            this.consume();
             //get the scope
             const scope = this.parseScope();
             if (!scope) {

@@ -155,7 +155,7 @@ __calc_string_length_return:
         this.scopes.push(this.vars.size);
     }
 
-    private endScope() {
+    private endScope(isFunction = false) {
         const varPopCount =
             this.vars.size - this.scopes[this.scopes.length - 1];
         this.writeText(
@@ -171,6 +171,9 @@ __calc_string_length_return:
                 keys.includes(key),
             ),
         );
+        if (!isFunction) {
+            this.scopes.pop();
+        }
     }
 
     private createLabel() {
@@ -181,13 +184,13 @@ __calc_string_length_return:
         return `ident${this.identCount++}`;
     }
 
-    private generateScope(scope: Scope) {
+    private generateScope(scope: Scope, isFunction = false) {
         this.writeText(`    ; start scope on line ${scope.startLine}\n`);
         this.beginScope();
         for (const statement of scope.statements) {
             this.generateStatement(statement);
         }
-        this.endScope();
+        this.endScope(isFunction);
         this.writeText(
             `    ; end scope that started on line ${scope.startLine}\n`,
         );
@@ -214,6 +217,7 @@ __calc_string_length_return:
                 this.writeText(
                     `    add rsp, ${term.arguments.length * 8} ; ; move stack pointer up for each arg in function\n`,
                 );
+                this.scopes.pop();
                 this.stackSize -= term.arguments.length;
                 this.push("rax ; push return value of function to stack");
             } else {
@@ -565,7 +569,7 @@ __calc_string_length_return:
             }
             this.functions.set(statement.identifier, statement);
             this.stackSize++; // "call" instruction pushed return address onto stack
-            this.generateScope(statement.scope);
+            this.generateScope(statement.scope, true);
             const functionDepth = statement.scope.innerScopeDepth;
             let varPopCount =
                 this.vars.size - this.scopes[this.scopes.length - 1];

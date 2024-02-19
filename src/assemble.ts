@@ -57,4 +57,9 @@ export async function execute(source: string) {
         }),
     );
     console.log("Exit Code: " + result.data.execResult.code);
+    return {
+        exitCode: result.data.execResult.code,
+        standardOut: result.data.execResult.stdout,
+        standardErr: result.data.execResult.stderr,
+    };
 }

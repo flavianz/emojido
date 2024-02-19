@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./types.js";
+import { Token, TokenType } from "./types";
 
 export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
