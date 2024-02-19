@@ -52,7 +52,7 @@ export async function execute(source: string) {
     );
     console.log(
         "Standard Error: ",
-        result.data.execResult.stderr.map((text) => {
+        ...result.data.execResult.stderr.map((text) => {
             return text.text;
         }),
     );

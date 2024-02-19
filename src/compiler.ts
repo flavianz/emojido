@@ -12,7 +12,6 @@ export function compile(source: string): string {
     const start = Date.now();
 
     source = demoji(source);
-    console.log(source);
     const tokenizer = new Tokenizer(source);
     const tokens = tokenizer.tokenize();
 
@@ -22,7 +21,9 @@ export function compile(source: string): string {
     const generator = new Generator(program);
     const asm = generator.generateProgram();
 
-    console.log(`compiled in ${Date.now() - start} ms}`);
+    console.log(
+        `Compiled in ${Date.now() - start} ms\nFetching execution results...\n\n`,
+    );
 
     return asm;
 }

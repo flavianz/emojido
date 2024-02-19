@@ -59,7 +59,7 @@ export class Generator {
     private bss: string = "";
     private stackSize: number = 0;
     private vars = new Map<string, Var>();
-    private functions = new Map<string, LiteralType>();
+    private functions = new Map<string, StatementFunctionDefinition>();
     private scopes: number[] = [];
     private labelCount = 0;
     private identCount = 0;
@@ -211,6 +211,10 @@ __calc_string_length_return:
                 this.writeText(
                     `    call _${term.identifier} ; call function ${term.identifier}\n`,
                 );
+                this.writeText(
+                    `    add rsp, ${term.arguments.length * 8} ; ; move stack pointer up for each arg in function\n`,
+                );
+                this.stackSize -= term.arguments.length;
                 this.push("rax ; push return value of function to stack");
             } else {
                 this.push(
@@ -559,9 +563,16 @@ __calc_string_length_return:
                     type: arg.type,
                 });
             }
-            this.functions.set(statement.identifier, statement.returnType);
+            this.functions.set(statement.identifier, statement);
             this.stackSize++; // "call" instruction pushed return address onto stack
             this.generateScope(statement.scope);
+            const functionDepth = statement.scope.innerScopeDepth;
+            let varPopCount =
+                this.vars.size - this.scopes[this.scopes.length - 1];
+            for (let i = this.scopes.length - 1; functionDepth <= i; i--) {
+                varPopCount += this.scopes[i] - this.scopes[i - 1];
+            }
+            this.stackSize -= varPopCount;
             this.stackSize--; //"ret" instruction popped return address from stack
             //remove arguments from the var map
             for (const arg of statement.arguments) {
@@ -572,8 +583,14 @@ __calc_string_length_return:
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
             this.generateExpr(statement.expression);
-            const varPopCount =
+            const idents = Array.from(this.functions.keys());
+            const functionDepth = this.functions.get(idents[idents.length - 1])
+                .scope.innerScopeDepth;
+            let varPopCount =
                 this.vars.size - this.scopes[this.scopes.length - 1];
+            for (let i = this.scopes.length - 1; functionDepth <= i; i--) {
+                varPopCount += this.scopes[i] - this.scopes[i - 1];
+            }
             this.pop("rax ; mov return value into rax");
             this.writeText(
                 `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,

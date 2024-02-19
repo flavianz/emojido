@@ -102,6 +102,7 @@ export class Parser {
     private readonly tokens: Token[];
     private vars = new Map<string, LiteralType>();
     private functions = new Map<string, VarFunction>();
+    private scopes: number = 0;
 
     private removeVars(count: number) {
         let keys = Array.from(this.vars.keys());
@@ -176,7 +177,10 @@ export class Parser {
             return new TermFloat(token.line, token.value);
         } else if (token?.type === TokenType.ident) {
             this.consume();
-            if (this.peek()?.type === TokenType.callFunction) {
+            if (
+                this.peek()?.type === TokenType.callFunction &&
+                !this.vars.has(token.value)
+            ) {
                 this.consume();
                 if (!this.functions.has(token.value)) {
                     error("Undeclared function", token.line);
@@ -362,7 +366,7 @@ export class Parser {
             } else {
                 error("Expected '🚀'", line);
             }
-            if (this.vars.has(ident.value)) {
+            if (this.vars.has(ident.value) || this.functions.has(ident.value)) {
                 error(`Identifier ${ident.value} already in use`, line);
             }
             this.vars.set(ident.value, expr.literalType);
@@ -441,10 +445,13 @@ export class Parser {
                     line: line,
                 }).value;
                 arguments_.push(new FunctionArgument(argType, argIdent));
-                if (this.vars.has(argIdent)) {
-                    error("Identifier already declared", line);
+                if (this.vars.has(argIdent) || this.functions.has(argIdent)) {
+                    error(`Identifier '${argIdent}' already declared`, line);
                 }
                 this.vars.set(argIdent, argType);
+            }
+            if (this.functions.has(identifier) || this.vars.has(identifier)) {
+                error(`Identifier '${identifier}' already in use`, line);
             }
             this.functions.set(identifier, {
                 returnType: type,
@@ -611,10 +618,11 @@ export class Parser {
             error: "Expected '⚽'",
             line: this.peek()?.line ?? -1,
         }).line;
-        let scope: Scope = new Scope([], line);
+        let scope: Scope = new Scope([], line, this.scopes + 1);
         let statement = this.parseStatement();
         let varCount = 0;
         let functionCount = 0;
+        this.scopes++;
         while (statement) {
             scope.statements.push(statement);
             if (statement instanceof StatementLet) {
@@ -622,10 +630,9 @@ export class Parser {
             } else if (statement instanceof StatementFunctionDefinition) {
                 functionCount++;
             }
-            console.log(this.peek());
             statement = this.parseStatement();
-            console.log(this.peek());
         }
+        this.scopes--;
         this.tryConsume(TokenType.close_curly, {
             error: "Expected '🥅'",
             line: this.peek()?.line ?? -1,

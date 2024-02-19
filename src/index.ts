@@ -1,5 +1,6 @@
 import { compile } from "./compiler";
 import fs from "node:fs";
+import { execute } from "./assemble";
 const sourceFile = process.argv[2];
 
 if (!sourceFile) {
@@ -13,3 +14,5 @@ const source = fs.readFileSync(sourceFile);
 const asm = compile(source.toString());
 
 fs.writeFileSync(outFile, asm);
+
+execute(asm);
