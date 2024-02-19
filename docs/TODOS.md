@@ -1,7 +1,7 @@
 # TODOs
 
 ### Functions
-- Add default return of null
+- Check that every path of function returns something
 
 ### Binary Operations
 - +=, -=, /=, *=
