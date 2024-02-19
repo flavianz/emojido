@@ -158,9 +158,11 @@ __calc_string_length_return:
     private endScope(isFunction = false) {
         const varPopCount =
             this.vars.size - this.scopes[this.scopes.length - 1];
-        this.writeText(
-            `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,
-        );
+        if (!isFunction) {
+            this.writeText(
+                `    add rsp, ${varPopCount * 8} ; move stack pointer up for each var in scope\n`,
+            );
+        }
         this.stackSize -= varPopCount;
         let keys = Array.from(this.vars.keys());
         for (let i = 0; i < varPopCount; i++) {
@@ -582,7 +584,7 @@ __calc_string_length_return:
             for (const arg of statement.arguments) {
                 this.vars.delete(arg.identifier);
             }
-            this.writeText(`    ret\n    ; end function\n${label}:\n`);
+            this.writeText(`${label}:\n`);
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
