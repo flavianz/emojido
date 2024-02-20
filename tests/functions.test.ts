@@ -68,6 +68,14 @@ describe("Compiler", () => {
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
+    it("executes shorthand math", async () => {
+        const result = await execute(
+            compile("📦x🪢5🚀x➕🪢5🚀x✖️🪢5🚀x➖🪢5🚀🚪x🚀", false),
+        );
+        expect(result.exitCode).toBe(45);
+        expect(result.standardOut).toEqual([]);
+        expect(result.standardErr).toEqual([]);
+    });
     it("executes if-statements", async () => {
         const result = await execute(compile("✂️✅✂️⚽🚪10🚀🥅", false));
         expect(result.exitCode).toBe(10);

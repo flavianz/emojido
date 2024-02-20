@@ -196,6 +196,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "minusequal") {
+                    tokens.push({
+                        type: TokenType.minusEqual,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({
@@ -265,11 +271,21 @@ export class Tokenizer {
                 });
                 this.consume();
             } else if (this.peek() === "+") {
-                tokens.push({ type: TokenType.plus, line: this.lineCount });
                 this.consume();
+                if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.plusEqual,
+                        line: this.lineCount,
+                    });
+                } else {
+                    tokens.push({ type: TokenType.plus, line: this.lineCount });
+                }
             } else if (this.peek() === "-") {
-                tokens.push({ type: TokenType.minus, line: this.lineCount });
-                this.consume();
+                tokens.push({
+                    type: TokenType.minus,
+                    line: this.lineCount,
+                });
             } else if (this.peek() === "/") {
                 this.consume();
                 if (this.peek() === "/") {
@@ -292,6 +308,12 @@ export class Tokenizer {
                     }
                     this.consume();
                     this.consume();
+                } else if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.minusEqual,
+                        line: this.lineCount,
+                    });
                 } else {
                     tokens.push({
                         type: TokenType.slash,
@@ -299,8 +321,16 @@ export class Tokenizer {
                     });
                 }
             } else if (this.peek() === "*") {
-                tokens.push({ type: TokenType.star, line: this.lineCount });
                 this.consume();
+                if (this.peek() === "=") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.mulEqual,
+                        line: this.lineCount,
+                    });
+                } else {
+                    tokens.push({ type: TokenType.star, line: this.lineCount });
+                }
             } else if (this.peek() === "!") {
                 this.consume();
                 if (this.peek() === "=") {

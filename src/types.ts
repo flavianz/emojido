@@ -41,6 +41,10 @@ export enum TokenType {
     callFunction = "callFunction",
     typeString = "typeString",
     null = "null",
+    minusEqual = "minusEqual",
+    plusEqual = "plusEqual",
+    divEqual = "divEqual",
+    mulEqual = "mulEqual",
 }
 
 export enum LiteralType {

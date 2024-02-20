@@ -129,7 +129,7 @@ printFalse:
     mov rsi, ${false_}
     mov rdx, 5
     jmp printBoolEnd
-printTrue
+printTrue:
     mov rdx, 4
     mov rsi, ${true_}
 printBoolEnd:

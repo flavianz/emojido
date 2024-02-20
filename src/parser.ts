@@ -494,6 +494,146 @@ export class Parser {
                 );
             }
             return new StatementReturn(expression, line);
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.plusEqual
+        ) {
+            const ident = this.consume();
+            const line = this.consume().line;
+            const expr = this.parseExpr();
+            if (!expr) {
+                error("Invalid expression", line);
+            }
+            if (!this.vars.has(ident.value)) {
+                error("Undeclared identifier", line);
+            }
+            const literalType = this.vars.get(ident.value);
+            if (literalType !== expr.literalType) {
+                error(
+                    `Expected type '${getEmojiFromLiteralType(
+                        literalType,
+                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
+                    line,
+                );
+            }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionAdd(
+                    new TermIdentifier(line, ident.value, literalType),
+                    expr,
+                    line,
+                ),
+                ident,
+                line,
+            );
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.minusEqual
+        ) {
+            const ident = this.consume();
+            const line = this.consume().line;
+            const expr = this.parseExpr();
+            if (!expr) {
+                error("Invalid expression", line);
+            }
+            if (!this.vars.has(ident.value)) {
+                error("Undeclared identifier", line);
+            }
+            const literalType = this.vars.get(ident.value);
+            if (literalType !== expr.literalType) {
+                error(
+                    `Expected type '${getEmojiFromLiteralType(
+                        literalType,
+                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
+                    line,
+                );
+            }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionSub(
+                    new TermIdentifier(line, ident.value, literalType),
+                    expr,
+                    line,
+                ),
+                ident,
+                line,
+            );
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.mulEqual
+        ) {
+            const ident = this.consume();
+            const line = this.consume().line;
+            const expr = this.parseExpr();
+            if (!expr) {
+                error("Invalid expression", line);
+            }
+            if (!this.vars.has(ident.value)) {
+                error("Undeclared identifier", line);
+            }
+            const literalType = this.vars.get(ident.value);
+            if (literalType !== expr.literalType) {
+                error(
+                    `Expected type '${getEmojiFromLiteralType(
+                        literalType,
+                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
+                    line,
+                );
+            }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionMul(
+                    new TermIdentifier(line, ident.value, literalType),
+                    expr,
+                    line,
+                ),
+                ident,
+                line,
+            );
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.divEqual
+        ) {
+            const ident = this.consume();
+            const line = this.consume().line;
+            const expr = this.parseExpr();
+            if (!expr) {
+                error("Invalid expression", line);
+            }
+            if (!this.vars.has(ident.value)) {
+                error("Undeclared identifier", line);
+            }
+            const literalType = this.vars.get(ident.value);
+            if (literalType !== expr.literalType) {
+                error(
+                    `Expected type '${getEmojiFromLiteralType(
+                        literalType,
+                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
+                    line,
+                );
+            }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionDiv(
+                    new TermIdentifier(line, ident.value, literalType),
+                    expr,
+                    line,
+                ),
+                ident,
+                line,
+            );
         } else {
             //check for StatementExpression
             try {
