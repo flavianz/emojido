@@ -120,17 +120,17 @@ printIntLoop2:
         if (!this.routines.includes("printBool:")) {
             const true_ = this.generateIdentifier();
             const false_ = this.generateIdentifier();
-            this.data += `    ${true_} db "true", 0ah\n    ${false_} db "false", 0ah\n`;
+            this.data += `    ${true_} db "true", 10, 0ah\n    ${false_} db "false", 10, 0ah\n`;
             this.routines += `printBool:
     test rax, rax
     jz printFalse
     jmp printTrue
 printFalse:
     mov rsi, ${false_}
-    mov rdx, 5
+    mov rdx, 6
     jmp printBoolEnd
 printTrue:
-    mov rdx, 4
+    mov rdx, 5
     mov rsi, ${true_}
 printBoolEnd:
     mov rdi, 1
@@ -277,7 +277,7 @@ calc_string_length_return:
             this.push("rax");
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
-            this.data += `    ${ident} db "${term.stringValue}", 0ah\n`;
+            this.data += `    ${ident} db "${term.stringValue}", 10, 0ah\n`;
             this.writeText(new AssemblyMovToken("rax", ident));
             this.push("rax");
         } else if (term instanceof TermNull) {

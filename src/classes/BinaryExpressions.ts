@@ -243,12 +243,12 @@ export class BooleanBinaryExpressionAnd extends BinaryExpression {
     ) {
         checkLiteralType(
             lhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             lhsExpression.line,
         );
         checkLiteralType(
             rhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             rhsExpression.line,
         );
         super(LiteralType.booleanLiteral, lhsExpression, rhsExpression, line);
@@ -262,12 +262,12 @@ export class BooleanBinaryExpressionOr extends BinaryExpression {
     ) {
         checkLiteralType(
             lhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             lhsExpression.line,
         );
         checkLiteralType(
             rhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             rhsExpression.line,
         );
         super(LiteralType.booleanLiteral, lhsExpression, rhsExpression, line);
@@ -281,12 +281,12 @@ export class BooleanBinaryExpressionXor extends BinaryExpression {
     ) {
         checkLiteralType(
             lhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             lhsExpression.line,
         );
         checkLiteralType(
             rhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
+            [LiteralType.booleanLiteral],
             rhsExpression.line,
         );
         super(LiteralType.booleanLiteral, lhsExpression, rhsExpression, line);
