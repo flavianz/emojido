@@ -120,26 +120,6 @@ export class BinaryExpressionDiv extends BinaryExpression {
     }
 }
 
-export class BinaryExpressionPow extends BinaryExpression {
-    constructor(
-        lhsExpression: Expression,
-        rhsExpression: Expression,
-        line: number,
-    ) {
-        checkLiteralType(
-            lhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
-            lhsExpression.line,
-        );
-        checkLiteralType(
-            rhsExpression.literalType,
-            [LiteralType.integerLiteral],
-            rhsExpression.line,
-        );
-        super(LiteralType.floatLiteral, lhsExpression, rhsExpression, line);
-    }
-}
-
 export class BooleanBinaryExpressionCompare extends BinaryExpression {
     constructor(
         lhsExpression: Expression,

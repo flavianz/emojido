@@ -32,7 +32,6 @@ import {
     BinaryExpressionAdd,
     BinaryExpressionDiv,
     BinaryExpressionMul,
-    BinaryExpressionPow,
     BinaryExpressionSub,
     BooleanBinaryExpressionAnd,
     BooleanBinaryExpressionCompare,
@@ -548,8 +547,6 @@ export class Parser {
                 expr = new BinaryExpressionMul(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.slash) {
                 expr = new BinaryExpressionDiv(exprLhs, exprRhs, operator.line);
-            } else if (operator.type === TokenType.pow) {
-                expr = new BinaryExpressionPow(exprLhs, exprRhs, operator.line);
             } else if (operator.type === TokenType.double_equals) {
                 expr = new BooleanBinaryExpressionCompare(
                     exprLhs,

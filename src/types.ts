@@ -13,7 +13,6 @@ export enum TokenType {
     minus = "minus",
     star = "star",
     slash = "slash",
-    pow = "pow",
     open_curly = "open_curly",
     close_curly = "close_curly",
     if = "if",

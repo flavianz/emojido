@@ -2,8 +2,6 @@ import { Token, TokenType } from "./types";
 
 export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
-        case TokenType.pow:
-            return 4;
         case TokenType.star:
         case TokenType.slash:
             return 3;
@@ -301,14 +299,8 @@ export class Tokenizer {
                     });
                 }
             } else if (this.peek() === "*") {
-                if (this.peek(1) === "*") {
-                    tokens.push({ type: TokenType.pow, line: this.lineCount });
-                    this.consume();
-                    this.consume();
-                } else {
-                    tokens.push({ type: TokenType.star, line: this.lineCount });
-                    this.consume();
-                }
+                tokens.push({ type: TokenType.star, line: this.lineCount });
+                this.consume();
             } else if (this.peek() === "!") {
                 this.consume();
                 if (this.peek() === "=") {
