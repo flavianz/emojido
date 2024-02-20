@@ -26,6 +26,12 @@ describe("Compiler", () => {
         expect(result.standardOut).toEqual([{ text: "\u000069" }]);
         expect(result.standardErr).toEqual([]);
     });
+    it("prints booleans", async () => {
+        const result = await execute(compile("🖨️✅🚀", false));
+        expect(result.exitCode).toBe(0);
+        expect(result.standardOut).toEqual([{ text: "true" }]);
+        expect(result.standardErr).toEqual([]);
+    });
     it("defines variables", async () => {
         const result = await execute(compile("📦x🪢17🚀🚪x🚀", false));
         expect(result.exitCode).toBe(17);

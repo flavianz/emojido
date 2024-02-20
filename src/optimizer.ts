@@ -21,7 +21,7 @@ export class Optimizer {
 
     optimize(): AssemblyToken[] {
         let i = 0;
-        while (this.optimized !== this.source && i < 20) {
+        while (i < 20) {
             i++;
             while (this.peek()) {
                 const token = this.consume();
@@ -54,7 +54,7 @@ export class Optimizer {
                     }
                 } else if (token instanceof AssemblyMovToken) {
                     if (token.expression !== token.register) {
-                        this.optimized.push(token);
+                        this.optimized.push(token.clearComment());
                     }
                 } else if (token instanceof AssemblyAddToken) {
                     if (token.expression !== "0") {
@@ -120,7 +120,12 @@ export class Optimizer {
                     this.optimized.push(token.clearComment());
                 }
             }
+            if (this.source === this.optimized) {
+                break;
+            }
             this.source = this.optimized;
+            this.optimized = [];
+            this.index = 0;
         }
         return this.source;
     }

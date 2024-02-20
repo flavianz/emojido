@@ -45,7 +45,7 @@ export class StatementPrint extends Statement {
         this.expression = expression;
         checkLiteralType(
             expression.literalType,
-            [LiteralType.integerLiteral, LiteralType.stringLiteral],
+            [LiteralType.integerLiteral, LiteralType.stringLiteral, LiteralType.booleanLiteral],
             line,
         );
     }

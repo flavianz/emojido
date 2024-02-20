@@ -45,8 +45,8 @@ import {
     StatementTerm,
 } from "./classes/Statements";
 import {
-    TermFunctionCall,
     StatementFunctionDefinition,
+    TermFunctionCall,
 } from "./classes/Functions";
 import {
     AssemblyAddToken,
@@ -79,51 +79,75 @@ export class Generator {
     }
 
     generatePrintInt() {
-        if (!this.routines.includes("__printInt:")) {
-            this.routines += `__printInt:
-    mov rcx, _digitSpace
+        if (!this.routines.includes("printInt:")) {
+            this.routines += `printInt:
+    mov rcx, digitSpace
     mov rbx, 10
     mov [rcx], rbx
     inc rcx
-    mov [_digitSpacePos], rcx
-__printIntLoop:
+    mov [digitSpacePos], rcx
+printIntLoop:
     mov rdx, 0
     mov rbx, 10
     div rbx
     push rax
     add rdx, 48
-    mov rcx, [_digitSpacePos]
+    mov rcx, [digitSpacePos]
     mov [rcx], dl
     inc rcx
-    mov [_digitSpacePos], rcx
+    mov [digitSpacePos], rcx
     pop rax
     cmp rax, 0
-    jne __printIntLoop
-__printIntLoop2:
-    mov rcx, [_digitSpacePos]
+    jne printIntLoop
+printIntLoop2:
+    mov rcx, [digitSpacePos]
     mov rax, 1
     mov rdi, 1
     mov rsi, rcx
     mov rdx, 1
     syscall
-    mov rcx, [_digitSpacePos]
+    mov rcx, [digitSpacePos]
     dec rcx
-    mov [_digitSpacePos], rcx
-    cmp rcx, _digitSpace
-    jge __printIntLoop2
+    mov [digitSpacePos], rcx
+    cmp rcx, digitSpace
+    jge printIntLoop2
     ret\n`;
-            this.bss += "    _digitSpace resb 100\n    _digitSpacePos resb 8\n";
+            this.bss += "    digitSpace resb 100\n    digitSpacePos resb 8\n";
+        }
+    }
+
+    generatePrintBool() {
+        if (!this.routines.includes("printBool:")) {
+            const true_ = this.generateIdentifier();
+            const false_ = this.generateIdentifier();
+            this.data += `    ${true_} db "true", 0ah\n    ${false_} db "false", 0ah\n`;
+            this.routines += `printBool:
+    test rax, rax
+    jz printFalse
+    jmp printTrue
+printFalse:
+    mov rsi, ${false_}
+    mov rdx, 5
+    jmp printBoolEnd
+printTrue
+    mov rdx, 4
+    mov rsi, ${true_}
+printBoolEnd:
+    mov rdi, 1
+    mov rax, 1
+    syscall
+    ret`;
         }
     }
 
     generateCalcStringLength() {
-        if (!this.routines.includes("__calc_string_length:")) {
-            this.routines += `__calc_string_length:
+        if (!this.routines.includes("calc_string_length:")) {
+            this.routines += `calc_string_length:
     cmp byte [rsi + rcx], 0ah
-    je __calc_string_length_return
+    je calc_string_length_return
     inc rcx
-    jmp __calc_string_length
-__calc_string_length_return:
+    jmp calc_string_length
+calc_string_length_return:
     inc rcx
     ret
 `;
@@ -562,7 +586,7 @@ __calc_string_length_return:
                 this.pop("rsi");
                 this.writeText(
                     new AssemblyUnoptimizedToken(
-                        "    xor rcx, rcx\n    call __calc_string_length",
+                        "    xor rcx, rcx\n    call calc_string_length",
                     ),
                 );
                 this.generateCalcStringLength();
@@ -574,7 +598,13 @@ __calc_string_length_return:
                 this.generatePrintInt();
                 this.pop("rax");
                 this.writeText(
-                    new AssemblyUnoptimizedToken("    call __printInt"),
+                    new AssemblyUnoptimizedToken("    call printInt"),
+                );
+            } else if (literalType === LiteralType.booleanLiteral) {
+                this.pop("rax");
+                this.generatePrintBool();
+                this.writeText(
+                    new AssemblyUnoptimizedToken("    call printBool"),
                 );
             }
         } else if (statement instanceof StatementLet) {
