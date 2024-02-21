@@ -37,6 +37,7 @@ import {
     Statement,
     StatementAssign,
     StatementExit,
+    StatementFor,
     StatementIf,
     StatementLet,
     StatementPrint,
@@ -720,6 +721,31 @@ calc_string_length_return:
                     `    jmp ${startLabel}\n${endLabel}:`,
                 ),
             );
+        } else if (statement instanceof StatementFor) {
+            this.generateStatement(statement.statementAssign);
+            const startLabel = this.createLabel();
+            const endLabel = this.createLabel();
+            this.writeText(new AssemblyUnoptimizedToken(`${startLabel}:`));
+            this.generateExpr(statement.expression);
+            this.pop("rax");
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    `    test rax, rax\n    jz ${endLabel}`,
+                ),
+                new AssemblyCommentToken("for statement scope"),
+            );
+            this.generateScope(statement.scope);
+            this.generateStatement(statement.statementModify);
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    `    jmp ${startLabel}\n${endLabel}:`,
+                ),
+            );
+            if (statement.statementAssign instanceof StatementLet) {
+                this.writeText(new AssemblyAddToken("rsp", "8"));
+                this.vars.delete(statement.statementAssign.identifier);
+                this.stackSize--;
+            }
         }
     }
 

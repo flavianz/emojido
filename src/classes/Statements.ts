@@ -112,6 +112,31 @@ export class StatementWhile extends Statement {
         );
     }
 }
+export class StatementFor extends Statement {
+    readonly statementAssign: StatementLet | StatementAssign;
+    readonly statementModify: StatementAssign;
+    readonly expression: Expression;
+    readonly scope: Scope;
+
+    constructor(
+        statementAssign: StatementLet | StatementAssign,
+        expression: Expression,
+        statementModify: StatementAssign,
+        scope: Scope,
+        line: number,
+    ) {
+        super(line);
+        this.expression = expression;
+        this.scope = scope;
+        this.statementAssign = statementAssign;
+        this.statementModify = statementModify;
+        checkLiteralType(
+            expression.literalType,
+            [LiteralType.booleanLiteral],
+            line,
+        );
+    }
+}
 
 export class StatementTerm extends Statement {
     readonly term: Term;

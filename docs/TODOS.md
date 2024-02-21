@@ -4,7 +4,6 @@
 - Check that every path of function returns something
 
 ### Binary Operations
-- +=, -=, /=, *=
 - x++, x--;
 - convert float to int (possibly implemented in the math standard library)
 - convert string to int / float
@@ -39,7 +38,6 @@
     - get date string
 - import / export
 - ! (negate expressions)
-- while and for loop
 - constant variables
 - enums
 - exceptions

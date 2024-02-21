@@ -117,6 +117,46 @@ describe("Compiler", () => {
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
+    it("executes for-statements", async () => {
+        const result = await execute(
+            compile(
+                "☎️ 📦 i 🪢 0🚀 i ↘️ 5🚀 i ➕🪢 1🚀 ☎️ ⚽\n" +
+                    "    🖨️ i🚀\n" +
+                    "🥅",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(0);
+        expect(result.standardOut).toEqual([
+            { text: "\u00000" },
+            { text: "\u00001" },
+            { text: "\u00002" },
+            { text: "\u00003" },
+            { text: "\u00004" },
+        ]);
+        expect(result.standardErr).toEqual([]);
+    });
+    it("executes while-statements", async () => {
+        const result = await execute(
+            compile(
+                "📦i🪢0🚀\n" +
+                    "🥏i↘️5🥏⚽\n" +
+                    "    i➕🪢1🚀\n" +
+                    "    🖨️i🚀\n" +
+                    "🥅",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(0);
+        expect(result.standardOut).toEqual([
+            { text: "\u00001" },
+            { text: "\u00002" },
+            { text: "\u00003" },
+            { text: "\u00004" },
+            { text: "\u00005" },
+        ]);
+        expect(result.standardErr).toEqual([]);
+    });
     it("executes nested functions and if-statements", async () => {
         const result = await execute(
             compile(

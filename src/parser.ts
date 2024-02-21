@@ -21,6 +21,7 @@ import {
     Statement,
     StatementAssign,
     StatementExit,
+    StatementFor,
     StatementIf,
     StatementLet,
     StatementPrint,
@@ -647,6 +648,70 @@ export class Parser {
                 error("Invalid scope", line);
             }
             return new StatementWhile(expression, scope, line);
+        } else if (this.peek()?.type === TokenType.for) {
+            const line = this.consume().line;
+            let statementAssign: StatementAssign | StatementLet;
+            if (this.peek()?.type === TokenType.semi) {
+                statementAssign = null;
+                this.consume();
+            } else {
+                statementAssign = this.parseStatement() as
+                    | StatementAssign
+                    | StatementLet;
+                if (
+                    !(
+                        statementAssign instanceof StatementAssign ||
+                        statementAssign instanceof StatementLet
+                    )
+                ) {
+                    error(
+                        "Expected assignment of variable in first block of for statement",
+                        line,
+                    );
+                }
+            }
+            let expression: Expression;
+            if (this.peek()?.type === TokenType.semi) {
+                expression = new TermBoolean(line, "1");
+                this.consume();
+            } else {
+                expression = this.parseExpr();
+                this.tryConsume(TokenType.semi, {
+                    error: "Expected '🚀'",
+                    line: line,
+                });
+            }
+            let statementModify: StatementAssign;
+            if (this.peek()?.type === TokenType.semi) {
+                statementModify = null;
+                this.consume();
+            } else {
+                statementModify = this.parseStatement() as StatementAssign;
+                if (!(statementModify instanceof StatementAssign)) {
+                    error(
+                        "Expected assignment of variable in last block of for statement",
+                        line,
+                    );
+                }
+            }
+            this.tryConsume(TokenType.for, {
+                error: "Expected '☎️'",
+                line: line,
+            });
+            const scope = this.parseScope();
+            if (!scope) {
+                error("Invalid scope", line);
+            }
+            if (statementAssign instanceof StatementLet) {
+                this.vars.delete(statementAssign.identifier);
+            }
+            return new StatementFor(
+                statementAssign,
+                expression,
+                statementModify,
+                scope,
+                line,
+            );
         } else {
             //check for StatementExpression
             try {

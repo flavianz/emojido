@@ -208,6 +208,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "for") {
+                    tokens.push({
+                        type: TokenType.for,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({
