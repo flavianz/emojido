@@ -3,6 +3,7 @@ import { Program } from "./classes/Program";
 import { Scope } from "./classes/Scope";
 import {
     Term,
+    TermArray,
     TermBoolean,
     TermFloat,
     TermIdentifier,
@@ -158,6 +159,41 @@ calc_string_length_return:
         }
     }
 
+    generatePushElements() {
+        if (!this.routines.includes("push_elements_array:")) {
+            this.data +=
+                "    array_ptr dq 0\n    array_capacity dq 0\n array_size dq 0\n";
+            this.routines += `push_elements_array:
+    mov rax, [array_size]
+    add rax, rdi
+    cmp rax, [array_capacity]
+    jle enough_capacity_array
+    
+    mov rax, [array_capacity]
+    shl rax, 1
+    mov rcx, rax
+    imul rax, rdx, 8
+    mov rdi, 0
+    mov rdx, rax
+    mov r10, 0x22
+    mov r8, -1
+    mov r9, 0
+    syscall
+    mov rsi, rax
+    mov rax, [array_ptr]
+    mov rcx, [array_size]
+    shl rcx, 3
+    mov rdx, rcx
+    mov rdi, rsi
+    rep movsq
+    
+enough_capacity_array:
+    add qword [array_capacity], rdi
+    ret
+    `;
+        }
+    }
+
     /**push a register onto the stack and handle stack size
      * @param {string} reg the register to be pushed
      * @param comment
@@ -286,6 +322,54 @@ calc_string_length_return:
             this.push("rax");
         } else if (term instanceof TermNull) {
             this.push("0");
+        } else if (term instanceof TermArray) {
+            const ident = this.generateIdentifier();
+            this.data += `    ${ident}_ptr dq 0\n    ${ident}_capacity dq 0\n    ${ident}_size dq 0\n`;
+            this.writeText(
+                new AssemblyCommentToken("memory allocation for array"),
+            );
+            this.writeText(
+                new AssemblyUnoptimizedToken(`    mov rdi, 0
+    mov rax, 9
+    xor rsi, rsi
+    mov rdx, 128
+    mov r10, 0x22
+    mov r8, -1
+    mov r9, 0
+    syscall
+    mov QWORD [${ident}_ptr], rax
+    mov QWORD [${ident}_capacity], 16
+    
+    mov rax, [${ident}_ptr]
+    mov [array_ptr], rax
+    mov rax, [${ident}_capacity]
+    mov [array_capacity], rax
+    mov rax, [${ident}_size]
+    mov [array_size], rax
+    
+    mov rdi, ${term.values.length}
+    call push_elements_array
+    mov qword [${ident}_ptr], rsi
+    mov qword [${ident}_capacity], rcx
+    `),
+            );
+            this.generatePushElements();
+            for (let i = 0; i < term.values.length; i++) {
+                this.generateTerm(term.values[i]);
+                this.pop("rax");
+                this.writeText(
+                    new AssemblyMovToken(
+                        `QWORD [${ident}_ptr + ${i * 8}]`,
+                        "rax",
+                        "set item at index " + i,
+                    ),
+                );
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        `    inc QWORD [${ident}_size]`,
+                    ),
+                );
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 import { LiteralType } from "../types";
 import { Expression } from "./Expressions";
+import { checkLiteralType } from "../parser";
 
 export class Term extends Expression {
     constructor(literalType: LiteralType, line: number) {
@@ -64,5 +65,34 @@ export class TermParens extends Term {
 export class TermNull extends Term {
     constructor(line: number) {
         super(LiteralType.nullLiteral, line);
+    }
+}
+
+export class TermArray extends Term {
+    readonly values: Term[];
+    readonly valueType: LiteralType;
+
+    constructor(valueType: LiteralType, values: Term[], line: number) {
+        super(LiteralType.arrayLiteral, line);
+        this.values = values;
+        this.valueType = valueType;
+    }
+}
+
+export class TermArrayAccess extends TermIdentifier {
+    readonly expression: Expression;
+    constructor(
+        identifier: string,
+        literalType: LiteralType,
+        expression: Expression,
+        line: number,
+    ) {
+        super(line, identifier, literalType);
+        this.expression = expression;
+        checkLiteralType(
+            this.expression.literalType,
+            [LiteralType.integerLiteral],
+            line,
+        );
     }
 }

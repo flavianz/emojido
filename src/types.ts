@@ -47,6 +47,8 @@ export enum TokenType {
     mulEqual = "mulEqual",
     while = "while",
     for = "for",
+    openBracket = "openBracket",
+    closeBracket = "closeBracket",
 }
 
 export enum LiteralType {
@@ -55,6 +57,7 @@ export enum LiteralType {
     stringLiteral = "stringLiteral",
     booleanLiteral = "booleanLiteral",
     nullLiteral = "nullLiteral",
+    arrayLiteral = "arrayLiteral",
 }
 
 export interface Token {

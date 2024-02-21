@@ -244,6 +244,18 @@ export class Tokenizer {
             } else if (this.peek() === ";") {
                 tokens.push({ type: TokenType.semi, line: this.lineCount });
                 this.consume();
+            } else if (this.peek() === "[") {
+                tokens.push({
+                    type: TokenType.openBracket,
+                    line: this.lineCount,
+                });
+                this.consume();
+            } else if (this.peek() === "]") {
+                tokens.push({
+                    type: TokenType.closeBracket,
+                    line: this.lineCount,
+                });
+                this.consume();
             } else if (this.peek() === "(") {
                 tokens.push({
                     type: TokenType.open_paren,

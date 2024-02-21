@@ -2,6 +2,7 @@ import { LiteralType, Token, TokenType, VarFunction } from "./types";
 import { error, getBinaryPrecedence } from "./tokenization";
 import {
     Term,
+    TermArray,
     TermBoolean,
     TermFloat,
     TermIdentifier,
@@ -229,6 +230,13 @@ export class Parser {
                     arguments_,
                     this.peek(-1).line,
                 );
+            } else if (this.peek()?.type === TokenType.openBracket) {
+                if (!this.vars.has(token.value)) {
+                    error(`Undeclared identifier '${token.value}'`, token.line);
+                }
+                const array = this.vars.get(token.value);
+                if (array !== LiteralType.arrayLiteral) {
+                }
             }
             if (!this.vars.has(token.value)) {
                 error(`Undeclared identifier '${token.value}'`, token.line);
@@ -265,6 +273,27 @@ export class Parser {
             return new TermParens(expr, token.line);
         } else if (token?.type === TokenType.null) {
             return new TermNull(this.consume().line);
+        } else if (token?.type === TokenType.openBracket) {
+            const line = this.consume().line;
+            let type = getLiteralTypeFromTokenType(this.peek()?.type);
+            let values: Term[] = [];
+            if (type === null) {
+                while (this.peek()?.type !== TokenType.closeBracket) {
+                    values.push(this.parseTerm());
+                    if (this.peek()?.type !== TokenType.closeBracket) {
+                        this.tryConsume(TokenType.comma, {
+                            error: "Expected '🌶️' or '🌛'",
+                            line: line,
+                        });
+                    }
+                }
+                type = values[0].literalType;
+            }
+            this.tryConsume(TokenType.closeBracket, {
+                error: "Expected '🌛'",
+                line: line,
+            });
+            return new TermArray(type, values, line);
         } else {
             return null;
         }

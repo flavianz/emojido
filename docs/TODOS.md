@@ -49,15 +49,6 @@
 ### Optimisations
 - check for unused things
 - pre-calculate things like 3 * 2
-- delete things like
-  ```nasm
-  push rax
-  pop rax
-  ; or
-  add rax, 0
-  ; or
-  push QWORD [rsp + 0]
-  ```
 
 ### Interpreter
 

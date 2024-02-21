@@ -47,5 +47,7 @@ export function demoji(source: string) {
         .replaceAll("🪃", "return ")
         .replaceAll("🫥", " null ")
         .replaceAll("🥏", " while ")
-        .replaceAll("☎️", " for ");
+        .replaceAll("☎️", " for ")
+        .replaceAll("🌜", "[")
+        .replaceAll("🌛", "]");
 }
