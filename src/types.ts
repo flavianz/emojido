@@ -45,6 +45,7 @@ export enum TokenType {
     plusEqual = "plusEqual",
     divEqual = "divEqual",
     mulEqual = "mulEqual",
+    while = "while",
 }
 
 export enum LiteralType {

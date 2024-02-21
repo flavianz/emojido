@@ -202,6 +202,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "while") {
+                    tokens.push({
+                        type: TokenType.while,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else {
                     //identifier
                     tokens.push({

@@ -43,6 +43,7 @@ import {
     StatementReturn,
     StatementScope,
     StatementTerm,
+    StatementWhile,
 } from "./classes/Statements";
 import {
     StatementFunctionDefinition,
@@ -73,6 +74,8 @@ export class Generator {
     private scopes: number[] = [];
     private labelCount = 0;
     private identCount = 0;
+    private isStackPointerOffset = false;
+    private offsetFromStackPointer = 0;
 
     constructor(program: Program) {
         this.program = program;
@@ -563,6 +566,28 @@ calc_string_length_return:
         }
     }
 
+    private generateFunctionDefinition(statement: StatementFunctionDefinition) {
+        this.isStackPointerOffset = true;
+
+        const label = this.createLabel(); //end of function label
+        this.writeText(
+            new AssemblyCommentToken("start function definition"),
+            new AssemblyUnoptimizedToken(
+                `    jmp ${label}\n_${statement.identifier}:`,
+            ),
+        );
+        for (let i = 0; i < statement.arguments.length; i++) {
+            //last argument first because of stack order
+            const argument =
+                statement.arguments[statement.arguments.length - 1 - i];
+            //set all arguments according to offset from definition and call
+            this.vars.set(argument.identifier, {
+                stackLocation: this.stackSize + -i,
+                type: argument.type,
+            });
+        }
+    }
+
     /**generate the asm for a single statement
      * @param {Statement} statement the statement to generate
      * */
@@ -653,38 +678,7 @@ calc_string_length_return:
                 this.writeText(new AssemblyUnoptimizedToken(`${endLabel}:`));
             }
         } else if (statement instanceof StatementFunctionDefinition) {
-            const label = this.createLabel(); //end of function label
-            this.writeText(
-                new AssemblyCommentToken("start function definition"),
-                new AssemblyUnoptimizedToken(
-                    `    jmp ${label}\n_${statement.identifier}:`,
-                ),
-            );
-            for (let i = 0; i < statement.arguments.length; i++) {
-                //add arguments to the var map from behind because they are already in the stack
-                const arg =
-                    statement.arguments[statement.arguments.length - 1 - i];
-                this.vars.set(arg.identifier, {
-                    stackLocation: this.stackSize - 1 - i,
-                    type: arg.type,
-                });
-            }
-            this.functions.set(statement.identifier, statement);
-            this.stackSize++; // "call" instruction pushed return address onto stack
-            this.generateScope(statement.scope, true);
-            const functionDepth = statement.scope.innerScopeDepth;
-            let varPopCount =
-                this.vars.size - this.scopes[this.scopes.length - 1];
-            for (let i = this.scopes.length - 1; functionDepth <= i; i--) {
-                varPopCount += this.scopes[i] - this.scopes[i - 1];
-            }
-            this.stackSize -= varPopCount;
-            this.stackSize--; //"ret" instruction popped return address from stack
-            //remove arguments from the var map
-            for (const arg of statement.arguments) {
-                this.vars.delete(arg.identifier);
-            }
-            this.writeText(new AssemblyUnoptimizedToken(`${label}:`));
+            this.generateFunctionDefinition(statement);
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
@@ -694,7 +688,7 @@ calc_string_length_return:
                 .scope.innerScopeDepth;
             let varPopCount =
                 this.vars.size - this.scopes[this.scopes.length - 1];
-            for (let i = this.scopes.length - 1; functionDepth <= i; i--) {
+            for (let i = this.scopes.length - 1; functionDepth < i; i--) {
                 varPopCount += this.scopes[i] - this.scopes[i - 1];
             }
             this.pop("rax", "mov return value into rax");
@@ -707,6 +701,24 @@ calc_string_length_return:
             );
             this.writeText(
                 new AssemblyUnoptimizedToken("    ret", "return value"),
+            );
+        } else if (statement instanceof StatementWhile) {
+            const startLabel = this.createLabel();
+            const endLabel = this.createLabel();
+            this.writeText(new AssemblyUnoptimizedToken(`${startLabel}:`));
+            this.generateExpr(statement.expression);
+            this.pop("rax");
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    `    test rax, rax\n    jz ${endLabel}`,
+                ),
+                new AssemblyCommentToken("while statement scope"),
+            );
+            this.generateScope(statement.scope);
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    `    jmp ${startLabel}\n${endLabel}:`,
+                ),
             );
         }
     }

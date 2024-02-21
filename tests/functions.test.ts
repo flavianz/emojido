@@ -131,4 +131,45 @@ describe("Compiler", () => {
         ]);
         expect(result.standardErr).toEqual([]);
     });
+    test("case 1", async () => {
+        const result = await execute(
+            compile(
+                "📦a🪢2🚀\n" +
+                    "📦b🪢3🚀 //       3        8\n" +
+                    "🛒🔢multiply🛒🔢value1🔢value2 ⚽\n" +
+                    "    📦c🪢4🚀\n" +
+                    "    📦d🪢5🚀 //        3       4\n" +
+                    "    🛒🔢subtract🛒🔢value3🔢value4 ⚽\n" +
+                    "        📦e🪢6🚀\n" +
+                    "        📦f🪢7🚀 //  3       4\n" +
+                    "        🛒🔢ka🛒🔢value5🔢value6 ⚽\n" +
+                    "\n" +
+                    "                ✂️❌✂️⚽\n" +
+                    "                    🪃1🚀\n" +
+                    "                🥅📐✅📐⚽\n" +
+                    "                    🪃value5✖️e🚀\n" +
+                    "                🥅🗑️⚽\n" +
+                    "                    🪃10🚀\n" +
+                    "                🥅\n" +
+                    "                //🪃value5✖️e🚀\n" +
+                    "            🥅\n" +
+                    "        \n" +
+                    "        🪃ka🔫value3,value4🔫🚀\n" +
+                    "    🥅\n" +
+                    "    📦result🪢subtract🔫value1🌶️c🔫🚀\n" +
+                    "    🖨️result🚀\n" +
+                    "    🪃result✖️value2🚀\n" +
+                    "🥅\n" +
+                    "🖨️a🚀\n" +
+                    "🚪multiply🔫b🌶️8🔫🚀",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(144);
+        expect(result.standardOut).toEqual([
+            { text: "\u00002" },
+            { text: "\u000018" },
+        ]);
+        expect(result.standardErr).toEqual([]);
+    });
 });

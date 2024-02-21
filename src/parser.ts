@@ -26,6 +26,7 @@ import {
     StatementPrint,
     StatementReturn,
     StatementTerm,
+    StatementWhile,
 } from "./classes/Statements";
 import {
     BinaryExpression,
@@ -634,6 +635,18 @@ export class Parser {
                 ident,
                 line,
             );
+        } else if (this.peek()?.type === TokenType.while) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+            this.tryConsume(TokenType.while, { error: "Expected '🥏'", line });
+            const scope = this.parseScope();
+            if (!scope) {
+                error("Invalid scope", line);
+            }
+            return new StatementWhile(expression, scope, line);
         } else {
             //check for StatementExpression
             try {
@@ -791,7 +804,7 @@ export class Parser {
             if (statement) {
                 program.statements.push(statement);
             } else {
-                throw new Error("Invalid statement");
+                error("Invalid statement", statement.line);
             }
         }
         return program;

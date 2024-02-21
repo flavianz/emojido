@@ -97,6 +97,21 @@ export class StatementIf extends Statement {
         );
     }
 }
+export class StatementWhile extends Statement {
+    readonly expression: Expression;
+    readonly scope: Scope;
+
+    constructor(expression: Expression, scope: Scope, line: number) {
+        super(line);
+        this.expression = expression;
+        this.scope = scope;
+        checkLiteralType(
+            expression.literalType,
+            [LiteralType.booleanLiteral],
+            line,
+        );
+    }
+}
 
 export class StatementTerm extends Statement {
     readonly term: Term;
