@@ -3,6 +3,7 @@ import { error, getBinaryPrecedence } from "./tokenization";
 import {
     Term,
     TermArray,
+    TermArrayAccess,
     TermBoolean,
     TermFloat,
     TermIdentifier,
@@ -102,7 +103,7 @@ export function checkLiteralType(
 export class Parser {
     private index: number = 0;
     private readonly tokens: Token[];
-    private vars = new Map<string, LiteralType>();
+    private vars = new Map<string, Expression>();
     private functions = new Map<string, VarFunction>();
     private scopes: number = 0;
 
@@ -111,7 +112,7 @@ export class Parser {
         for (let i = 0; i < count; i++) {
             keys.pop();
         }
-        this.vars = new Map<string, LiteralType>(
+        this.vars = new Map<string, Expression>(
             [...this.vars.entries()].filter(([key, _value]) =>
                 keys.includes(key),
             ),
@@ -231,12 +232,31 @@ export class Parser {
                     this.peek(-1).line,
                 );
             } else if (this.peek()?.type === TokenType.openBracket) {
+                this.consume();
                 if (!this.vars.has(token.value)) {
                     error(`Undeclared identifier '${token.value}'`, token.line);
                 }
-                const array = this.vars.get(token.value);
-                if (array !== LiteralType.arrayLiteral) {
+                let array: TermArray = this.vars.get(token.value) as TermArray;
+                if (array.literalType !== LiteralType.arrayLiteral) {
+                    error(
+                        `Can't use '[]' on type '${getEmojiFromLiteralType(array.literalType)}'`,
+                        token.line,
+                    );
                 }
+                const expr = this.parseExpr();
+                if (!expr) {
+                    error("Invalid expression", token.line);
+                }
+                this.tryConsume(TokenType.closeBracket, {
+                    error: "Expected '🌛'",
+                    line: token.line,
+                });
+                return new TermArrayAccess(
+                    token.value,
+                    array.valueType,
+                    expr,
+                    token.line,
+                );
             }
             if (!this.vars.has(token.value)) {
                 error(`Undeclared identifier '${token.value}'`, token.line);
@@ -244,7 +264,7 @@ export class Parser {
             return new TermIdentifier(
                 token.line,
                 token.value,
-                this.vars.get(token.value),
+                this.vars.get(token.value).literalType,
             );
         } else if (token?.type === TokenType.quotes) {
             this.consume();
@@ -401,7 +421,7 @@ export class Parser {
             if (this.vars.has(ident.value) || this.functions.has(ident.value)) {
                 error(`Identifier ${ident.value} already in use`, line);
             }
-            this.vars.set(ident.value, expr.literalType);
+            this.vars.set(ident.value, expr);
             return statementLet;
         } else if (
             this.peek()?.type === TokenType.ident &&
@@ -424,7 +444,7 @@ export class Parser {
             }
             checkLiteralType(
                 expr.literalType,
-                [this.vars.get(ident.value)],
+                [this.vars.get(ident.value).literalType],
                 ident.line,
             );
             return new StatementAssign(expr, ident, ident.line);
@@ -480,7 +500,7 @@ export class Parser {
                 if (this.vars.has(argIdent) || this.functions.has(argIdent)) {
                     error(`Identifier '${argIdent}' already declared`, line);
                 }
-                this.vars.set(argIdent, argType);
+                //this.vars.set(argIdent, );
             }
             if (this.functions.has(identifier) || this.vars.has(identifier)) {
                 error(`Identifier '${identifier}' already in use`, line);
@@ -538,11 +558,11 @@ export class Parser {
             if (!this.vars.has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const literalType = this.vars.get(ident.value);
-            if (literalType !== expr.literalType) {
+            const var_ = this.vars.get(ident.value);
+            if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
-                        literalType,
+                        var_.literalType,
                     )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
                     line,
                 );
@@ -553,7 +573,7 @@ export class Parser {
             });
             return new StatementAssign(
                 new BinaryExpressionAdd(
-                    new TermIdentifier(line, ident.value, literalType),
+                    new TermIdentifier(line, ident.value, var_.literalType),
                     expr,
                     line,
                 ),
@@ -573,11 +593,11 @@ export class Parser {
             if (!this.vars.has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const literalType = this.vars.get(ident.value);
-            if (literalType !== expr.literalType) {
+            const var_ = this.vars.get(ident.value);
+            if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
-                        literalType,
+                        var_.literalType,
                     )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
                     line,
                 );
@@ -588,7 +608,7 @@ export class Parser {
             });
             return new StatementAssign(
                 new BinaryExpressionSub(
-                    new TermIdentifier(line, ident.value, literalType),
+                    new TermIdentifier(line, ident.value, var_.literalType),
                     expr,
                     line,
                 ),
@@ -608,11 +628,11 @@ export class Parser {
             if (!this.vars.has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const literalType = this.vars.get(ident.value);
-            if (literalType !== expr.literalType) {
+            const var_ = this.vars.get(ident.value);
+            if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
-                        literalType,
+                        var_.literalType,
                     )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
                     line,
                 );
@@ -623,7 +643,7 @@ export class Parser {
             });
             return new StatementAssign(
                 new BinaryExpressionMul(
-                    new TermIdentifier(line, ident.value, literalType),
+                    new TermIdentifier(line, ident.value, var_.literalType),
                     expr,
                     line,
                 ),
@@ -643,11 +663,11 @@ export class Parser {
             if (!this.vars.has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const literalType = this.vars.get(ident.value);
-            if (literalType !== expr.literalType) {
+            const var_ = this.vars.get(ident.value);
+            if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
-                        literalType,
+                        var_.literalType,
                     )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
                     line,
                 );
@@ -658,7 +678,7 @@ export class Parser {
             });
             return new StatementAssign(
                 new BinaryExpressionDiv(
-                    new TermIdentifier(line, ident.value, literalType),
+                    new TermIdentifier(line, ident.value, var_.literalType),
                     expr,
                     line,
                 ),

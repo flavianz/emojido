@@ -4,6 +4,7 @@ import { Scope } from "./classes/Scope";
 import {
     Term,
     TermArray,
+    TermArrayAccess,
     TermBoolean,
     TermFloat,
     TermIdentifier,
@@ -297,6 +298,21 @@ enough_capacity_array:
                 this.scopes.pop();
                 this.stackSize -= term.arguments.length;
                 this.push("rax", "push return value of function to stack");
+            } else if (term instanceof TermArrayAccess) {
+                this.push(
+                    `QWORD [rsp + ${
+                        (this.stackSize -
+                            this.vars.get(term.identifier).stackLocation -
+                            1) *
+                        8
+                    }]`,
+                );
+                this.pop("rdi");
+                this.generateTerm(term.expression);
+                this.pop("rax");
+                this.writeText(new AssemblyMovToken("rbx", "8"));
+                this.writeText(new AssemblyMulToken("rbx"));
+                this.push("QWORD [rdi + rax]");
             } else {
                 this.push(
                     `QWORD [rsp + ${
@@ -370,6 +386,7 @@ enough_capacity_array:
                     ),
                 );
             }
+            this.push(ident + "_ptr");
         }
     }
 
