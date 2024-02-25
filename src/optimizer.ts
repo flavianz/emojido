@@ -27,18 +27,13 @@ export class Optimizer {
                 const token = this.consume();
                 if (token instanceof AssemblyPushToken) {
                     if (this.peek() instanceof AssemblyPopToken) {
-                        const pop = this.peek() as AssemblyPopToken;
-                        if (token.expression === pop.register) {
-                            this.consume();
-                            this.optimized.push(
-                                new AssemblyMovToken(
-                                    pop.register,
-                                    token.expression,
-                                ),
-                            );
-                        } else {
-                            this.optimized.push(token.clearComment());
-                        }
+                        const pop = this.consume() as AssemblyPopToken;
+                        this.optimized.push(
+                            new AssemblyMovToken(
+                                pop.register,
+                                token.expression,
+                            ),
+                        );
                     } else {
                         this.optimized.push(token.clearComment());
                     }

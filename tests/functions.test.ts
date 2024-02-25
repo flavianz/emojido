@@ -237,4 +237,50 @@ describe("Compiler", () => {
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
+    it("test case 3", async () => {
+        const result = await execute(
+            compile(
+                "function int fn function int value {\n" +
+                    "    let x = 3;\n" +
+                    "    return x * value;\n" +
+                    "}\n" +
+                    "let a = 2;\n" +
+                    "print fn call 7 call;\n" +
+                    "exit a;\n",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(2);
+        expect(result.standardOut).toEqual([{ text: "\u000021" }]);
+        expect(result.standardErr).toEqual([]);
+    });
+    it("test case 4", async () => {
+        const result = await execute(
+            compile(
+                "🛒 🔢 modify 🛒 🔢 value ⚽\n" +
+                    "    ✂️ value ↘️ 3 ✂️ ⚽\n" +
+                    "        🪃 value ✖️ 3🚀\n" +
+                    "    🥅 🗑️ ⚽\n" +
+                    "        🪃 value ✖️ 2🚀\n" +
+                    "    🥅\n" +
+                    "🥅\n" +
+                    "📦 a 🪢 modify 🔫 3 🔫🚀\n" +
+                    "☎️ 📦 i 🪢 0🚀 i ↘️🪢 5🚀 i➕🪢1🚀 ☎️\n" +
+                    "⚽\n" +
+                    "    🖨️ modify 🔫 i 🔫 ✖️ a🚀\n" +
+                    "🥅",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(0);
+        expect(result.standardOut).toEqual([
+            { text: "\u00000" },
+            { text: "\u000018" },
+            { text: "\u000036" },
+            { text: "\u000036" },
+            { text: "\u000048" },
+            { text: "\u000060" },
+        ]);
+        expect(result.standardErr).toEqual([]);
+    });
 });

@@ -250,7 +250,7 @@ enough_capacity_array:
         return offset;
     }
 
-    private generateScope(scope: Scope) {
+    private generateScope(scope: Scope, prologStackSize = 1) {
         this.writeText(
             new AssemblyCommentToken(`start scope on line ${scope.startLine}`),
         );
@@ -262,7 +262,7 @@ enough_capacity_array:
         this.scopes.push({
             vars: new Map(),
             functions: new Map(),
-            prologStackSize: 1,
+            prologStackSize: prologStackSize,
         });
 
         for (const statement of scope.statements) {
@@ -295,6 +295,21 @@ enough_capacity_array:
             this.push("rax");
         } else if (term instanceof TermIdentifier) {
             if (term instanceof TermFunctionCall) {
+                for (const arg of term.arguments) {
+                    this.generateExpr(arg);
+                }
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        `    call _${term.identifier}`,
+                    ),
+                );
+                this.writeText(
+                    new AssemblyAddToken(
+                        "rsp",
+                        (term.arguments.length * 8).toString(),
+                    ),
+                );
+                this.push("r14", "push return value to stack");
             } else if (term instanceof TermArrayAccess) {
                 this.push(
                     `QWORD [rbp + ${this.getIdentifierStackOffset(term.identifier) * 8}]`,
@@ -747,29 +762,42 @@ enough_capacity_array:
                 this.writeText(new AssemblyUnoptimizedToken(`${endLabel}:`));
             }
         } else if (statement instanceof StatementFunctionDefinition) {
+            const label = this.createLabel();
+            this.writeText(
+                new AssemblyCommentToken("start function definition"),
+                new AssemblyUnoptimizedToken(
+                    `    jmp ${label}\n_${statement.identifier}:`,
+                ),
+            );
+            for (let i = 0; i < statement.arguments.length; i++) {
+                const arg = statement.arguments[i];
+                //set var dict
+                this.scopes[this.scopes.length - 1].vars.set(arg.identifier, {
+                    type: arg.type,
+                    offsetFromRBP:
+                        this.scopes[this.scopes.length - 1].vars.size + 1,
+                });
+            }
+            this.scopes[this.scopes.length - 1].functions.set(
+                statement.identifier,
+                {
+                    arguments: statement.arguments,
+                    returnType: statement.returnType,
+                },
+            );
+            this.generateScope(statement.scope, 2);
+            for (const arg of statement.arguments) {
+                this.scopes[this.scopes.length - 1].vars.delete(arg.identifier);
+            }
+            this.writeText(
+                new AssemblyUnoptimizedToken("    ret"),
+                new AssemblyUnoptimizedToken(`${label}:`),
+            );
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
-            // this.generateExpr(statement.expression);
-            // const idents = Array.from(this.functions.keys());
-            // const functionDepth = this.functions.get(idents[idents.length - 1])
-            //     .scope.innerScopeDepth;
-            // let varPopCount =
-            //     this.vars.size - this.scopes[this.scopes.length - 1];
-            // for (let i = this.scopes.length - 1; functionDepth < i; i--) {
-            //     varPopCount += this.scopes[i] - this.scopes[i - 1];
-            // }
-            // this.pop("rax", "mov return value into rax");
-            // this.writeText(
-            //     new AssemblyAddToken(
-            //         "rsp",
-            //         (varPopCount * 8).toString(),
-            //         "move stack pointer for each var in scope",
-            //     ),
-            // );
-            // this.writeText(
-            //     new AssemblyUnoptimizedToken("    ret", "return value"),
-            // );
+            this.generateExpr(statement.expression);
+            this.pop("r14", "mov return value into r14");
         } else if (statement instanceof StatementWhile) {
             const startLabel = this.createLabel();
             const endLabel = this.createLabel();

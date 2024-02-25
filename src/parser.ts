@@ -507,7 +507,10 @@ export class Parser {
                 ) {
                     error(`Identifier '${argIdent}' already declared`, line);
                 }
-                //this.vars.set(argIdent, );
+                this.scopes[this.scopes.length - 1].vars.set(
+                    argIdent,
+                    new Term(argType, line),
+                );
             }
             if (
                 this.getFunctions().has(identifier) ||
