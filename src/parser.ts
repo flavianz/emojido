@@ -1,5 +1,6 @@
 import { LiteralType, Token, TokenType, VarFunction } from "./types";
 import { error, getBinaryPrecedence } from "./tokenization";
+import { mergeMaps } from "./utils";
 import {
     Term,
     TermArray,
@@ -103,35 +104,33 @@ export function checkLiteralType(
 export class Parser {
     private index: number = 0;
     private readonly tokens: Token[];
-    private vars = new Map<string, Expression>();
-    private functions = new Map<string, VarFunction>();
-    private scopes: number = 0;
-
-    private removeVars(count: number) {
-        let keys = Array.from(this.vars.keys());
-        for (let i = 0; i < count; i++) {
-            keys.pop();
-        }
-        this.vars = new Map<string, Expression>(
-            [...this.vars.entries()].filter(([key, _value]) =>
-                keys.includes(key),
-            ),
-        );
-    }
-    private removeFunctions(count: number) {
-        let keys = Array.from(this.functions.keys());
-        for (let i = 0; i < count; i++) {
-            keys.pop();
-        }
-        this.functions = new Map<string, VarFunction>(
-            [...this.functions.entries()].filter(([key, _value]) =>
-                keys.includes(key),
-            ),
-        );
-    }
+    private scopes: {
+        vars: Map<string, Term>;
+        functions: Map<string, VarFunction>;
+    }[] = [
+        {
+            vars: new Map<string, Term>(),
+            functions: new Map<string, VarFunction>(),
+        },
+    ];
 
     constructor(tokens: Token[]) {
         this.tokens = tokens;
+    }
+
+    private getVars(): Map<string, Term> {
+        let result = new Map<string, Term>();
+        for (const map of this.scopes) {
+            result = mergeMaps(result, map.vars);
+        }
+        return result;
+    }
+    private getFunctions(): Map<string, VarFunction> {
+        let result = new Map<string, VarFunction>();
+        for (const map of this.scopes) {
+            result = mergeMaps(result, map.functions);
+        }
+        return result;
     }
 
     /** check the next token
@@ -182,10 +181,10 @@ export class Parser {
             this.consume();
             if (
                 this.peek()?.type === TokenType.callFunction &&
-                !this.vars.has(token.value)
+                !this.getVars().has(token.value)
             ) {
                 this.consume();
-                if (!this.functions.has(token.value)) {
+                if (!this.getFunctions().has(token.value)) {
                     error("Undeclared function", token.line);
                 }
                 let arguments_: Expression[] = [];
@@ -202,7 +201,7 @@ export class Parser {
                     error: "Expected '🔫'",
                     line: token.line,
                 });
-                const requiredArguments = this.functions.get(
+                const requiredArguments = this.getFunctions().get(
                     token.value,
                 ).arguments;
                 if (requiredArguments.length !== arguments_.length) {
@@ -227,16 +226,18 @@ export class Parser {
                 }
                 return new TermFunctionCall(
                     token.value,
-                    this.functions.get(token.value).returnType,
+                    this.getFunctions().get(token.value).returnType,
                     arguments_,
                     this.peek(-1).line,
                 );
             } else if (this.peek()?.type === TokenType.openBracket) {
                 this.consume();
-                if (!this.vars.has(token.value)) {
+                if (!this.getVars().has(token.value)) {
                     error(`Undeclared identifier '${token.value}'`, token.line);
                 }
-                let array: TermArray = this.vars.get(token.value) as TermArray;
+                let array: TermArray = this.getVars().get(
+                    token.value,
+                ) as TermArray;
                 if (array.literalType !== LiteralType.arrayLiteral) {
                     error(
                         `Can't use '[]' on type '${getEmojiFromLiteralType(array.literalType)}'`,
@@ -258,13 +259,13 @@ export class Parser {
                     token.line,
                 );
             }
-            if (!this.vars.has(token.value)) {
+            if (!this.getVars().has(token.value)) {
                 error(`Undeclared identifier '${token.value}'`, token.line);
             }
             return new TermIdentifier(
                 token.line,
                 token.value,
-                this.vars.get(token.value).literalType,
+                this.getVars().get(token.value).literalType,
             );
         } else if (token?.type === TokenType.quotes) {
             this.consume();
@@ -418,10 +419,13 @@ export class Parser {
             } else {
                 error("Expected '🚀'", line);
             }
-            if (this.vars.has(ident.value) || this.functions.has(ident.value)) {
+            if (
+                this.getVars().has(ident.value) ||
+                this.getFunctions().has(ident.value)
+            ) {
                 error(`Identifier ${ident.value} already in use`, line);
             }
-            this.vars.set(ident.value, expr);
+            this.scopes[this.scopes.length - 1].vars.set(ident.value, expr);
             return statementLet;
         } else if (
             this.peek()?.type === TokenType.ident &&
@@ -439,12 +443,12 @@ export class Parser {
                 error: "Expected '🚀'",
                 line: ident.line,
             });
-            if (!this.vars.has(ident.value)) {
+            if (!this.getVars().has(ident.value)) {
                 error(`Variable '${ident.value}' does not exist`, ident.line);
             }
             checkLiteralType(
                 expr.literalType,
-                [this.vars.get(ident.value).literalType],
+                [this.getVars().get(ident.value).literalType],
                 ident.line,
             );
             return new StatementAssign(expr, ident, ident.line);
@@ -497,20 +501,25 @@ export class Parser {
                     line: line,
                 }).value;
                 arguments_.push(new FunctionArgument(argType, argIdent));
-                if (this.vars.has(argIdent) || this.functions.has(argIdent)) {
+                if (
+                    this.getVars().has(argIdent) ||
+                    this.getFunctions().has(argIdent)
+                ) {
                     error(`Identifier '${argIdent}' already declared`, line);
                 }
                 //this.vars.set(argIdent, );
             }
-            if (this.functions.has(identifier) || this.vars.has(identifier)) {
+            if (
+                this.getFunctions().has(identifier) ||
+                this.getVars().has(identifier)
+            ) {
                 error(`Identifier '${identifier}' already in use`, line);
             }
-            this.functions.set(identifier, {
+            this.scopes[this.scopes.length - 1].functions.set(identifier, {
                 returnType: type,
                 arguments: arguments_,
             });
             const scope = this.parseScope();
-            this.removeVars(arguments_.length);
             return new StatementFunctionDefinition(
                 type,
                 identifier,
@@ -528,12 +537,15 @@ export class Parser {
                 error: "Expected '🚀'",
                 line: line,
             });
-            if (this.functions.size === 0) {
+            if (this.scopes.length === 1) {
+                //TODO
                 error("Cannot '🪃' outisde a function", line);
             }
             //get innermost function
-            const idents = Array.from(this.functions.keys());
-            const function_ = this.functions.get(idents[idents.length - 1]);
+            const idents = Array.from(this.getFunctions().keys());
+            const function_ = this.getFunctions().get(
+                idents[idents.length - 1],
+            );
             if (function_.returnType !== expression.literalType) {
                 error(
                     `Returend type '${getEmojiFromLiteralType(
@@ -555,10 +567,10 @@ export class Parser {
             if (!expr) {
                 error("Invalid expression", line);
             }
-            if (!this.vars.has(ident.value)) {
+            if (!this.getVars().has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const var_ = this.vars.get(ident.value);
+            const var_ = this.getVars().get(ident.value);
             if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
@@ -590,10 +602,10 @@ export class Parser {
             if (!expr) {
                 error("Invalid expression", line);
             }
-            if (!this.vars.has(ident.value)) {
+            if (!this.getVars().has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const var_ = this.vars.get(ident.value);
+            const var_ = this.getVars().get(ident.value);
             if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
@@ -625,10 +637,10 @@ export class Parser {
             if (!expr) {
                 error("Invalid expression", line);
             }
-            if (!this.vars.has(ident.value)) {
+            if (!this.getVars().has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const var_ = this.vars.get(ident.value);
+            const var_ = this.getVars().get(ident.value);
             if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
@@ -660,10 +672,10 @@ export class Parser {
             if (!expr) {
                 error("Invalid expression", line);
             }
-            if (!this.vars.has(ident.value)) {
+            if (!this.getVars().has(ident.value)) {
                 error("Undeclared identifier", line);
             }
-            const var_ = this.vars.get(ident.value);
+            const var_ = this.getVars().get(ident.value);
             if (var_.literalType !== expr.literalType) {
                 error(
                     `Expected type '${getEmojiFromLiteralType(
@@ -752,7 +764,9 @@ export class Parser {
                 error("Invalid scope", line);
             }
             if (statementAssign instanceof StatementLet) {
-                this.vars.delete(statementAssign.identifier);
+                this.scopes[this.scopes.length - 1].vars.delete(
+                    statementAssign.identifier,
+                );
             }
             return new StatementFor(
                 statementAssign,
@@ -884,27 +898,18 @@ export class Parser {
             error: "Expected '⚽'",
             line: this.peek()?.line ?? -1,
         }).line;
-        let scope: Scope = new Scope([], line, this.scopes + 1);
+        let scope: Scope = new Scope([], line);
+        this.scopes.push({ vars: new Map(), functions: new Map() });
         let statement = this.parseStatement();
-        let varCount = 0;
-        let functionCount = 0;
-        this.scopes++;
         while (statement) {
             scope.statements.push(statement);
-            if (statement instanceof StatementLet) {
-                varCount++;
-            } else if (statement instanceof StatementFunctionDefinition) {
-                functionCount++;
-            }
             statement = this.parseStatement();
         }
-        this.scopes--;
+        this.scopes.pop();
         this.tryConsume(TokenType.close_curly, {
             error: "Expected '🥅'",
             line: this.peek()?.line ?? -1,
         });
-        this.removeVars(varCount);
-        this.removeFunctions(functionCount);
         return scope;
     }
 

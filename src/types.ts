@@ -67,7 +67,7 @@ export interface Token {
 }
 
 export interface Var {
-    stackLocation: number;
+    offsetFromRBP: number;
     type: LiteralType;
 }
 export interface VarFunction {

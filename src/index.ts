@@ -1,6 +1,7 @@
 import { compile } from "./compiler";
 import fs from "node:fs";
 import { execute } from "./assemble";
+
 const sourceFile = process.argv[2];
 
 if (!sourceFile) {

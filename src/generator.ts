@@ -1,4 +1,4 @@
-import { LiteralType, Var } from "./types";
+import { LiteralType, Var, VarFunction } from "./types";
 import { Program } from "./classes/Program";
 import { Scope } from "./classes/Scope";
 import {
@@ -67,18 +67,24 @@ import {
 
 export class Generator {
     private readonly program: Program;
-    private routines = "\n    ; routines\n";
+    private routines = "\n; routines\n";
     private textTokens: AssemblyToken[] = [];
     private data: string = "";
     private bss: string = "";
     private stackSize: number = 0;
-    private vars = new Map<string, Var>();
-    private functions = new Map<string, StatementFunctionDefinition>();
-    private scopes: number[] = [];
+    private scopes: {
+        vars: Map<string, Var>;
+        functions: Map<string, VarFunction>;
+        prologStackSize: number;
+    }[] = [
+        {
+            vars: new Map<string, Var>(),
+            functions: new Map<string, VarFunction>(),
+            prologStackSize: 0,
+        },
+    ];
     private labelCount = 0;
     private identCount = 0;
-    private isStackPointerOffset = false;
-    private offsetFromStackPointer = 0;
 
     constructor(program: Program) {
         this.program = program;
@@ -213,37 +219,6 @@ enough_capacity_array:
         this.textTokens.push(...token);
     }
 
-    private beginScope() {
-        this.scopes.push(this.vars.size);
-    }
-
-    private endScope(isFunction = false) {
-        const varPopCount =
-            this.vars.size - this.scopes[this.scopes.length - 1];
-        if (!isFunction) {
-            this.writeText(
-                new AssemblyAddToken(
-                    "rsp",
-                    (varPopCount * 8).toString(),
-                    "move stack pointer up for each var in scope",
-                ),
-            );
-        }
-        this.stackSize -= varPopCount;
-        let keys = Array.from(this.vars.keys());
-        for (let i = 0; i < varPopCount; i++) {
-            keys.pop();
-        }
-        this.vars = new Map(
-            [...this.vars.entries()].filter(([key, _value]) =>
-                keys.includes(key),
-            ),
-        );
-        if (!isFunction) {
-            this.scopes.pop();
-        }
-    }
-
     private createLabel() {
         return `label${this.labelCount++}`;
     }
@@ -252,19 +227,58 @@ enough_capacity_array:
         return `ident${this.identCount++}`;
     }
 
-    private generateScope(scope: Scope, isFunction = false) {
+    private getIdentifierStackOffset(identifier: string) {
+        let offset = 0;
+        //iterate from behind
+        for (let i = 0; i < this.scopes.length; i++) {
+            const scope = this.scopes[this.scopes.length - 1 - i];
+
+            if (i !== 0) {
+                // mov past all vars, except for active scope
+                offset += scope.vars.size;
+            }
+
+            if (scope.vars.has(identifier)) {
+                //move down to var
+                offset -= scope.vars.get(identifier).offsetFromRBP;
+                break;
+            } else {
+                //move offset to rbp of this scope
+                offset += scope.prologStackSize;
+            }
+        }
+        return offset;
+    }
+
+    private generateScope(scope: Scope) {
         this.writeText(
             new AssemblyCommentToken(`start scope on line ${scope.startLine}`),
         );
-        this.beginScope();
+        this.writeText(
+            new AssemblyPushToken("rbp"),
+            new AssemblyMovToken("rbp", "rsp"),
+        );
+
+        this.scopes.push({
+            vars: new Map(),
+            functions: new Map(),
+            prologStackSize: 1,
+        });
+
         for (const statement of scope.statements) {
             this.generateStatement(statement);
         }
-        this.endScope(isFunction);
+
         this.writeText(
             new AssemblyCommentToken(
                 `end scope that started on line ${scope.startLine}`,
             ),
+        );
+
+        this.scopes.pop();
+        this.writeText(
+            new AssemblyMovToken("rsp", "rbp"),
+            new AssemblyPopToken("rbp"),
         );
     }
 
@@ -281,31 +295,10 @@ enough_capacity_array:
             this.push("rax");
         } else if (term instanceof TermIdentifier) {
             if (term instanceof TermFunctionCall) {
-                for (const arg of term.arguments) {
-                    this.generateExpr(arg);
-                }
-                this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    call _${term.identifier}`,
-                        `call function ${term.identifier}`,
-                    ),
-                    new AssemblyAddToken(
-                        "rsp",
-                        (term.arguments.length * 8).toString(),
-                        "move stack pointer up for each arg in function",
-                    ),
-                );
-                this.scopes.pop();
-                this.stackSize -= term.arguments.length;
-                this.push("rax", "push return value of function to stack");
             } else if (term instanceof TermArrayAccess) {
                 this.push(
-                    `QWORD [rsp + ${
-                        (this.stackSize -
-                            this.vars.get(term.identifier).stackLocation -
-                            1) *
-                        8
-                    }]`,
+                    `QWORD [rbp + ${this.getIdentifierStackOffset(term.identifier) * 8}]`,
+                    `generate array from identifier ${term.identifier}`,
                 );
                 this.pop("rdi");
                 this.generateTerm(term.expression);
@@ -314,13 +307,9 @@ enough_capacity_array:
                 this.writeText(new AssemblyMulToken("rbx"));
                 this.push("QWORD [rdi + rax]");
             } else {
+                // generate identifier
                 this.push(
-                    `QWORD [rsp + ${
-                        (this.stackSize -
-                            this.vars.get(term.identifier).stackLocation -
-                            1) *
-                        8
-                    }]`,
+                    `QWORD [rbp + ${this.getIdentifierStackOffset(term.identifier) * 8}]`,
                     `generate term from identifier ${term.identifier}`,
                 );
             }
@@ -668,28 +657,6 @@ enough_capacity_array:
         }
     }
 
-    private generateFunctionDefinition(statement: StatementFunctionDefinition) {
-        this.isStackPointerOffset = true;
-
-        const label = this.createLabel(); //end of function label
-        this.writeText(
-            new AssemblyCommentToken("start function definition"),
-            new AssemblyUnoptimizedToken(
-                `    jmp ${label}\n_${statement.identifier}:`,
-            ),
-        );
-        for (let i = 0; i < statement.arguments.length; i++) {
-            //last argument first because of stack order
-            const argument =
-                statement.arguments[statement.arguments.length - 1 - i];
-            //set all arguments according to offset from definition and call
-            this.vars.set(argument.identifier, {
-                stackLocation: this.stackSize + -i,
-                type: argument.type,
-            });
-        }
-    }
-
     /**generate the asm for a single statement
      * @param {Statement} statement the statement to generate
      * */
@@ -736,8 +703,9 @@ enough_capacity_array:
             }
         } else if (statement instanceof StatementLet) {
             this.writeText(new AssemblyCommentToken("start let statement"));
-            this.vars.set(statement.identifier, {
-                stackLocation: this.stackSize,
+            this.scopes[this.scopes.length - 1].vars.set(statement.identifier, {
+                offsetFromRBP:
+                    this.scopes[this.scopes.length - 1].vars.size + 1,
                 type: statement.expression.literalType,
             });
             this.generateExpr(statement.expression);
@@ -746,11 +714,10 @@ enough_capacity_array:
                 new AssemblyCommentToken("start reassign statement"),
             );
             this.generateExpr(statement.expression);
-            const var_ = this.vars.get(statement.identifier);
             this.pop("rax");
             this.writeText(
                 new AssemblyMovToken(
-                    `[rsp + ${(this.stackSize - var_.stackLocation - 1) * 8}]`,
+                    `[rbp + ${this.getIdentifierStackOffset(statement.identifier) * 8}]`,
                     "rax",
                 ),
             );
@@ -780,30 +747,29 @@ enough_capacity_array:
                 this.writeText(new AssemblyUnoptimizedToken(`${endLabel}:`));
             }
         } else if (statement instanceof StatementFunctionDefinition) {
-            this.generateFunctionDefinition(statement);
         } else if (statement instanceof StatementTerm) {
             this.generateTerm(statement.term);
         } else if (statement instanceof StatementReturn) {
-            this.generateExpr(statement.expression);
-            const idents = Array.from(this.functions.keys());
-            const functionDepth = this.functions.get(idents[idents.length - 1])
-                .scope.innerScopeDepth;
-            let varPopCount =
-                this.vars.size - this.scopes[this.scopes.length - 1];
-            for (let i = this.scopes.length - 1; functionDepth < i; i--) {
-                varPopCount += this.scopes[i] - this.scopes[i - 1];
-            }
-            this.pop("rax", "mov return value into rax");
-            this.writeText(
-                new AssemblyAddToken(
-                    "rsp",
-                    (varPopCount * 8).toString(),
-                    "move stack pointer for each var in scope",
-                ),
-            );
-            this.writeText(
-                new AssemblyUnoptimizedToken("    ret", "return value"),
-            );
+            // this.generateExpr(statement.expression);
+            // const idents = Array.from(this.functions.keys());
+            // const functionDepth = this.functions.get(idents[idents.length - 1])
+            //     .scope.innerScopeDepth;
+            // let varPopCount =
+            //     this.vars.size - this.scopes[this.scopes.length - 1];
+            // for (let i = this.scopes.length - 1; functionDepth < i; i--) {
+            //     varPopCount += this.scopes[i] - this.scopes[i - 1];
+            // }
+            // this.pop("rax", "mov return value into rax");
+            // this.writeText(
+            //     new AssemblyAddToken(
+            //         "rsp",
+            //         (varPopCount * 8).toString(),
+            //         "move stack pointer for each var in scope",
+            //     ),
+            // );
+            // this.writeText(
+            //     new AssemblyUnoptimizedToken("    ret", "return value"),
+            // );
         } else if (statement instanceof StatementWhile) {
             const startLabel = this.createLabel();
             const endLabel = this.createLabel();
@@ -844,23 +810,27 @@ enough_capacity_array:
             );
             if (statement.statementAssign instanceof StatementLet) {
                 this.writeText(new AssemblyAddToken("rsp", "8"));
-                this.vars.delete(statement.statementAssign.identifier);
+                this.scopes[this.scopes.length - 1].vars.delete(
+                    statement.statementAssign.identifier,
+                );
                 this.stackSize--;
             }
         }
     }
 
     /** Generate asm from the token array
-     * @returns {string} the asm
      * */
     generateProgram() {
+        this.writeText(new AssemblyMovToken("rbp", "rsp"));
         for (const statement of this.program.statements) {
             this.generateStatement(statement);
         }
 
-        this.writeText(new AssemblyMovToken("rax", "60"));
-        this.writeText(new AssemblyMovToken("rdi", "0"));
-        this.writeText(new AssemblyUnoptimizedToken("    syscall"));
+        this.writeText(
+            new AssemblyMovToken("rax", "60"),
+            new AssemblyMovToken("rdi", "0"),
+            new AssemblyUnoptimizedToken("    syscall"),
+        );
 
         return {
             data: this.data,

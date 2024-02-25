@@ -55,7 +55,6 @@ export class TermIdentifier extends Term {
 
 export class TermParens extends Term {
     readonly expression: Expression;
-
     constructor(expression: Expression, line: number) {
         super(expression.literalType, line);
         this.expression = expression;

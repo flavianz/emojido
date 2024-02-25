@@ -171,7 +171,7 @@ describe("Compiler", () => {
         ]);
         expect(result.standardErr).toEqual([]);
     });
-    test("case 1", async () => {
+    it("test case 1", async () => {
         const result = await execute(
             compile(
                 "📦a🪢2🚀\n" +
@@ -210,6 +210,31 @@ describe("Compiler", () => {
             { text: "\u00002" },
             { text: "\u000018" },
         ]);
+        expect(result.standardErr).toEqual([]);
+    });
+    it("test case 2", async () => {
+        const result = await execute(
+            compile(
+                "let x = 10;\n" +
+                    "if false if {\n" +
+                    "    x = 11;\n" +
+                    "} elseif true elseif {\n" +
+                    "    let a = 3;\n" +
+                    "    if a > 34 if {\n" +
+                    "        x = 69;\n" +
+                    "    }\n" +
+                    "    else {\n" +
+                    "    x = 12 * a;}\n" +
+                    "} else {\n" +
+                    "    x = 13;\n" +
+                    "}\n" +
+                    "\n" +
+                    "exit x;",
+                false,
+            ),
+        );
+        expect(result.exitCode).toBe(36);
+        expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
 });
