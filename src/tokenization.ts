@@ -148,6 +148,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "minusminus") {
+                    tokens.push({
+                        type: TokenType.doubleMinus,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else if (buffer === "int") {
                     tokens.push({
                         type: TokenType.typeInt,
@@ -300,6 +306,12 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.plusEqual,
+                        line: this.lineCount,
+                    });
+                } else if (this.peek() === "+") {
+                    this.consume();
+                    tokens.push({
+                        type: TokenType.doublePlus,
                         line: this.lineCount,
                     });
                 } else {

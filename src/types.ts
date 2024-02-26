@@ -49,6 +49,8 @@ export enum TokenType {
     for = "for",
     openBracket = "openBracket",
     closeBracket = "closeBracket",
+    doublePlus = "doublePlus",
+    doubleMinus = "doubleMinus",
 }
 
 export enum LiteralType {

@@ -574,14 +574,16 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            if (var_.literalType !== expr.literalType) {
-                error(
-                    `Expected type '${getEmojiFromLiteralType(
-                        var_.literalType,
-                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
-                    line,
-                );
-            }
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            checkLiteralType(
+                expr.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,
@@ -609,14 +611,16 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            if (var_.literalType !== expr.literalType) {
-                error(
-                    `Expected type '${getEmojiFromLiteralType(
-                        var_.literalType,
-                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
-                    line,
-                );
-            }
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            checkLiteralType(
+                expr.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,
@@ -644,14 +648,16 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            if (var_.literalType !== expr.literalType) {
-                error(
-                    `Expected type '${getEmojiFromLiteralType(
-                        var_.literalType,
-                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
-                    line,
-                );
-            }
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            checkLiteralType(
+                expr.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,
@@ -679,14 +685,16 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            if (var_.literalType !== expr.literalType) {
-                error(
-                    `Expected type '${getEmojiFromLiteralType(
-                        var_.literalType,
-                    )}' but got type '${getEmojiFromLiteralType(expr.literalType)}'`,
-                    line,
-                );
-            }
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            checkLiteralType(
+                expr.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,
@@ -695,6 +703,58 @@ export class Parser {
                 new BinaryExpressionDiv(
                     new TermIdentifier(line, ident.value, var_.literalType),
                     expr,
+                    line,
+                ),
+                ident,
+                line,
+            );
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.doublePlus
+        ) {
+            const ident = this.consume();
+            //consume double plus
+            const line = this.consume().line;
+            const var_ = this.getVars().get(ident.value);
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionAdd(
+                    new TermIdentifier(line, ident.value, var_.literalType),
+                    new TermInteger(line, "1"),
+                    line,
+                ),
+                ident,
+                line,
+            );
+        } else if (
+            this.peek()?.type === TokenType.ident &&
+            this.peek(1)?.type === TokenType.doubleMinus
+        ) {
+            const ident = this.consume();
+            //consume double plus
+            const line = this.consume().line;
+            const var_ = this.getVars().get(ident.value);
+            checkLiteralType(
+                var_.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                line,
+            );
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementAssign(
+                new BinaryExpressionSub(
+                    new TermIdentifier(line, ident.value, var_.literalType),
+                    new TermInteger(line, "1"),
                     line,
                 ),
                 ident,
