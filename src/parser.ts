@@ -1,5 +1,5 @@
 import { LiteralType, Token, TokenType, VarFunction } from "./types";
-import { error, getBinaryPrecedence } from "./tokenization";
+import { error, getBinaryPrecedence, Tokenizer } from "./tokenization";
 import { mergeMaps } from "./utils";
 import {
     Term,
@@ -54,6 +54,9 @@ import {
     StatementFunctionDefinition,
     TermFunctionCall,
 } from "./classes/Functions";
+import fs from "node:fs";
+import { compile } from "./compiler";
+import { demoji } from "./demoji";
 
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
@@ -838,6 +841,42 @@ export class Parser {
                 scope,
                 line,
             );
+        } else if (this.peek()?.type === TokenType.for) {
+            const line = this.consume().line;
+            const string = this.tryConsume(TokenType.string, {
+                error: "Expected type '📜'",
+                line: line,
+            });
+            let ident = "";
+            for (
+                let i = 0;
+                i < string.value.length && string.value[i] !== "/";
+                i++
+            ) {
+                ident = string.value[i] + ident;
+            }
+            if (string.value === "math") {
+                string.value = "./stdlib/math";
+                ident = "math";
+            }
+            let source = fs.readFileSync(string.value).toString();
+
+            source = demoji(source);
+            const tokenizer = new Tokenizer(source);
+            const tokens = tokenizer.tokenize();
+
+            const parser = new Parser(tokens);
+            const program = parser.parseProgram();
+
+            const vars: StatementLet[] = [];
+            const functions: StatementFunctionDefinition[] = [];
+            for (const statement of program.statements) {
+                if (statement instanceof StatementLet) {
+                    vars.push(statement);
+                } else if (statement instanceof StatementFunctionDefinition) {
+                    functions.push(statement);
+                }
+            }
         } else {
             //check for StatementExpression
             try {

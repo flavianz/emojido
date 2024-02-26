@@ -51,6 +51,7 @@ export enum TokenType {
     closeBracket = "closeBracket",
     doublePlus = "doublePlus",
     doubleMinus = "doubleMinus",
+    import = "import",
 }
 
 export enum LiteralType {

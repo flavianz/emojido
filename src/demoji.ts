@@ -48,7 +48,9 @@ export function demoji(source: string) {
         .replaceAll("🥏", " while ")
         .replaceAll("☎️", " for ")
         .replaceAll("🌜", "[")
-        .replaceAll("🌛", "]");
+        .replaceAll("🌛", "]")
+        .replaceAll("🪤", "import ")
+        .replaceAll("🗃️", " obj ");
 }
 
 export function enmoji(string: string) {
@@ -99,5 +101,8 @@ export function enmoji(string: string) {
         .replaceAll("while", "🥏")
         .replaceAll("for", "☎️")
         .replaceAll("[", "🌜")
-        .replaceAll("]", "🌛");
+        .replaceAll("]", "🌛")
+        .replaceAll("import", "🪤")
+        .replaceAll("obj", "🗃️")
+        .replaceAll("➡️", ".");
 }
