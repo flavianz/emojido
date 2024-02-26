@@ -4,7 +4,6 @@
 - Check that every path of function returns something
 
 ### Binary Operations
-- x++, x--;
 - convert float to int (possibly implemented in the math standard library)
 - convert string to int / float
 
