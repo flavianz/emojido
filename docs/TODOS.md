@@ -13,7 +13,6 @@
 
 ### Features
 
-- Arrays
 - Objects
 - Classes?
 - Standard library
@@ -40,7 +39,7 @@
 - constant variables
 - enums
 - exceptions
-  - try / catch
+- try / catch
 - read / write file
 - execution arguments
 - user input

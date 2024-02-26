@@ -218,7 +218,6 @@ enough_capacity_array:
     private writeText(...token: AssemblyToken[]) {
         this.textTokens.push(...token);
     }
-
     private createLabel() {
         return `label${this.labelCount++}`;
     }
