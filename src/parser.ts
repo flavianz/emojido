@@ -10,6 +10,7 @@ import {
     TermIdentifier,
     TermInteger,
     TermNull,
+    TermObject,
     TermParens,
     TermString,
 } from "./classes/Terms";
@@ -55,7 +56,6 @@ import {
     TermFunctionCall,
 } from "./classes/Functions";
 import fs from "node:fs";
-import { compile } from "./compiler";
 import { demoji } from "./demoji";
 
 const literalTypeToEmoji = {
@@ -108,11 +108,11 @@ export class Parser {
     private index: number = 0;
     private readonly tokens: Token[];
     private scopes: {
-        vars: Map<string, Term>;
+        vars: Map<string, Expression>;
         functions: Map<string, VarFunction>;
     }[] = [
         {
-            vars: new Map<string, Term>(),
+            vars: new Map<string, Expression>(),
             functions: new Map<string, VarFunction>(),
         },
     ];
@@ -121,8 +121,8 @@ export class Parser {
         this.tokens = tokens;
     }
 
-    private getVars(): Map<string, Term> {
-        let result = new Map<string, Term>();
+    private getVars(): Map<string, Expression> {
+        let result = new Map<string, Expression>();
         for (const map of this.scopes) {
             result = mergeMaps(result, map.vars);
         }
@@ -318,6 +318,46 @@ export class Parser {
                 line: line,
             });
             return new TermArray(type, values, line);
+        } else if (this.peek()?.type === TokenType.object) {
+            const line = this.consume().line;
+            let vars: Map<string, StatementLet> = new Map<
+                string,
+                StatementLet
+            >();
+            let functions: Map<string, StatementFunctionDefinition> = new Map<
+                string,
+                StatementFunctionDefinition
+            >();
+            while (this.peek() && this.peek()?.type !== TokenType.object) {
+                const ident = this.tryConsume(TokenType.ident, {
+                    error: "Expected identifier",
+                    line: line,
+                });
+                this.tryConsume(TokenType.equals, {
+                    error: "Expected '🪢'",
+                    line: ident.line,
+                });
+                if (this.peek()?.type === TokenType.function) {
+                    functions.set(
+                        ident.value,
+                        this.parseStatement() as StatementFunctionDefinition,
+                    );
+                }
+                vars.set(
+                    ident.value,
+                    new StatementLet(this.parseExpr(), ident, line),
+                );
+            }
+            this.tryConsume(TokenType.object, {
+                error: "Expected '🗃️' at end of object",
+                line: line,
+            });
+            return new TermObject(
+                LiteralType.objectLiteral,
+                vars,
+                functions,
+                line,
+            );
         } else {
             return null;
         }
@@ -512,7 +552,7 @@ export class Parser {
                 }
                 this.scopes[this.scopes.length - 1].vars.set(
                     argIdent,
-                    new Term(argType, line),
+                    new Term(argType, line, new Map(), new Map()),
                 );
             }
             if (
@@ -841,7 +881,7 @@ export class Parser {
                 scope,
                 line,
             );
-        } else if (this.peek()?.type === TokenType.for) {
+        } else if (this.peek()?.type === TokenType.import) {
             const line = this.consume().line;
             const string = this.tryConsume(TokenType.string, {
                 error: "Expected type '📜'",

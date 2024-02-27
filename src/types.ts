@@ -52,6 +52,7 @@ export enum TokenType {
     doublePlus = "doublePlus",
     doubleMinus = "doubleMinus",
     import = "import",
+    object = "object",
 }
 
 export enum LiteralType {
@@ -61,6 +62,7 @@ export enum LiteralType {
     booleanLiteral = "booleanLiteral",
     nullLiteral = "nullLiteral",
     arrayLiteral = "arrayLiteral",
+    objectLiteral = "objectLiteral",
 }
 
 export interface Token {

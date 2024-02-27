@@ -10,6 +10,7 @@ import {
     TermIdentifier,
     TermInteger,
     TermNull,
+    TermObject,
     TermParens,
     TermString,
 } from "./classes/Terms";
@@ -315,7 +316,7 @@ enough_capacity_array:
                     `generate array from identifier ${term.identifier}`,
                 );
                 this.pop("rdi");
-                this.generateTerm(term.expression);
+                this.generateExpr(term.expression);
                 this.pop("rax");
                 this.writeText(new AssemblyMovToken("rbx", "8"));
                 this.writeText(new AssemblyMulToken("rbx"));
@@ -390,6 +391,7 @@ enough_capacity_array:
                 );
             }
             this.push(ident + "_ptr");
+        } else if (term instanceof TermObject) {
         }
     }
 
