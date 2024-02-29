@@ -27,6 +27,7 @@ import {
     StatementExit,
     StatementFor,
     StatementIf,
+    StatementImport,
     StatementLet,
     StatementPrint,
     StatementReturn,
@@ -883,8 +884,20 @@ export class Parser {
             );
         } else if (this.peek()?.type === TokenType.import) {
             const line = this.consume().line;
+            this.tryConsume(TokenType.quotes, {
+                error: "Expected type '📜'",
+                line: line,
+            });
             const string = this.tryConsume(TokenType.string, {
                 error: "Expected type '📜'",
+                line: line,
+            });
+            this.tryConsume(TokenType.quotes, {
+                error: "Expected type '📜'",
+                line: line,
+            });
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
                 line: line,
             });
             let ident = "";
@@ -896,8 +909,9 @@ export class Parser {
                 ident = string.value[i] + ident;
             }
             if (string.value === "math") {
-                string.value = "./stdlib/math";
-                ident = "math";
+                string.value = "stdlib/math.ejo";
+            } else {
+                string.value += ".ejo";
             }
             let source = fs.readFileSync(string.value).toString();
 
@@ -913,10 +927,39 @@ export class Parser {
             for (const statement of program.statements) {
                 if (statement instanceof StatementLet) {
                     vars.push(statement);
+
+                    if (
+                        this.getVars().has(statement.identifier) ||
+                        this.getFunctions().has(statement.identifier)
+                    ) {
+                        error(
+                            `Trying to import identifier '${statement.identifier}' that is already defined`,
+                            line,
+                        );
+                    }
+                    this.scopes[this.scopes.length - 1].vars.set(
+                        statement.identifier,
+                        statement.expression,
+                    );
                 } else if (statement instanceof StatementFunctionDefinition) {
                     functions.push(statement);
+                    if (
+                        this.getVars().has(statement.identifier) ||
+                        this.getFunctions().has(statement.identifier)
+                    ) {
+                        error(
+                            `Trying to import function '${statement.identifier}' that is already defined`,
+                            line,
+                        );
+                    }
+                    this.scopes[this.scopes.length - 1].functions.set(
+                        statement.identifier,
+                        statement,
+                    );
                 }
             }
+
+            return new StatementImport(functions, vars, line);
         } else {
             //check for StatementExpression
             try {
@@ -1065,7 +1108,7 @@ export class Parser {
             if (statement) {
                 program.statements.push(statement);
             } else {
-                error("Invalid statement", statement.line);
+                error("Invalid statement", statement?.line);
             }
         }
         return program;

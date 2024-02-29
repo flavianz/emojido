@@ -48,6 +48,7 @@ import {
     StatementScope,
     StatementTerm,
     StatementWhile,
+    StatementImport,
 } from "./classes/Statements";
 import {
     StatementFunctionDefinition,
@@ -149,7 +150,8 @@ printBoolEnd:
     mov rdi, 1
     mov rax, 1
     syscall
-    ret`;
+    ret
+`;
         }
     }
 
@@ -384,12 +386,13 @@ enough_capacity_array:
                         "set item at index " + i,
                     ),
                 );
-                this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    inc QWORD [${ident}_size]`,
-                    ),
-                );
             }
+            this.writeText(
+                new AssemblyAddToken(
+                    `QWORD [${ident}_size]`,
+                    term.values.length.toString(),
+                ),
+            );
             this.push(ident + "_ptr");
         } else if (term instanceof TermObject) {
         }
@@ -602,10 +605,42 @@ enough_capacity_array:
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-            this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setl al"),
-            );
-            this.push("rax");
+
+            if (
+                binaryExpr.lhsExpression.literalType ===
+                    LiteralType.integerLiteral &&
+                binaryExpr.rhsExpression.literalType ===
+                    LiteralType.integerLiteral
+            ) {
+                //sub two integers
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    cmp rax, rbx\n    setl al",
+                    ),
+                );
+                this.push("rax");
+            } else {
+                //min one float involved
+                const ident = this.generateNumber(
+                    binaryExpr.lhsExpression.literalType,
+                    binaryExpr.rhsExpression.literalType,
+                );
+
+                this.writeText(
+                    new AssemblyUnoptimizedToken("    cmppd xmm0, xmm1, 1"),
+                );
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        `    movq qword [${ident}], xmm0`,
+                    ),
+                );
+                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
+                this.push("rax");
+            }
+            // this.writeText(
+            //     new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setl al"),
+            // );
+            // this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionLessEquals) {
             this.writeText(new AssemblyCommentToken("binary '<='"));
             this.generateExpr(binaryExpr.lhsExpression);
@@ -843,6 +878,13 @@ enough_capacity_array:
                     statement.statementAssign.identifier,
                 );
                 this.stackSize--;
+            }
+        } else if (statement instanceof StatementImport) {
+            for (const var_ of statement.vars) {
+                this.generateStatement(var_);
+            }
+            for (const function_ of statement.functions) {
+                this.generateStatement(function_);
             }
         }
     }

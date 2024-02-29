@@ -4,6 +4,7 @@ import { checkLiteralType } from "../parser";
 import { Scope } from "./Scope";
 import { IfPredicate } from "./IfPredicates";
 import { Term } from "./Terms";
+import { StatementFunctionDefinition } from "./Functions";
 
 export class Statement {
     readonly line: number;
@@ -153,5 +154,18 @@ export class StatementReturn extends Statement {
     constructor(expression: Expression, line: number) {
         super(line);
         this.expression = expression;
+    }
+}
+export class StatementImport extends Statement {
+    readonly vars: StatementLet[];
+    readonly functions: StatementFunctionDefinition[];
+    constructor(
+        functions: StatementFunctionDefinition[],
+        vars: StatementLet[],
+        line: number,
+    ) {
+        super(line);
+        this.vars = vars;
+        this.functions = functions;
     }
 }
