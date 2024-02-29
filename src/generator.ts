@@ -398,9 +398,7 @@ enough_capacity_array:
         }
     }
 
-    private generateNumber(lhs: LiteralType, rhs: LiteralType): string {
-        const ident = this.generateIdentifier();
-        this.data += `    ${ident} dq 0\n`;
+    private generateNumber(lhs: LiteralType, rhs: LiteralType) {
         if (lhs === LiteralType.integerLiteral) {
             this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
         } else {
@@ -415,7 +413,6 @@ enough_capacity_array:
                 new AssemblyUnoptimizedToken("    movsd xmm1, [rbx]"),
             );
         }
-        return ident;
     }
 
     private generateBinaryExpr(binaryExpr: BinaryExpression) {
@@ -437,7 +434,7 @@ enough_capacity_array:
                 this.push("rax");
             } else {
                 //min one float involved
-                const ident = this.generateNumber(
+                this.generateNumber(
                     binaryExpr.lhsExpression.literalType,
                     binaryExpr.rhsExpression.literalType,
                 );
@@ -446,11 +443,8 @@ enough_capacity_array:
                     new AssemblyUnoptimizedToken("    subsd xmm0, xmm1"),
                 );
                 this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    movq qword [${ident}], xmm0`,
-                    ),
+                    new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
-                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionAdd) {
@@ -471,7 +465,7 @@ enough_capacity_array:
                 this.push("rax");
             } else {
                 //min one float involved
-                const ident = this.generateNumber(
+                this.generateNumber(
                     binaryExpr.lhsExpression.literalType,
                     binaryExpr.rhsExpression.literalType,
                 );
@@ -480,11 +474,8 @@ enough_capacity_array:
                     new AssemblyUnoptimizedToken("    addsd xmm0, xmm1"),
                 );
                 this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    movq qword [${ident}], xmm0`,
-                    ),
+                    new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
-                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionMul) {
@@ -505,7 +496,7 @@ enough_capacity_array:
                 this.push("rax");
             } else {
                 //min one float involved
-                const ident = this.generateNumber(
+                this.generateNumber(
                     binaryExpr.lhsExpression.literalType,
                     binaryExpr.rhsExpression.literalType,
                 );
@@ -514,11 +505,8 @@ enough_capacity_array:
                     new AssemblyUnoptimizedToken("    mulsd xmm0, xmm1"),
                 );
                 this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    movq qword [${ident}], xmm0`,
-                    ),
+                    new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
-                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BinaryExpressionDiv) {
@@ -539,7 +527,7 @@ enough_capacity_array:
                 this.push("rax");
             } else {
                 //min one float involved
-                const ident = this.generateNumber(
+                this.generateNumber(
                     binaryExpr.lhsExpression.literalType,
                     binaryExpr.rhsExpression.literalType,
                 );
@@ -548,11 +536,8 @@ enough_capacity_array:
                     new AssemblyUnoptimizedToken("    divsd xmm0, xmm1"),
                 );
                 this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    movq qword [${ident}], xmm0`,
-                    ),
+                    new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
-                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BooleanBinaryExpressionCompare) {
@@ -621,26 +606,17 @@ enough_capacity_array:
                 this.push("rax");
             } else {
                 //min one float involved
-                const ident = this.generateNumber(
+                this.generateNumber(
                     binaryExpr.lhsExpression.literalType,
                     binaryExpr.rhsExpression.literalType,
                 );
 
                 this.writeText(
-                    new AssemblyUnoptimizedToken("    cmppd xmm0, xmm1, 1"),
+                    new AssemblyUnoptimizedToken("    comisd xmm0, xmm1"),
                 );
-                this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        `    movq qword [${ident}], xmm0`,
-                    ),
-                );
-                this.writeText(new AssemblyMovToken("rax", `[${ident}]`));
+                this.writeText(new AssemblyUnoptimizedToken("    setnc al"));
                 this.push("rax");
             }
-            // this.writeText(
-            //     new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setl al"),
-            // );
-            // this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionLessEquals) {
             this.writeText(new AssemblyCommentToken("binary '<='"));
             this.generateExpr(binaryExpr.lhsExpression);
