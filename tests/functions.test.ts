@@ -100,10 +100,83 @@ describe("Compiler", () => {
     });
     it("compares", async () => {
         const result = await execute(
-            compile("✂️❌✂️⚽🚪9🚀🥅📐✅📐⚽🚪10🚀🥅🗑️⚽🚪11🚀🥅", false),
+            compile(
+                "print 1 < 3;\n" +
+                    "print 1 < 1;\n" +
+                    "print 1 < -2;\n" +
+                    "print -1 < 0;\n" +
+                    "\n" +
+                    "print 1 <= 3;\n" +
+                    "print 1 <= 1;\n" +
+                    "print 1 <= -2;\n" +
+                    "print -1 <= 0;\n" +
+                    "\n" +
+                    "print 1 > 3;\n" +
+                    "print 1 > 1;\n" +
+                    "print 1 > -2;\n" +
+                    "print -1 > 0;\n" +
+                    "\n" +
+                    "print 1 >= 3;\n" +
+                    "print 1 >= 1;\n" +
+                    "print 1 >= -2;\n" +
+                    "print -1 >= 0;\n" +
+                    "print 1.0 < 3;\n" +
+                    "print 1.0 < 1;\n" +
+                    "print 1.0 < -2.0;\n" +
+                    "print -1.0 < 0.0;\n" +
+                    "\n" +
+                    "print 1.0 <= 3;\n" +
+                    "print 1.0 <= 1;\n" +
+                    "print 1.0 <= -2.0;\n" +
+                    "print -1.0 <= 0.0;\n" +
+                    "\n" +
+                    "print 1.0 > 3;\n" +
+                    "print 1.0 > 1;\n" +
+                    "print 1.0 > -2.0;\n" +
+                    "print -1.0 > 0.0;\n" +
+                    "\n" +
+                    "print 1.0 >= 3;\n" +
+                    "print 1.0 >= 1;\n" +
+                    "print 1.0 >= -2.0;\n" +
+                    "print -1.0 >= 0.0;",
+                false,
+            ),
         );
-        expect(result.exitCode).toBe(10);
-        expect(result.standardOut).toEqual([]);
+        expect(result.exitCode).toBe(0);
+        expect(result.standardOut).toEqual([
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "true" },
+            { text: "true" },
+            { text: "false" },
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "true" },
+            { text: "false" },
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "true" },
+            { text: "true" },
+            { text: "false" },
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "false" },
+            { text: "false" },
+            { text: "true" },
+            { text: "true" },
+            { text: "false" },
+        ]);
         expect(result.standardErr).toEqual([]);
     });
     it("executes functions", async () => {

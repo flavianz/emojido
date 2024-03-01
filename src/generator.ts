@@ -400,14 +400,18 @@ enough_capacity_array:
 
     private generateNumber(lhs: LiteralType, rhs: LiteralType) {
         if (lhs === LiteralType.integerLiteral) {
-            this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
+            this.writeText(
+                new AssemblyUnoptimizedToken("    cvtsi2sd xmm0, rax"),
+            );
         } else {
             this.writeText(
                 new AssemblyUnoptimizedToken("    movsd xmm0, [rax]"),
             );
         }
         if (rhs === LiteralType.integerLiteral) {
-            this.writeText(new AssemblyUnoptimizedToken("    movq xmm1, rbx"));
+            this.writeText(
+                new AssemblyUnoptimizedToken("    cvtsi2sd xmm1, rbx"),
+            );
         } else {
             this.writeText(
                 new AssemblyUnoptimizedToken("    movsd xmm1, [rbx]"),
@@ -547,7 +551,9 @@ enough_capacity_array:
             this.pop("rbx");
             this.pop("rax");
             this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setz al"),
+                new AssemblyUnoptimizedToken(
+                    "    cmp rax, rbx\n    setz al\n    movzx rax, al",
+                ),
             );
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionNotCompare) {
@@ -557,7 +563,9 @@ enough_capacity_array:
             this.pop("rbx");
             this.pop("rax");
             this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setnz al"),
+                new AssemblyUnoptimizedToken(
+                    "    cmp rax, rbx\n    setnz al\n    movzx rax, al",
+                ),
             );
             this.push("rax");
         } else if (binaryExpr instanceof BooleanBinaryExpressionOr) {
@@ -600,7 +608,7 @@ enough_capacity_array:
                 //sub two integers
                 this.writeText(
                     new AssemblyUnoptimizedToken(
-                        "    cmp rax, rbx\n    setl al",
+                        "    cmp rax, rbx\n    setl al\n    movzx rax, al",
                     ),
                 );
                 this.push("rax");
@@ -614,7 +622,11 @@ enough_capacity_array:
                 this.writeText(
                     new AssemblyUnoptimizedToken("    comisd xmm0, xmm1"),
                 );
-                this.writeText(new AssemblyUnoptimizedToken("    setnc al"));
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    setb al\n    movzx rax, al",
+                    ),
+                );
                 this.push("rax");
             }
         } else if (binaryExpr instanceof BooleanBinaryExpressionLessEquals) {
@@ -623,30 +635,108 @@ enough_capacity_array:
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-            this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setle al"),
-            );
-            this.push("rax");
+            if (
+                binaryExpr.lhsExpression.literalType ===
+                    LiteralType.integerLiteral &&
+                binaryExpr.rhsExpression.literalType ===
+                    LiteralType.integerLiteral
+            ) {
+                //sub two integers
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    cmp rax, rbx\n    setle al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            } else {
+                //min one float involved
+                this.generateNumber(
+                    binaryExpr.lhsExpression.literalType,
+                    binaryExpr.rhsExpression.literalType,
+                );
+
+                this.writeText(
+                    new AssemblyUnoptimizedToken("    comisd xmm0, xmm1"),
+                );
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    setbe al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            }
         } else if (binaryExpr instanceof BooleanBinaryExpressionGreaterThan) {
             this.writeText(new AssemblyCommentToken("binary '>'"));
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-            this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setg al"),
-            );
-            this.push("rax");
+            if (
+                binaryExpr.lhsExpression.literalType ===
+                    LiteralType.integerLiteral &&
+                binaryExpr.rhsExpression.literalType ===
+                    LiteralType.integerLiteral
+            ) {
+                //sub two integers
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    cmp rax, rbx\n    setg al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            } else {
+                //min one float involved
+                this.generateNumber(
+                    binaryExpr.lhsExpression.literalType,
+                    binaryExpr.rhsExpression.literalType,
+                );
+
+                this.writeText(
+                    new AssemblyUnoptimizedToken("    comisd xmm0, xmm1"),
+                );
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    seta al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            }
         } else if (binaryExpr instanceof BooleanBinaryExpressionGreaterEquals) {
             this.writeText(new AssemblyCommentToken("binary '>='"));
             this.generateExpr(binaryExpr.lhsExpression);
             this.generateExpr(binaryExpr.rhsExpression);
             this.pop("rbx"); //Rhs
             this.pop("rax"); //Lhs
-            this.writeText(
-                new AssemblyUnoptimizedToken("    cmp rax, rbx\n    setge al"),
-            );
-            this.push("rax");
+            if (
+                binaryExpr.lhsExpression.literalType ===
+                    LiteralType.integerLiteral &&
+                binaryExpr.rhsExpression.literalType ===
+                    LiteralType.integerLiteral
+            ) {
+                //sub two integers
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    cmp rax, rbx\n    setge al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            } else {
+                //min one float involved
+                this.generateNumber(
+                    binaryExpr.lhsExpression.literalType,
+                    binaryExpr.rhsExpression.literalType,
+                );
+
+                this.writeText(
+                    new AssemblyUnoptimizedToken("    comisd xmm0, xmm1"),
+                );
+                this.writeText(
+                    new AssemblyUnoptimizedToken(
+                        "    setae al\n    movzx rax, al",
+                    ),
+                );
+                this.push("rax");
+            }
         }
     }
 
