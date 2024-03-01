@@ -293,7 +293,7 @@ enough_capacity_array:
         } else if (term instanceof TermFloat) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} dq ${term.floatValue} ; generate term float ${term.floatValue}\n`; //store value in memory
-            this.writeText(new AssemblyMovToken("rax", ident)); //mov float into sse reg
+            this.writeText(new AssemblyMovToken("rax", `[${ident}]`)); //mov float into sse reg
             this.push("rax");
         } else if (term instanceof TermIdentifier) {
             if (term instanceof TermFunctionCall) {
@@ -404,18 +404,14 @@ enough_capacity_array:
                 new AssemblyUnoptimizedToken("    cvtsi2sd xmm0, rax"),
             );
         } else {
-            this.writeText(
-                new AssemblyUnoptimizedToken("    movsd xmm0, [rax]"),
-            );
+            this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
         }
         if (rhs === LiteralType.integerLiteral) {
             this.writeText(
                 new AssemblyUnoptimizedToken("    cvtsi2sd xmm1, rbx"),
             );
         } else {
-            this.writeText(
-                new AssemblyUnoptimizedToken("    movsd xmm1, [rbx]"),
-            );
+            this.writeText(new AssemblyUnoptimizedToken("    movq xmm1, rbx"));
         }
     }
 
@@ -446,6 +442,7 @@ enough_capacity_array:
                 this.writeText(
                     new AssemblyUnoptimizedToken("    subsd xmm0, xmm1"),
                 );
+                const ident = this.generateIdentifier();
                 this.writeText(
                     new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
