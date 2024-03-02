@@ -1,0 +1,155 @@
+let e = 2.7182818284590;
+
+let pi = 3.1415926535897;
+
+function float abs function float absInput {
+    if absInput < 0 if {
+        return absInput * -1;
+    }
+    else {
+        return absInput;
+    }
+}
+
+function float mod function float dividend float divisor {
+    while dividend >= divisor while {
+        dividend minusequal divisor;
+    }
+    return dividend;
+}
+
+
+function int round function float roundInput {
+    return int roundInput + 0.000000000000000000001;
+}
+
+function int floor function float floorInput {
+    return round call floorInput minus 0.5 call;
+}
+
+function int ceil function float ceilInput {
+    return round call ceilInput + 0.5 call;
+}
+
+
+function int factorial function int factorialInput {
+    if factorialInput == 0 || factorialInput == 1 if
+    {
+        return 1;
+    }
+    elseif factorialInput == -1 elseif {
+        return -1;
+    }
+    else {
+        let result = 1;
+        let isNeg = factorialInput < 0;
+        factorialInput = round call abs call float factorialInput call call;
+        for let i = 2; i <= factorialInput; i++; for {
+            result *= i;
+        }
+        if isNeg if {
+            return result * -1;
+        }
+        else
+        {
+            return result;
+        }
+    }
+}
+
+function float exp function float expInput {
+    let epsilon = 0.000000001;
+    let term = 1.0;
+    let sum = 1.0;
+    let n = 1;
+    while abs call term call > epsilon while {
+        term *= expInput / n;
+        sum += term;
+        n++;
+    }
+    return sum;
+}
+
+function float loge function float logeInput {
+    if logeInput <= 0 if {
+        return float 0;
+    } else{
+        let epsilon = 0.000000001;
+        let term = (logeInput minus 1) / (logeInput + 1);
+        let sum = term;
+        let power = term;
+        let n = 3;
+        while abs call power call > epsilon while {
+            power *= term * term;
+            sum += power / n;
+            n += 2;
+        }
+        return 2 * sum;
+    }
+}
+
+function float pow function float base float exponent {
+    if exponent == 0.0 if {
+        return 1.0;
+    } elseif exponent == 1.0 elseif {
+        return base;
+    } elseif exponent < 0 elseif {
+        return 1 / pow call base, -1 * exponent call;
+    } else {
+        return exp call exponent * loge call base call call;
+    }
+}
+
+function float max function float maxInput1 float maxInput2 {
+    if maxInput1 > maxInput2 if {
+        return maxInput1;
+    } else {
+        return maxInput2;
+    }
+}
+function float min function float minInput1 float minInput2 {
+    if minInput1 < minInput2 if {
+        return minInput1;
+    } else {
+        return minInput2;
+    }
+}
+
+function float sin function float sinAngle  {
+    let terms = 10;
+    sinAngle = sinAngle * pi / 180;
+    let result = 0.0;
+    for let i = 0; i < terms; i++; for {
+        let coefficient = 0;
+        if mod call float i, 2.0 call == 0.0 if {
+            coefficient = 1;
+        } else {
+            coefficient = -1;
+        }
+        let sinExponent = 2 * i + 1;
+        result += coefficient * (pow call sinAngle, float sinExponent call) / (factorial call sinExponent call);
+    }
+    return result;
+}
+function float cos function float cosAngle  {
+    let terms = 10;
+    cosAngle = cosAngle * pi / 180;
+    let result = 0.0;
+    for let i = 0; i < terms; i++; for {
+        let coefficient = 0;
+        if mod call float i, 2.0 call == 0.0 if {
+            coefficient = 1;
+        } else {
+            coefficient = -1;
+        }
+        let cosExponent = 2 * i;
+        result += coefficient * (pow call cosAngle, float cosExponent call) / (factorial call cosExponent call);
+    }
+    return result;
+}
+
+function float tan function float tanAngle {
+    let sinVal = (sin call tanAngle call);
+    let cosVal = cos call tanAngle call;
+    return sinVal / cosVal;
+}
