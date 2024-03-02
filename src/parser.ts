@@ -12,6 +12,8 @@ import {
     TermNull,
     TermObject,
     TermParens,
+    TermParseToFloat,
+    TermParseToInt,
     TermString,
 } from "./classes/Terms";
 import { Expression } from "./classes/Expressions";
@@ -359,6 +361,30 @@ export class Parser {
                 functions,
                 line,
             );
+        } else if (this.peek()?.type === TokenType.typeFloat) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+            checkLiteralType(
+                expression.literalType,
+                [LiteralType.integerLiteral],
+                line,
+            );
+            return new TermParseToFloat(expression, line);
+        } else if (this.peek()?.type === TokenType.typeInt) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+            checkLiteralType(
+                expression.literalType,
+                [LiteralType.floatLiteral],
+                line,
+            );
+            return new TermParseToInt(expression, line);
         } else {
             return null;
         }
@@ -553,7 +579,7 @@ export class Parser {
                 }
                 this.scopes[this.scopes.length - 1].vars.set(
                     argIdent,
-                    new Term(argType, line, new Map(), new Map()),
+                    new Term(argType, line),
                 );
             }
             if (

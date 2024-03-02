@@ -12,6 +12,8 @@ import {
     TermNull,
     TermObject,
     TermParens,
+    TermParseToFloat,
+    TermParseToInt,
     TermString,
 } from "./classes/Terms";
 import {
@@ -394,6 +396,22 @@ enough_capacity_array:
                 ),
             );
             this.push(ident + "_ptr");
+        } else if (term instanceof TermParseToFloat) {
+            this.generateExpr(term.expression);
+            this.pop("rax");
+            this.writeText(
+                new AssemblyUnoptimizedToken("    cvtsi2sd xmm0, rax"),
+            );
+            this.writeText(new AssemblyUnoptimizedToken("    movq rax, xmm0"));
+            this.push("rax");
+        } else if (term instanceof TermParseToInt) {
+            this.generateExpr(term.expression);
+            this.pop("rax");
+            this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
+            this.writeText(
+                new AssemblyUnoptimizedToken("    cvtsd2si rax, xmm0"),
+            );
+            this.push("rax");
         } else if (term instanceof TermObject) {
         }
     }
