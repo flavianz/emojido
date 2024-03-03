@@ -95,6 +95,8 @@ function float pow function float base float exponent {
         return base;
     } elseif exponent < 0 elseif {
         return 1 / pow call base, -1 * exponent call;
+    } elseif base == 0.0 elseif {
+        return 0.0;
     } else {
         return exp call exponent * loge call base call call;
     }
@@ -116,8 +118,10 @@ function float min function float minInput1 float minInput2 {
 }
 
 function float sin function float sinAngle  {
+print "sin";
+    print int pi * 1000;
     let terms = 10;
-    sinAngle = sinAngle * pi / 180;
+    sinAngle = sinAngle * 3.1415926535897 / 180;
     let result = 0.0;
     for let i = 0; i < terms; i++; for {
         let coefficient = 0;
@@ -133,7 +137,7 @@ function float sin function float sinAngle  {
 }
 function float cos function float cosAngle  {
     let terms = 10;
-    cosAngle = cosAngle * pi / 180;
+    cosAngle = cosAngle * 3.1415926535897 / 180;
     let result = 0.0;
     for let i = 0; i < terms; i++; for {
         let coefficient = 0;
@@ -149,7 +153,8 @@ function float cos function float cosAngle  {
 }
 
 function float tan function float tanAngle {
-    let sinVal = (sin call tanAngle call);
+    print int pi * 1000;
+    let sinVal = sin call tanAngle call;
     let cosVal = cos call tanAngle call;
     return sinVal / cosVal;
 }
