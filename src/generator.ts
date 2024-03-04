@@ -75,16 +75,17 @@ export class Generator {
     private textTokens: AssemblyToken[] = [];
     private data: string = "";
     private bss: string = "";
-    private stackSize: number = 0;
     private scopes: {
         vars: Map<string, Var>;
         functions: Map<string, VarFunction>;
         prologStackSize: number;
+        stackSize: number;
     }[] = [
         {
             vars: new Map<string, Var>(),
             functions: new Map<string, VarFunction>(),
             prologStackSize: 0,
+            stackSize: 0,
         },
     ];
     private labelCount = 0;
@@ -212,12 +213,12 @@ enough_capacity_array:
      * */
     private push(reg: string, comment: string = "") {
         this.writeText(new AssemblyPushToken(reg, comment));
-        this.stackSize++;
+        this.scopes[this.scopes.length - 1].stackSize++;
     }
 
     private pop(reg: string, comment: string = "") {
         this.writeText(new AssemblyPopToken(reg, comment));
-        this.stackSize--;
+        this.scopes[this.scopes.length - 1].stackSize--;
     }
 
     private writeText(...token: AssemblyToken[]) {
@@ -258,15 +259,14 @@ enough_capacity_array:
         this.writeText(
             new AssemblyCommentToken(`start scope on line ${scope.startLine}`),
         );
-        this.writeText(
-            new AssemblyPushToken("rbp"),
-            new AssemblyMovToken("rbp", "rsp"),
-        );
+        this.push("rbp");
+        this.writeText(new AssemblyMovToken("rbp", "rsp"));
 
         this.scopes.push({
             vars: new Map(),
             functions: new Map(),
             prologStackSize: prologStackSize,
+            stackSize: 0,
         });
 
         for (const statement of scope.statements) {
@@ -280,10 +280,8 @@ enough_capacity_array:
         );
 
         this.scopes.pop();
-        this.writeText(
-            new AssemblyMovToken("rsp", "rbp"),
-            new AssemblyPopToken("rbp"),
-        );
+        this.writeText(new AssemblyMovToken("rsp", "rbp"));
+        this.pop("rbp");
     }
 
     private generateTerm(term: Term) {
@@ -460,7 +458,6 @@ enough_capacity_array:
                 this.writeText(
                     new AssemblyUnoptimizedToken("    subsd xmm0, xmm1"),
                 );
-                const ident = this.generateIdentifier();
                 this.writeText(
                     new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
                 );
@@ -900,6 +897,8 @@ enough_capacity_array:
                 {
                     arguments: statement.arguments,
                     returnType: statement.returnType,
+                    scopeDefinitionOffset:
+                        this.scopes[this.scopes.length - 1].stackSize,
                 },
             );
             this.generateScope(statement.scope, 2);
@@ -958,7 +957,6 @@ enough_capacity_array:
                 this.scopes[this.scopes.length - 1].vars.delete(
                     statement.statementAssign.identifier,
                 );
-                this.stackSize--;
             }
         } else if (statement instanceof StatementImport) {
             for (const var_ of statement.vars) {

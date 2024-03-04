@@ -78,4 +78,5 @@ export interface Var {
 export interface VarFunction {
     returnType: LiteralType;
     arguments: FunctionArgument[];
+    scopeDefinitionOffset?: number;
 }
