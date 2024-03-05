@@ -74,7 +74,7 @@ function float loge function float logeInput {
     if logeInput <= 0 if {
         return float 0;
     } else{
-        let epsilon = 0.000000001;
+        let epsilon = 0.0000000001;
         let term = (logeInput minus 1) / (logeInput + 1);
         let sum = term;
         let power = term;
@@ -118,8 +118,6 @@ function float min function float minInput1 float minInput2 {
 }
 
 function float sin function float sinAngle  {
-print "sin";
-    print int pi * 1000;
     let terms = 10;
     sinAngle = sinAngle * 3.1415926535897 / 180;
     let result = 0.0;
@@ -153,8 +151,49 @@ function float cos function float cosAngle  {
 }
 
 function float tan function float tanAngle {
-    print int pi * 1000;
     let sinVal = sin call tanAngle call;
     let cosVal = cos call tanAngle call;
     return sinVal / cosVal;
+}
+
+function float sqrt function float sqrtValue float sqrtBase {
+    if (sqrtValue < 0 || sqrtBase <= 1) if {
+        return 0.0;
+    }
+    let epsilon = 0.00001;
+    let minVal = 0.0;
+    let maxVal = sqrtValue;
+    let guess = (minVal + maxVal) / 2;
+    while (maxVal minus minVal) > epsilon while
+    {
+        let powed = pow call guess, sqrtBase call;
+        if powed < sqrtValue if {
+            minVal = guess;
+        } elseif powed > sqrtValue elseif {
+            maxVal = guess;
+        } else {
+            return guess;
+        }
+        guess = (minVal + maxVal) / 2;
+    }
+
+    return guess;
+}
+
+
+function float logx function float logxNumber float logxBase {
+    if logxNumber <= 0 || logxBase <= 0 || logxBase == 1.0 if {
+        return 0.0;
+    }
+
+    return loge call logxNumber call / loge call logxBase call;
+}
+
+function float log2 function float logValue {
+        return logx call logValue, 2.0 call;
+}
+
+
+function float log10 function float logValue {
+    return logx call logValue, 10.0 call;
 }
