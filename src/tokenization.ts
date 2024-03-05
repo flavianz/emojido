@@ -4,20 +4,21 @@ export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
         case TokenType.star:
         case TokenType.slash:
-            return 3;
+            return 4;
         case TokenType.plus:
         case TokenType.minus:
-            return 2;
+            return 3;
         case TokenType.double_equals:
         case TokenType.not_equals:
-            return 1;
-        case TokenType.and:
-        case TokenType.or:
-        case TokenType.xor:
+            return 2;
         case TokenType.smaller:
         case TokenType.smallerEquals:
         case TokenType.greater:
         case TokenType.greaterEquals:
+            return 1;
+        case TokenType.and:
+        case TokenType.or:
+        case TokenType.xor:
             return 0;
         default:
             return null;

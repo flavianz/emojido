@@ -593,6 +593,10 @@ export class Parser {
                 arguments: arguments_,
             });
             const scope = this.parseScope();
+
+            for (const arg of arguments_) {
+                this.scopes[this.scopes.length - 1].vars.delete(arg.identifier);
+            }
             return new StatementFunctionDefinition(
                 type,
                 identifier,
