@@ -116,6 +116,11 @@ export class TermParseToFloat extends Term {
     readonly expression: Expression;
     constructor(expression: Expression, line: number) {
         super(LiteralType.floatLiteral, line);
+        checkLiteralType(
+            expression.literalType,
+            [LiteralType.integerLiteral],
+            line,
+        );
         this.expression = expression;
     }
 }
@@ -124,6 +129,11 @@ export class TermParseToInt extends Term {
     readonly expression: Expression;
     constructor(expression: Expression, line: number) {
         super(LiteralType.integerLiteral, line);
+        checkLiteralType(
+            expression.literalType,
+            [LiteralType.floatLiteral],
+            line,
+        );
         this.expression = expression;
     }
 }

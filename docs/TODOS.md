@@ -12,7 +12,8 @@
 - print floats
 
 ### Features
-
+- automatic int to float conversion
+- accept null for every type
 - Objects
 - Classes?
 - Standard library
@@ -24,7 +25,6 @@
     - getMillis
     - get date string
 - import / export
-- ! (negate expressions)
 - constant variables
 - enums
 - exceptions

@@ -53,6 +53,7 @@ export enum TokenType {
     doubleMinus = "doubleMinus",
     import = "import",
     object = "object",
+    exclamation = "exclamation",
 }
 
 export enum LiteralType {

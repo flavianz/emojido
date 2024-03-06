@@ -385,6 +385,22 @@ export class Parser {
                 line,
             );
             return new TermParseToInt(expression, line);
+        } else if (this.peek()?.type === TokenType.exclamation) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+            checkLiteralType(
+                expression.literalType,
+                [LiteralType.booleanLiteral],
+                line,
+            );
+            return new BooleanBinaryExpressionXor(
+                expression,
+                new TermBoolean(line, "1"),
+                line,
+            );
         } else {
             return null;
         }

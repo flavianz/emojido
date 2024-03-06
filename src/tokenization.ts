@@ -392,7 +392,10 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({ type: TokenType.xor, line: this.lineCount });
                 } else {
-                    // !
+                    tokens.push({
+                        type: TokenType.exclamation,
+                        line: this.lineCount,
+                    });
                 }
             } else if (this.peek() === "|" && this.peek(1) === "|") {
                 this.consume();
