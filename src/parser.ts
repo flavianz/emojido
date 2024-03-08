@@ -9,11 +9,13 @@ import {
     TermFloat,
     TermIdentifier,
     TermInteger,
+    TermMemoryAccess,
     TermNull,
     TermObject,
     TermParens,
     TermParseToFloat,
     TermParseToInt,
+    TermPointer,
     TermString,
 } from "./classes/Terms";
 import { Expression } from "./classes/Expressions";
@@ -60,6 +62,7 @@ import {
 } from "./classes/Functions";
 import fs from "node:fs";
 import { demoji } from "./demoji";
+import assert from "node:assert";
 
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
@@ -401,6 +404,28 @@ export class Parser {
                 new TermBoolean(line, "1"),
                 line,
             );
+        } else if (this.peek().type === TokenType.greater) {
+            const line = this.consume().line;
+            const term = this.parseTerm();
+            if (!term) {
+                error("Can't create pointer to invalid term", line);
+            }
+            return new TermPointer(term, line);
+        } else if (this.peek().type === TokenType.smaller) {
+            const line = this.consume().line;
+            const term = this.parseTerm();
+            if (!term) {
+                error("Can't access value at invalid term", line);
+            }
+            if (!(term instanceof TermIdentifier)) {
+                error(
+                    "Can't access data at direct value memory addresses",
+                    line,
+                );
+            }
+            const ident = term as TermIdentifier;
+            const var_ = this.getVars().get(ident.identifier);
+            return new TermMemoryAccess(var_.literalType, ident, line);
         } else {
             return null;
         }
@@ -664,16 +689,6 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            checkLiteralType(
-                var_.literalType,
-                [LiteralType.floatLiteral, LiteralType.integerLiteral],
-                line,
-            );
-            checkLiteralType(
-                expr.literalType,
-                [LiteralType.floatLiteral, LiteralType.integerLiteral],
-                line,
-            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,

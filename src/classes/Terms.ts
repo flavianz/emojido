@@ -137,3 +137,23 @@ export class TermParseToInt extends Term {
         this.expression = expression;
     }
 }
+
+export class TermPointer extends Term {
+    readonly expressionPointedTo: Expression;
+    constructor(expressionPointedTo: Expression, line: number) {
+        super(LiteralType.integerLiteral, line);
+        this.expressionPointedTo = expressionPointedTo;
+    }
+}
+
+export class TermMemoryAccess extends Term {
+    readonly address: TermIdentifier;
+    constructor(
+        literalType: LiteralType,
+        address: TermIdentifier,
+        line: number,
+    ) {
+        super(literalType, line);
+        this.address = address;
+    }
+}
