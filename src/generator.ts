@@ -9,6 +9,7 @@ import {
     TermFloat,
     TermIdentifier,
     TermInteger,
+    TermMemoryAccess,
     TermNull,
     TermObject,
     TermParens,
@@ -45,13 +46,13 @@ import {
     StatementExit,
     StatementFor,
     StatementIf,
+    StatementImport,
     StatementLet,
     StatementPrint,
     StatementReturn,
     StatementScope,
     StatementTerm,
     StatementWhile,
-    StatementImport,
 } from "./classes/Statements";
 import {
     StatementFunctionDefinition,
@@ -418,6 +419,10 @@ enough_capacity_array:
             this.pop("rax");
             this.writeText(new AssemblyMovToken(`qword [${ident}]`, "rax"));
             this.push(`${ident}`);
+        } else if (term instanceof TermMemoryAccess) {
+            this.generateExpr(term.address);
+            this.pop("rax");
+            this.push("qword [rax]");
         } else if (term instanceof TermObject) {
         }
     }
@@ -480,27 +485,38 @@ enough_capacity_array:
             this.pop("rax"); //Lhs
             if (
                 binaryExpr.lhsExpression.literalType ===
-                    LiteralType.integerLiteral &&
-                binaryExpr.rhsExpression.literalType ===
-                    LiteralType.integerLiteral
+                LiteralType.stringLiteral
             ) {
-                //sub two integers
-                this.writeText(new AssemblyAddToken("rax", "rbx"));
-                this.push("rax");
+                //concatenate strings
+                //TODO
             } else {
-                //min one float involved
-                this.generateNumber(
-                    binaryExpr.lhsExpression.literalType,
-                    binaryExpr.rhsExpression.literalType,
-                );
+                //add numbers
+                if (
+                    binaryExpr.lhsExpression.literalType ===
+                        LiteralType.integerLiteral &&
+                    binaryExpr.rhsExpression.literalType ===
+                        LiteralType.integerLiteral
+                ) {
+                    //sub two integers
+                    this.writeText(new AssemblyAddToken("rax", "rbx"));
+                    this.push("rax");
+                } else {
+                    //min one float involved
+                    this.generateNumber(
+                        binaryExpr.lhsExpression.literalType,
+                        binaryExpr.rhsExpression.literalType,
+                    );
 
-                this.writeText(
-                    new AssemblyUnoptimizedToken("    addsd xmm0, xmm1"),
-                );
-                this.writeText(
-                    new AssemblyUnoptimizedToken(`    movq qword rax, xmm0`),
-                );
-                this.push("rax");
+                    this.writeText(
+                        new AssemblyUnoptimizedToken("    addsd xmm0, xmm1"),
+                    );
+                    this.writeText(
+                        new AssemblyUnoptimizedToken(
+                            `    movq qword rax, xmm0`,
+                        ),
+                    );
+                    this.push("rax");
+                }
             }
         } else if (binaryExpr instanceof BinaryExpressionMul) {
             this.writeText(new AssemblyCommentToken("binary multiply"));

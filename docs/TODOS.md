@@ -12,6 +12,9 @@
 - print floats
 
 ### Features
+- pointers
+- malloc
+- free
 - automatic int to float conversion
 - accept null for every type
 - Objects

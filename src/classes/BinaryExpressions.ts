@@ -25,16 +25,24 @@ export class BinaryExpressionAdd extends BinaryExpression {
         rhsExpression: Expression,
         line: number,
     ) {
-        checkLiteralType(
-            lhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
-            lhsExpression.line,
-        );
-        checkLiteralType(
-            rhsExpression.literalType,
-            [LiteralType.floatLiteral, LiteralType.integerLiteral],
-            rhsExpression.line,
-        );
+        if (lhsExpression.literalType === LiteralType.stringLiteral) {
+            checkLiteralType(
+                rhsExpression.literalType,
+                [LiteralType.stringLiteral],
+                rhsExpression.line,
+            );
+        } else {
+            checkLiteralType(
+                lhsExpression.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                lhsExpression.line,
+            );
+            checkLiteralType(
+                rhsExpression.literalType,
+                [LiteralType.floatLiteral, LiteralType.integerLiteral],
+                rhsExpression.line,
+            );
+        }
         super(
             lhsExpression.literalType === LiteralType.integerLiteral &&
                 rhsExpression.literalType === LiteralType.integerLiteral

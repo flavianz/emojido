@@ -9,16 +9,21 @@ import {
     TermFloat,
     TermIdentifier,
     TermInteger,
+    TermMemoryAccess,
     TermNull,
     TermObject,
     TermParens,
     TermParseToFloat,
     TermParseToInt,
     TermPointer,
-    TermString
+    TermString,
 } from "./classes/Terms";
 import { Expression } from "./classes/Expressions";
-import { ElseIfPredicate, ElsePredicate, IfPredicate } from "./classes/IfPredicates";
+import {
+    ElseIfPredicate,
+    ElsePredicate,
+    IfPredicate,
+} from "./classes/IfPredicates";
 import { Scope } from "./classes/Scope";
 import {
     Statement,
@@ -31,7 +36,7 @@ import {
     StatementPrint,
     StatementReturn,
     StatementTerm,
-    StatementWhile
+    StatementWhile,
 } from "./classes/Statements";
 import {
     BinaryExpression,
@@ -47,12 +52,17 @@ import {
     BooleanBinaryExpressionLessThan,
     BooleanBinaryExpressionNotCompare,
     BooleanBinaryExpressionOr,
-    BooleanBinaryExpressionXor
+    BooleanBinaryExpressionXor,
 } from "./classes/BinaryExpressions";
 import { Program } from "./classes/Program";
-import { FunctionArgument, StatementFunctionDefinition, TermFunctionCall } from "./classes/Functions";
+import {
+    FunctionArgument,
+    StatementFunctionDefinition,
+    TermFunctionCall,
+} from "./classes/Functions";
 import fs from "node:fs";
 import { demoji } from "./demoji";
+import assert from "node:assert";
 
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
@@ -415,10 +425,7 @@ export class Parser {
             }
             const ident = term as TermIdentifier;
             const var_ = this.getVars().get(ident.identifier);
-            switch (var_.literalType) {
-                case LiteralType.integerLiteral:
-                    return new TermInteger()
-            }
+            return new TermMemoryAccess(var_.literalType, ident, line);
         } else {
             return null;
         }
@@ -682,16 +689,6 @@ export class Parser {
                 error("Undeclared identifier", line);
             }
             const var_ = this.getVars().get(ident.value);
-            checkLiteralType(
-                var_.literalType,
-                [LiteralType.floatLiteral, LiteralType.integerLiteral],
-                line,
-            );
-            checkLiteralType(
-                expr.literalType,
-                [LiteralType.floatLiteral, LiteralType.integerLiteral],
-                line,
-            );
             this.tryConsume(TokenType.semi, {
                 error: "Expected '🚀'",
                 line: line,
