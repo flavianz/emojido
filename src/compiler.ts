@@ -12,7 +12,6 @@ import { assemblify, Optimizer } from "./optimizer";
  * */
 export function compile(source: string, debug: boolean): string {
     const start = Date.now();
-
     source = demoji(source);
     const tokenizer = new Tokenizer(source);
     const tokens = tokenizer.tokenize();

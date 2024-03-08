@@ -64,6 +64,7 @@ export enum LiteralType {
     nullLiteral = "nullLiteral",
     arrayLiteral = "arrayLiteral",
     objectLiteral = "objectLiteral",
+    pointerLiteral = "pointerLiteral",
 }
 
 export interface Token {

@@ -14,14 +14,11 @@ import {
     TermParens,
     TermParseToFloat,
     TermParseToInt,
-    TermString,
+    TermPointer,
+    TermString
 } from "./classes/Terms";
 import { Expression } from "./classes/Expressions";
-import {
-    ElseIfPredicate,
-    ElsePredicate,
-    IfPredicate,
-} from "./classes/IfPredicates";
+import { ElseIfPredicate, ElsePredicate, IfPredicate } from "./classes/IfPredicates";
 import { Scope } from "./classes/Scope";
 import {
     Statement,
@@ -34,7 +31,7 @@ import {
     StatementPrint,
     StatementReturn,
     StatementTerm,
-    StatementWhile,
+    StatementWhile
 } from "./classes/Statements";
 import {
     BinaryExpression,
@@ -50,14 +47,10 @@ import {
     BooleanBinaryExpressionLessThan,
     BooleanBinaryExpressionNotCompare,
     BooleanBinaryExpressionOr,
-    BooleanBinaryExpressionXor,
+    BooleanBinaryExpressionXor
 } from "./classes/BinaryExpressions";
 import { Program } from "./classes/Program";
-import {
-    FunctionArgument,
-    StatementFunctionDefinition,
-    TermFunctionCall,
-} from "./classes/Functions";
+import { FunctionArgument, StatementFunctionDefinition, TermFunctionCall } from "./classes/Functions";
 import fs from "node:fs";
 import { demoji } from "./demoji";
 
@@ -401,6 +394,31 @@ export class Parser {
                 new TermBoolean(line, "1"),
                 line,
             );
+        } else if (this.peek().type === TokenType.greater) {
+            const line = this.consume().line;
+            const term = this.parseTerm();
+            if (!term) {
+                error("Can't create pointer to invalid term", line);
+            }
+            return new TermPointer(term, line);
+        } else if (this.peek().type === TokenType.smaller) {
+            const line = this.consume().line;
+            const term = this.parseTerm();
+            if (!term) {
+                error("Can't access value at invalid term", line);
+            }
+            if (!(term instanceof TermIdentifier)) {
+                error(
+                    "Can't access data at direct value memory addresses",
+                    line,
+                );
+            }
+            const ident = term as TermIdentifier;
+            const var_ = this.getVars().get(ident.identifier);
+            switch (var_.literalType) {
+                case LiteralType.integerLiteral:
+                    return new TermInteger()
+            }
         } else {
             return null;
         }

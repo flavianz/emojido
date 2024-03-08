@@ -22,7 +22,6 @@ export class StatementLet extends Statement {
         super(line);
         this.expression = expression;
         this.identifier = identifier.value;
-        //TODO: typechecking of variable
     }
 }
 export class StatementExit extends Statement {
@@ -64,7 +63,6 @@ export class StatementAssign extends Statement {
         super(line);
         this.expression = expression;
         this.identifier = identifier.value;
-        //TODO: typechecking of variable
     }
 }
 export class StatementScope extends Statement {

@@ -50,7 +50,9 @@ export function demoji(source: string) {
         .replaceAll("🌜", "[")
         .replaceAll("🌛", "]")
         .replaceAll("🪤", "import ")
-        .replaceAll("🗃️", " obj ");
+        .replaceAll("🗃️", " obj ")
+        .replaceAll("👉", ">")
+        .replaceAll("🔎", "<");
 }
 
 export function enmoji(string: string) {

@@ -14,6 +14,7 @@ import {
     TermParens,
     TermParseToFloat,
     TermParseToInt,
+    TermPointer,
     TermString,
 } from "./classes/Terms";
 import {
@@ -410,6 +411,13 @@ enough_capacity_array:
                 new AssemblyUnoptimizedToken("    cvtsd2si rax, xmm0"),
             );
             this.push("rax");
+        } else if (term instanceof TermPointer) {
+            const ident = this.generateIdentifier();
+            this.generateExpr(term.expressionPointedTo);
+            this.data += `    ${ident} dq 0\n`;
+            this.pop("rax");
+            this.writeText(new AssemblyMovToken(`qword [${ident}]`, "rax"));
+            this.push(`${ident}`);
         } else if (term instanceof TermObject) {
         }
     }

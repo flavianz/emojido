@@ -24,7 +24,6 @@
   - Time
     - getMillis
     - get date string
-- import / export
 - constant variables
 - enums
 - exceptions
