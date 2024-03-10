@@ -167,3 +167,16 @@ export class StatementImport extends Statement {
         this.functions = functions;
     }
 }
+
+export class StatementAssembly extends Statement {
+    readonly text: string;
+    readonly data: string;
+    readonly bss: string;
+
+    constructor(text: string, data: string, bss: string, line: number) {
+        super(line);
+        this.text = text;
+        this.data = data;
+        this.bss = bss;
+    }
+}

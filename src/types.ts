@@ -54,6 +54,7 @@ export enum TokenType {
     import = "import",
     object = "object",
     exclamation = "exclamation",
+    assembly = "assembly",
 }
 
 export enum LiteralType {

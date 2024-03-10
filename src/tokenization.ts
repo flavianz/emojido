@@ -227,6 +227,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "asm") {
+                    tokens.push({
+                        type: TokenType.assembly,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else if (buffer === "obj") {
                     tokens.push({
                         type: TokenType.object,

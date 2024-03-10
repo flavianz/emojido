@@ -27,6 +27,7 @@ import {
 import { Scope } from "./classes/Scope";
 import {
     Statement,
+    StatementAssembly,
     StatementAssign,
     StatementExit,
     StatementFor,
@@ -62,7 +63,6 @@ import {
 } from "./classes/Functions";
 import fs from "node:fs";
 import { demoji } from "./demoji";
-import assert from "node:assert";
 
 const literalTypeToEmoji = {
     integerLiteral: "🔢",
@@ -971,6 +971,8 @@ export class Parser {
             }
             if (string.value === "math") {
                 string.value = "stdlib/math.ejo";
+            } else if (string.value === "sys") {
+                string.value = "stdlib/sys.ejo";
             } else {
                 string.value += ".ejo";
             }
@@ -1021,6 +1023,52 @@ export class Parser {
             }
 
             return new StatementImport(functions, vars, line);
+        } else if (this.peek()?.type === TokenType.assembly) {
+            const line = this.consume().line;
+            const string = this.parseExpr();
+            if (!string) {
+                error("Invalid statement", line);
+            }
+            checkLiteralType(
+                string.literalType,
+                [LiteralType.stringLiteral],
+                line,
+            );
+            let data = "";
+            let bss = "";
+            if (this.peek()?.type === TokenType.comma) {
+                this.consume();
+                const term = this.parseExpr();
+                if (!term) {
+                    error("Invalid statement", line);
+                }
+                checkLiteralType(
+                    term.literalType,
+                    [LiteralType.stringLiteral],
+                    line,
+                );
+                data = (term as TermString).stringValue;
+            }
+            if (this.peek()?.type === TokenType.comma) {
+                this.consume();
+                const term = this.parseExpr();
+                if (!term) {
+                    error("Invalid statement", line);
+                }
+                checkLiteralType(
+                    term.literalType,
+                    [LiteralType.stringLiteral],
+                    line,
+                );
+                bss = (term as TermString).stringValue;
+            }
+            this.tryConsume(TokenType.semi);
+            return new StatementAssembly(
+                (string as TermString).stringValue,
+                data,
+                bss,
+                line,
+            );
         } else {
             //check for StatementExpression
             try {

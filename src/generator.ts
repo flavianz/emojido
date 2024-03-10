@@ -42,6 +42,7 @@ import {
 import { Expression } from "./classes/Expressions";
 import {
     Statement,
+    StatementAssembly,
     StatementAssign,
     StatementExit,
     StatementFor,
@@ -989,6 +990,12 @@ enough_capacity_array:
             for (const function_ of statement.functions) {
                 this.generateStatement(function_);
             }
+        } else if (statement instanceof StatementAssembly) {
+            this.writeText(
+                new AssemblyUnoptimizedToken(statement.text, "written in code"),
+            );
+            this.data += statement.data + "\n";
+            this.bss += statement.bss + "\n";
         }
     }
 
