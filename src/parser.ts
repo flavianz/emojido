@@ -197,19 +197,23 @@ export class Parser {
                     error("Undeclared function", token.line);
                 }
                 let arguments_: Expression[] = [];
-                while (this.peek()?.type !== TokenType.callFunction) {
-                    arguments_.push(this.parseExpr());
-                    if (
-                        !this.tryConsume(TokenType.comma) &&
-                        this.peek()?.type !== TokenType.callFunction
-                    ) {
-                        error("Expected '🌶️'", this.peek(-1).line);
+                if (this.peek()?.type !== TokenType.semi) {
+                    while (this.peek()?.type !== TokenType.callFunction) {
+                        arguments_.push(this.parseExpr());
+                        if (
+                            !this.tryConsume(TokenType.comma) &&
+                            this.peek()?.type !== TokenType.callFunction
+                        ) {
+                            error("Expected '🌶️'", this.peek(-1).line);
+                        }
                     }
+
+                    this.tryConsume(TokenType.callFunction, {
+                        error: "Expected '🔫'",
+                        line: token.line,
+                    });
                 }
-                this.tryConsume(TokenType.callFunction, {
-                    error: "Expected '🔫'",
-                    line: token.line,
-                });
+
                 const requiredArguments = this.getFunctions().get(
                     token.value,
                 ).arguments;
