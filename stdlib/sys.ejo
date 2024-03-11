@@ -1,1 +1,8 @@
-function 
+function int getUnixUTC function {
+    asm "    mov rax, 201
+    xor rdi, rdi
+    syscall
+    mov rdi, 1000
+    mul rdi
+    mov r14, rax";
+}
