@@ -233,6 +233,12 @@ export class Tokenizer {
                         line: this.lineCount,
                     });
                     buffer = "";
+                } else if (buffer === "pointer") {
+                    tokens.push({
+                        type: TokenType.typeInt,
+                        line: this.lineCount,
+                    });
+                    buffer = "";
                 } else if (buffer === "obj") {
                     tokens.push({
                         type: TokenType.object,

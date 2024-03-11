@@ -65,11 +65,11 @@ import fs from "node:fs";
 import { demoji } from "./demoji";
 
 const literalTypeToEmoji = {
-    integerLiteral: "🔢",
-    floatLiteral: "🧮",
-    stringLiteral: "📜",
-    booleanLiteral: "⚜️",
-    nulLiteral: "🫥",
+    [LiteralType.integerLiteral]: "🔢",
+    [LiteralType.floatLiteral]: "🧮",
+    [LiteralType.stringLiteral]: "📜",
+    [LiteralType.booleanLiteral]: "⚜️",
+    [LiteralType.nullLiteral]: "🫥",
 };
 
 export function getEmojiFromLiteralType(literalType: LiteralType) {
