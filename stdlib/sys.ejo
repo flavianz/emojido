@@ -1,8 +1,25 @@
-function int getUnixUTC function {
+function int getUnix function {
     asm "    mov rax, 201
     xor rdi, rdi
     syscall
     mov rdi, 1000
     mul rdi
-    mov r14, rax";
+    mov r14, rax
+    ";
+}
+
+function pointer malloc function int bytes {
+    asm "    mov rax, 9
+    mov rdi, [rbp + 16]
+    syscall
+    mov r14, rax
+    "
+}
+
+function null free function pointer address {
+    asm "    mov rax, 12
+    mov rdi, [rbp + 16]
+    syscall
+    mov r14, 0
+    "
 }
