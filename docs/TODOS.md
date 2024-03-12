@@ -12,6 +12,7 @@
 - print floats
 
 ### Features
+- proper error handling
 - pointers
 - malloc
 - free

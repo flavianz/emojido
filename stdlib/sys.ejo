@@ -9,16 +9,22 @@ function int getUnix function {
 }
 
 function pointer malloc function int bytes {
-    asm "    mov rax, 9
-    mov rdi, [rbp + 16]
+    asm "    mov rsi, [rbp + 16]
+    xor rdi, rdi
+    mov rdx, 0x07
+    mov r10, 0x22
+    mov r8, -1
+    mov r9, 0
+    mov rax, 9
     syscall
     mov r14, rax
 "
 }
 
-function null free function pointer address {
-    asm "    mov rax, 12
-    mov rdi, [rbp + 16]
+function null free function int size {
+    asm "    mov rsi, [rbp + 16]
+    mov rdi, rax
+    mov rax, 11
     syscall
     mov r14, 0
 "

@@ -147,12 +147,8 @@ export class TermPointer extends Term {
 }
 
 export class TermMemoryAccess extends Term {
-    readonly address: TermIdentifier;
-    constructor(
-        literalType: LiteralType,
-        address: TermIdentifier,
-        line: number,
-    ) {
+    readonly address: Expression;
+    constructor(literalType: LiteralType, address: Expression, line: number) {
         super(literalType, line);
         this.address = address;
     }

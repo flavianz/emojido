@@ -182,10 +182,10 @@ export class StatementAssembly extends Statement {
 }
 
 export class StatementMemoryModification extends Statement {
-    readonly address: string;
+    readonly address: Expression;
     readonly expression: Expression;
 
-    constructor(address: string, expression: Expression, line: number) {
+    constructor(address: Expression, expression: Expression, line: number) {
         super(line);
         this.address = address;
         this.expression = expression;

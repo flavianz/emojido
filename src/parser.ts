@@ -225,18 +225,18 @@ export class Parser {
                     );
                 }
                 for (let i = 0; i < requiredArguments.length; i++) {
-                    if (
-                        requiredArguments[i].type !== arguments_[i].literalType
-                    ) {
-                        error(
-                            `Function argument '${
-                                requiredArguments[i].identifier
-                            }' requires type '${getEmojiFromLiteralType(
-                                requiredArguments[i].type,
-                            )}' but got type '${getEmojiFromLiteralType(arguments_[i].literalType)}'`,
-                            token.line,
-                        );
-                    }
+                    // if (
+                    //     requiredArguments[i].type !== arguments_[i].literalType
+                    // ) {
+                    //     error(
+                    //         `Function argument '${
+                    //             requiredArguments[i].identifier
+                    //         }' requires type '${getEmojiFromLiteralType(
+                    //             requiredArguments[i].type,
+                    //         )}' but got type '${getEmojiFromLiteralType(arguments_[i].literalType)}'`,
+                    //         token.line,
+                    //     );
+                    // }
                 }
                 return new TermFunctionCall(
                     token.value,
@@ -418,19 +418,25 @@ export class Parser {
             return new TermPointer(term, line);
         } else if (this.peek().type === TokenType.smaller) {
             const line = this.consume().line;
+            let type = getLiteralTypeFromTokenType(this.peek()?.type);
+            if (type) {
+                this.consume();
+            }
             const term = this.parseTerm();
             if (!term) {
                 error("Can't access value at invalid term", line);
             }
-            if (!(term instanceof TermIdentifier)) {
+            if (term instanceof TermIdentifier) {
+                const ident = term as TermIdentifier;
+                type = this.getVars().get(ident.identifier).literalType;
+            } else if (!type) {
                 error(
-                    "Can't access data at direct value memory addresses",
+                    "Memory access at direct addresses has to specify its type",
                     line,
                 );
             }
-            const ident = term as TermIdentifier;
-            const var_ = this.getVars().get(ident.identifier);
-            return new TermMemoryAccess(var_.literalType, ident, line);
+
+            return new TermMemoryAccess(type, term, line);
         } else {
             return null;
         }
@@ -1099,11 +1105,7 @@ export class Parser {
                 error: "Expected '🚀'",
                 line: line,
             });
-            return new StatementMemoryModification(
-                (address as TermInteger).integerValue,
-                expression,
-                line,
-            );
+            return new StatementMemoryModification(address, expression, line);
         } else {
             //check for StatementExpression
             try {

@@ -414,6 +414,9 @@ enough_capacity_array:
         } else if (term instanceof TermParseToInt) {
             this.generateExpr(term.expression);
             this.pop("rax");
+            this.writeText(new AssemblyUnoptimizedToken("    mov rax, [rax]"));
+            this.generateExpr(term.expression);
+            this.pop("rax");
             this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
             this.writeText(
                 new AssemblyUnoptimizedToken("    cvtsd2si rax, xmm0"),
@@ -1007,13 +1010,11 @@ enough_capacity_array:
             this.data += statement.data;
             this.bss += statement.bss;
         } else if (statement instanceof StatementMemoryModification) {
+            this.generateExpr(statement.address);
+            this.pop("rbx");
             this.generateExpr(statement.expression);
             this.pop("rax");
-            this.writeText(
-                new AssemblyUnoptimizedToken(
-                    `    mov [${statement.address}], rax`,
-                ),
-            );
+            this.writeText(new AssemblyUnoptimizedToken(`    mov [rbx], rax`));
         }
     }
 

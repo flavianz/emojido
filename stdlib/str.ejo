@@ -1,5 +1,16 @@
-function string concat function string prefix string suffix {
-    asm ""
+//import "sys";
+// only temporary in str lib, until importing from imported files works
+function pointer malloc function int bytes {
+    asm "    mov rsi, [rbp + 16]
+    xor rdi, rdi
+    mov rdx, 0x07
+    mov r10, 0x22
+    mov r8, -1
+    mov r9, 0
+    mov rax, 9
+    syscall
+    mov r14, rax
+"
 }
 
 function int stringLength function string input {
@@ -17,4 +28,21 @@ function int stringLength function string input {
     lea rax, [rax + rcx - 16]
     mov r14, rax
 "
+}
+
+function string concat function string prefix string suffix {
+    let prefixLength = stringLength call prefix call;
+    let suffixLength = stringLength call suffix call;
+    let point = malloc call prefixLength + suffixLength + 1 call;
+    for let i = 0; i < prefixLength; i++; for {
+        let var = <int (>prefix + i);
+        print var;
+        <point + i = var;
+    }
+    for let i = 0; i < suffixLength + 1; i++; for {
+        let var = <int(>suffix + i);
+        print var;
+        <(point + prefixLength + i) = var;
+    }
+    print stringLength call point call;
 }
