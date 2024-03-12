@@ -1,0 +1,20 @@
+function string concat function string prefix string suffix {
+    asm ""
+}
+
+function int stringLength function string input {
+    asm "    mov rdi, [rbp + 16]
+    xor eax, eax
+    pxor xmm0, xmm0
+.loop:
+    movdqu xmm1, [rdi + rax]
+    pcmpeqb xmm1, xmm0
+    pmovmskb ecx, xmm1
+    lea rax, [eax + 16]
+    test ecx, ecx
+    jz .loop
+    bsf ecx, ecx
+    lea rax, [rax + rcx - 16]
+    mov r14, rax
+"
+}
