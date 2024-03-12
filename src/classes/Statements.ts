@@ -180,3 +180,14 @@ export class StatementAssembly extends Statement {
         this.bss = bss;
     }
 }
+
+export class StatementMemoryModification extends Statement {
+    readonly address: string;
+    readonly expression: Expression;
+
+    constructor(address: string, expression: Expression, line: number) {
+        super(line);
+        this.address = address;
+        this.expression = expression;
+    }
+}

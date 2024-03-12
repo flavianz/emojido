@@ -134,16 +134,16 @@ export class BooleanBinaryExpressionCompare extends BinaryExpression {
         rhsExpression: Expression,
         line: number,
     ) {
-        if (lhsExpression.literalType !== rhsExpression.literalType) {
-            error(
-                "Expected equal types for comparison, but got '" +
-                    getEmojiFromLiteralType(lhsExpression.literalType) +
-                    "' and '" +
-                    getEmojiFromLiteralType(rhsExpression.literalType) +
-                    "'",
-                lhsExpression.line,
-            );
-        }
+        checkLiteralType(
+            lhsExpression.literalType,
+            [LiteralType.integerLiteral, LiteralType.stringLiteral],
+            line,
+        );
+        checkLiteralType(
+            rhsExpression.literalType,
+            [LiteralType.integerLiteral, LiteralType.stringLiteral],
+            line,
+        );
         super(LiteralType.booleanLiteral, lhsExpression, rhsExpression, line);
     }
 }

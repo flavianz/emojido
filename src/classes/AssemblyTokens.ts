@@ -1,8 +1,10 @@
 export class AssemblyToken {
     comment: string;
+    appendNewLine: boolean;
 
-    constructor(comment: string) {
+    constructor(comment: string, appendNewLine: boolean = true) {
         this.comment = comment;
+        this.appendNewLine = appendNewLine;
     }
 
     clearComment() {
@@ -36,8 +38,8 @@ export class AssemblyMovToken extends AssemblyToken {
 }
 export class AssemblyUnoptimizedToken extends AssemblyToken {
     readonly string: string;
-    constructor(string: string, comment: string = "") {
-        super(comment);
+    constructor(string: string, comment: string = "", appendNewLine = true) {
+        super(comment, appendNewLine);
         this.string = string;
     }
 }

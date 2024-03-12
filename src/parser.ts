@@ -34,6 +34,7 @@ import {
     StatementIf,
     StatementImport,
     StatementLet,
+    StatementMemoryModification,
     StatementPrint,
     StatementReturn,
     StatementTerm,
@@ -977,6 +978,8 @@ export class Parser {
                 string.value = "stdlib/math.ejo";
             } else if (string.value === "sys") {
                 string.value = "stdlib/sys.ejo";
+            } else if (string.value === "str") {
+                string.value = "stdlib/str.ejo";
             } else {
                 string.value += ".ejo";
             }
@@ -1071,6 +1074,34 @@ export class Parser {
                 (string as TermString).stringValue,
                 data,
                 bss,
+                line,
+            );
+        } else if (this.peek()?.type === TokenType.smaller) {
+            const line = this.consume().line;
+            const address = this.parseExpr();
+            if (!address) {
+                error("Invalid statement", line);
+            }
+            checkLiteralType(
+                address.literalType,
+                [LiteralType.integerLiteral],
+                line,
+            );
+            this.tryConsume(TokenType.equals, {
+                error: "Expected '🪢'",
+                line: line,
+            });
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
+            return new StatementMemoryModification(
+                (address as TermInteger).integerValue,
+                expression,
                 line,
             );
         } else {

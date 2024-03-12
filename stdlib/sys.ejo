@@ -5,7 +5,7 @@ function int getUnix function {
     mov rdi, 1000
     mul rdi
     mov r14, rax
-    ";
+";
 }
 
 function pointer malloc function int bytes {
@@ -13,7 +13,7 @@ function pointer malloc function int bytes {
     mov rdi, [rbp + 16]
     syscall
     mov r14, rax
-    "
+"
 }
 
 function null free function pointer address {
@@ -21,5 +21,5 @@ function null free function pointer address {
     mov rdi, [rbp + 16]
     syscall
     mov r14, 0
-    "
+"
 }

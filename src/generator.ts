@@ -49,6 +49,7 @@ import {
     StatementIf,
     StatementImport,
     StatementLet,
+    StatementMemoryModification,
     StatementPrint,
     StatementReturn,
     StatementScope,
@@ -164,12 +165,17 @@ printBoolEnd:
     generateCalcStringLength() {
         if (!this.routines.includes("calc_string_length:")) {
             this.routines += `calc_string_length:
-    cmp byte [rsi + rcx], 0ah
-    je calc_string_length_return
-    inc rcx
-    jmp calc_string_length
-calc_string_length_return:
-    inc rcx
+    xor       eax, eax
+    pxor      xmm0, xmm0
+.loop:
+    movdqu    xmm1, [rdi + rax]
+    pcmpeqb   xmm1, xmm0
+    pmovmskb  ecx, xmm1
+    lea       eax, [eax + 16]
+    test      ecx, ecx
+    jz        .loop
+    bsf       ecx, ecx
+    lea       rax, [rax + rcx - 16]
     ret
 `;
         }
@@ -342,7 +348,7 @@ enough_capacity_array:
             this.push("rax");
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
-            this.data += `    ${ident} db "${term.stringValue}", 10, 0ah\n`;
+            this.data += `    ${ident} db "${term.stringValue}", 0\n`;
             this.writeText(new AssemblyMovToken("rax", ident));
             this.push("rax");
         } else if (term instanceof TermNull) {
@@ -589,7 +595,7 @@ enough_capacity_array:
             this.pop("rax");
             this.writeText(
                 new AssemblyUnoptimizedToken(
-                    "    cmp rax, rbx\n    setz al\n    movzx rax, al",
+                    "    cmp rax, rbx\n    sete al\n    movzx rax, al",
                 ),
             );
             this.push("rax");
@@ -992,10 +998,22 @@ enough_capacity_array:
             }
         } else if (statement instanceof StatementAssembly) {
             this.writeText(
-                new AssemblyUnoptimizedToken(statement.text, "written in code"),
+                new AssemblyUnoptimizedToken(
+                    statement.text,
+                    "written in code",
+                    false,
+                ),
             );
-            this.data += statement.data + "\n";
-            this.bss += statement.bss + "\n";
+            this.data += statement.data;
+            this.bss += statement.bss;
+        } else if (statement instanceof StatementMemoryModification) {
+            this.generateExpr(statement.expression);
+            this.pop("rax");
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    `    mov [${statement.address}], rax`,
+                ),
+            );
         }
     }
 

@@ -167,7 +167,9 @@ export function assemblify(source: AssemblyToken[]) {
         } else if (token instanceof AssemblyCommentToken) {
             text += "    ";
         }
-        text += getComment(token.comment) + "\n";
+        if (token.appendNewLine) {
+            text += getComment(token.comment) + "\n";
+        }
     }
 
     return text;
