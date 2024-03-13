@@ -15,6 +15,7 @@ import {
     TermParens,
     TermParseToFloat,
     TermParseToInt,
+    TermParseToString,
     TermPointer,
     TermString,
 } from "./classes/Terms";
@@ -393,6 +394,14 @@ export class Parser {
                 line,
             );
             return new TermParseToInt(expression, line);
+        } else if (this.peek()?.type === TokenType.typeString) {
+            const line = this.consume().line;
+            const expression = this.parseExpr();
+            if (!expression) {
+                error("Invalid expression", line);
+            }
+
+            return new TermParseToString(expression, line);
         } else if (this.peek()?.type === TokenType.exclamation) {
             const line = this.consume().line;
             const expression = this.parseExpr();
