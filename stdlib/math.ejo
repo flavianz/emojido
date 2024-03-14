@@ -59,8 +59,8 @@ function int factorial function int factorialInput {
 
 function float exp function float expInput {
     let epsilon = 0.000000001;
-    let term = 1.0;
-    let sum = 1.0;
+    let term = float 1;
+    let sum = float 1;
     let n = 1;
     while abs call term call > epsilon while {
         term *= expInput / n;

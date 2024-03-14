@@ -1010,12 +1010,8 @@ export class Parser {
             const parser = new Parser(tokens);
             const program = parser.parseProgram();
 
-            const vars: StatementLet[] = [];
-            const functions: StatementFunctionDefinition[] = [];
             for (const statement of program.statements) {
                 if (statement instanceof StatementLet) {
-                    vars.push(statement);
-
                     if (
                         this.getVars().has(statement.identifier) ||
                         this.getFunctions().has(statement.identifier)
@@ -1030,7 +1026,6 @@ export class Parser {
                         statement.expression,
                     );
                 } else if (statement instanceof StatementFunctionDefinition) {
-                    functions.push(statement);
                     if (
                         this.getVars().has(statement.identifier) ||
                         this.getFunctions().has(statement.identifier)
@@ -1047,7 +1042,7 @@ export class Parser {
                 }
             }
 
-            return new StatementImport(functions, vars, line);
+            return new StatementImport(program.statements, line);
         } else if (this.peek()?.type === TokenType.assembly) {
             const line = this.consume().line;
             const string = this.parseExpr();
@@ -1137,6 +1132,7 @@ export class Parser {
         }
     }
 
+    // noinspection InfiniteRecursionJS
     /** Parse the next token(s) to an expr
      * @param {number} minPrecedence the minimal precedence of this expression
      * @returns {Expression | null} the created expr

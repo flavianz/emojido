@@ -1,18 +1,5 @@
-//import "sys";
-// only temporary in str lib, until importing from imported files works
-function pointer malloc function int bytes {
-    asm "    mov rsi, [rbp + 16]
-    xor rdi, rdi
-    mov rdx, 0x07
-    mov r10, 0x22
-    mov r8, -1
-    mov r9, 0
-    mov rax, 9
-    syscall
-    mov r14, rax
-";
-}
-
+import "sys";
+import "math";
 
 function int stringLength function string input {
     asm "    mov rdi, [rbp + 16]
@@ -75,4 +62,52 @@ function string concat function string prefix string suffix {
     stringCopy call prefix, point call;
     stringCopy call suffix, point + prefixLength call;
     return string point;
+}
+
+function string fromInt function int number {
+    let result = "";
+    if number == 0 if {
+        return "0";
+    } else {
+        let isNeg = false;
+        if number < 0 if {
+            isNeg = true;
+            number = -1 * number;
+        }
+        while number > 0 while {
+            let val = int mod call float number, float 10 call + 48; //used in asm
+            let stringified = ""; // used in asm
+            asm "    mov qword [rbp - 16], [rbp - 8]
+    "; //moves the ascii value calculated above into stringified
+            result = concat call stringified, result call;
+            number = floor call number / 10 call;
+        }
+
+        if isNeg if {
+            result = concat call "-", result call;
+        }
+
+        return result;
+    }
+}
+
+function string fromFloat function float number {
+    let prefix = "";
+    if number < 0 if {
+        prefix = "-";
+    }
+    number = abs call number call;
+    let integralPart = floor call number call;
+    let fractionalPart = number minus integralPart;
+
+    let integralString = "";
+    let fractionalString = "";
+
+    if integralPart == 0 if{
+        integralString = "0";
+    } else {
+        while integralPart > 0 while {
+            integralString = "";
+        }
+    }
 }

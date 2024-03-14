@@ -995,11 +995,8 @@ enough_capacity_array:
                 );
             }
         } else if (statement instanceof StatementImport) {
-            for (const var_ of statement.vars) {
-                this.generateStatement(var_);
-            }
-            for (const function_ of statement.functions) {
-                this.generateStatement(function_);
+            for (const stmt of statement.statements) {
+                this.generateStatement(stmt);
             }
         } else if (statement instanceof StatementAssembly) {
             this.writeText(

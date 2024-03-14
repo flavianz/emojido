@@ -18,7 +18,7 @@ function pointer malloc function int bytes {
     mov rax, 9
     syscall
     mov r14, rax
-"
+";
 }
 
 function null free function int size {
@@ -27,5 +27,5 @@ function null free function int size {
     mov rax, 11
     syscall
     mov r14, 0
-"
+";
 }

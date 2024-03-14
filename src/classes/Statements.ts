@@ -155,16 +155,10 @@ export class StatementReturn extends Statement {
     }
 }
 export class StatementImport extends Statement {
-    readonly vars: StatementLet[];
-    readonly functions: StatementFunctionDefinition[];
-    constructor(
-        functions: StatementFunctionDefinition[],
-        vars: StatementLet[],
-        line: LineCount,
-    ) {
+    readonly statements: Statement[];
+    constructor(statements: Statement[], line: LineCount) {
         super(line);
-        this.vars = vars;
-        this.functions = functions;
+        this.statements = statements;
     }
 }
 

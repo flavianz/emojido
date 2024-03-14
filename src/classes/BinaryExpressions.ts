@@ -136,12 +136,20 @@ export class BooleanBinaryExpressionCompare extends BinaryExpression {
     ) {
         checkLiteralType(
             lhsExpression.literalType,
-            [LiteralType.integerLiteral, LiteralType.stringLiteral],
+            [
+                LiteralType.integerLiteral,
+                LiteralType.stringLiteral,
+                LiteralType.floatLiteral,
+            ],
             line,
         );
         checkLiteralType(
             rhsExpression.literalType,
-            [LiteralType.integerLiteral, LiteralType.stringLiteral],
+            [
+                LiteralType.integerLiteral,
+                LiteralType.stringLiteral,
+                LiteralType.floatLiteral,
+            ],
             line,
         );
         super(LiteralType.booleanLiteral, lhsExpression, rhsExpression, line);
