@@ -12,7 +12,11 @@ const outFile = process.argv[3] ?? "./out.asm";
 
 const source = fs.readFileSync(sourceFile);
 
-const asm = compile(source.toString(), process.argv.includes("-debug"));
+const asm = compile(
+    source.toString(),
+    process.argv.includes("-debug"),
+    sourceFile,
+);
 
 fs.writeFileSync(outFile, asm);
 

@@ -15,6 +15,7 @@ import {
     TermParens,
     TermParseToFloat,
     TermParseToInt,
+    TermParseToString,
     TermPointer,
     TermString,
 } from "./classes/Terms";
@@ -266,7 +267,9 @@ enough_capacity_array:
 
     private generateScope(scope: Scope, prologStackSize = 1) {
         this.writeText(
-            new AssemblyCommentToken(`start scope on line ${scope.startLine}`),
+            new AssemblyCommentToken(
+                `start scope on line ${scope.startLine.line} in file ${scope.startLine.file}`,
+            ),
         );
         this.push("rbp");
         this.writeText(new AssemblyMovToken("rbp", "rsp"));
@@ -284,7 +287,7 @@ enough_capacity_array:
 
         this.writeText(
             new AssemblyCommentToken(
-                `end scope that started on line ${scope.startLine}`,
+                `end scope that started on line ${scope.startLine.line} in file ${scope.startLine.file}`,
             ),
         );
 
@@ -422,6 +425,8 @@ enough_capacity_array:
                 new AssemblyUnoptimizedToken("    cvtsd2si rax, xmm0"),
             );
             this.push("rax");
+        } else if (term instanceof TermParseToString) {
+            this.generateExpr(term.expression);
         } else if (term instanceof TermPointer) {
             const ident = this.generateIdentifier();
             this.generateExpr(term.expressionPointedTo);
@@ -836,19 +841,16 @@ enough_capacity_array:
             //check type
             const literalType = statement.expression.literalType;
             if (literalType === LiteralType.stringLiteral) {
-                this.writeText(
-                    new AssemblyMovToken("rax", "1"),
-                    new AssemblyMovToken("rdi", "1"),
-                );
                 this.pop("rsi");
                 this.writeText(
-                    new AssemblyUnoptimizedToken(
-                        "    xor rcx, rcx\n    call calc_string_length",
-                    ),
+                    new AssemblyMovToken("rdi", "rsi"),
+                    new AssemblyUnoptimizedToken("    call calc_string_length"),
                 );
                 this.generateCalcStringLength();
                 this.writeText(
-                    new AssemblyMovToken("rdx", "rcx"),
+                    new AssemblyMovToken("rdx", "rax"),
+                    new AssemblyMovToken("rax", "1"),
+                    new AssemblyMovToken("rdi", "1"),
                     new AssemblyUnoptimizedToken("    syscall"),
                 );
             } else if (literalType === LiteralType.integerLiteral) {

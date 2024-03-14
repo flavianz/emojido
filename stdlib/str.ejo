@@ -10,8 +10,9 @@ function pointer malloc function int bytes {
     mov rax, 9
     syscall
     mov r14, rax
-"
+";
 }
+
 
 function int stringLength function string input {
     asm "    mov rdi, [rbp + 16]
@@ -27,12 +28,30 @@ function int stringLength function string input {
     bsf ecx, ecx
     lea rax, [rax + rcx - 16]
     mov r14, rax
-"
+";
+}
+
+function null println function string input {
+    let length = stringLength call input call;
+    asm "    mov rax, 1
+    mov rdi, 1
+    mov rsi, [rbp + 16]
+    mov rdx, [rbp - 8]
+    syscall
+    ";
+}
+
+function string fromBool function bool input {
+    if input if {
+        return "true";
+    } else {
+        return "false";
+    }
 }
 
 function pointer stringCopy function pointer src pointer dest {
-    asm "    mov rdi, [rbp - 16]
-    mov rsi, [rbp - 24]
+    asm "    mov rdi, [rbp + 16]
+    mov rsi, [rbp + 24]
     cmp	di, 0
     je strcpy_done
     cmp	rsi, 0
@@ -53,11 +72,7 @@ function string concat function string prefix string suffix {
     let prefixLength = stringLength call prefix call;
     let suffixLength = stringLength call suffix call;
     let point = malloc call prefixLength + suffixLength + 1 call;
-    stringCopy call point, point + prefixLength call;
-    print "a";
-    print string point;
-    print "b";
-    print stringLength call point call;
-    return "result";
-//    return point;
+    stringCopy call prefix, point call;
+    stringCopy call suffix, point + prefixLength call;
+    return string point;
 }
