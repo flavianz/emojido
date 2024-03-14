@@ -1,4 +1,4 @@
-import { LiteralType, Token, TokenType, VarFunction } from "./types";
+import { LineCount, LiteralType, Token, TokenType, VarFunction } from "./types";
 import { error, getBinaryPrecedence, Tokenizer } from "./tokenization";
 import { mergeMaps } from "./utils";
 import {
@@ -98,7 +98,7 @@ export function getLiteralTypeFromTokenType(tokenType: TokenType) {
 export function checkLiteralType(
     provided: LiteralType,
     required: LiteralType[],
-    line: number,
+    line: LineCount,
 ) {
     if (!required.includes(provided)) {
         let expected = "";
@@ -159,11 +159,14 @@ export class Parser {
      * */
     private tryConsume(
         type: TokenType,
-        error_: { error: string; line: number } = { error: "", line: 0 },
+        error_: { error: string; line: LineCount } = {
+            error: "",
+            line: { line: 0, file: "" },
+        },
     ): Token | null {
         if (this.peek()?.type === type) {
             return this.consume();
-        } else if (error_.line === 0) {
+        } else if (error_.line.line === 0) {
             return null;
         } else {
             error(error_.error, error_.line);
@@ -1001,7 +1004,7 @@ export class Parser {
             let source = fs.readFileSync(string.value).toString();
 
             source = demoji(source);
-            const tokenizer = new Tokenizer(source);
+            const tokenizer = new Tokenizer(source, string.value);
             const tokens = tokenizer.tokenize();
 
             const parser = new Parser(tokens);
@@ -1084,7 +1087,10 @@ export class Parser {
                 );
                 bss = (term as TermString).stringValue;
             }
-            this.tryConsume(TokenType.semi);
+            this.tryConsume(TokenType.semi, {
+                error: "Expected '🚀'",
+                line: line,
+            });
             return new StatementAssembly(
                 (string as TermString).stringValue,
                 data,
@@ -1120,7 +1126,10 @@ export class Parser {
             try {
                 const term = this.parseTerm();
                 //error caught locally
-                this.tryConsume(TokenType.semi, { error: "", line: 0 });
+                this.tryConsume(TokenType.semi, {
+                    error: "",
+                    line: { line: 0, file: "" },
+                });
                 return new StatementTerm(term.line, term);
             } catch (e) {
                 return null;
@@ -1132,11 +1141,8 @@ export class Parser {
      * @param {number} minPrecedence the minimal precedence of this expression
      * @returns {Expression | null} the created expr
      * */
-    private parseExpr(minPrecedence: number = 0): Expression | null {
+    private parseExpr(minPrecedence: number = 0): Expression {
         let exprLhs: Expression = this.parseTerm();
-        if (!exprLhs) {
-            return null;
-        }
 
         while (true) {
             const currentToken = this.peek();
@@ -1236,7 +1242,7 @@ export class Parser {
     parseScope(): Scope {
         const line = this.tryConsume(TokenType.open_curly, {
             error: "Expected '⚽'",
-            line: this.peek()?.line ?? -1,
+            line: this.peek()?.line ?? { line: -1, file: "" },
         }).line;
         let scope: Scope = new Scope([], line);
         this.scopes.push({ vars: new Map(), functions: new Map() });
@@ -1248,7 +1254,7 @@ export class Parser {
         this.scopes.pop();
         this.tryConsume(TokenType.close_curly, {
             error: "Expected '🥅'",
-            line: this.peek()?.line ?? -1,
+            line: this.peek()?.line ?? { line: -1, file: "" },
         });
         return scope;
     }

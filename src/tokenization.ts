@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./types";
+import { LineCount, Token, TokenType } from "./types";
 
 export function getBinaryPrecedence(type: TokenType) {
     switch (type) {
@@ -25,8 +25,10 @@ export function getBinaryPrecedence(type: TokenType) {
     }
 }
 
-export function error(error: string, line: number) {
-    throw new Error(`[Parse 💥]: ${error} on line ${line}`);
+export function error(error: string, line: LineCount) {
+    throw new Error(
+        `[Parse 💥]: ${error} on line ${line?.line} in file ${line?.file}`,
+    );
 }
 
 /**Check if string is alphanumeric
@@ -55,8 +57,10 @@ export class Tokenizer {
     private readonly source: string;
     private index: number = 0;
     private lineCount: number = 1;
-    constructor(source: string) {
+    private file: string;
+    constructor(source: string, file: string) {
         this.source = source;
+        this.file = file;
     }
 
     /** check the next char
@@ -93,156 +97,168 @@ export class Tokenizer {
 
                 //check keywords
                 if (buffer === "exit") {
-                    tokens.push({ type: TokenType.exit, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.exit,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                     buffer = "";
                 } else if (buffer === "let") {
-                    tokens.push({ type: TokenType.let, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.let,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                     buffer = "";
                 } else if (buffer === "if") {
-                    tokens.push({ type: TokenType.if, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.if,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                     buffer = "";
                 } else if (buffer === "elseif") {
                     tokens.push({
                         type: TokenType.elseif,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "else") {
-                    tokens.push({ type: TokenType.else, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.else,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                     buffer = "";
                 } else if (buffer === "true") {
                     tokens.push({
                         type: TokenType.boolean_lit,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                         value: "1",
                     });
                     buffer = "";
                 } else if (buffer === "false") {
                     tokens.push({
                         type: TokenType.boolean_lit,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                         value: "0",
                     });
                     buffer = "";
                 } else if (buffer === "bool") {
                     tokens.push({
                         type: TokenType.typeBool,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                         value: "bool",
                     });
                     buffer = "";
                 } else if (buffer === "int") {
                     tokens.push({
                         type: TokenType.typeInt,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "print") {
                     tokens.push({
                         type: TokenType.print,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "minus") {
                     tokens.push({
                         type: TokenType.minus,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "minusminus") {
                     tokens.push({
                         type: TokenType.doubleMinus,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "int") {
                     tokens.push({
                         type: TokenType.typeInt,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "float") {
                     tokens.push({
                         type: TokenType.typeFloat,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "bool") {
                     tokens.push({
                         type: TokenType.typeBool,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "function") {
                     tokens.push({
                         type: TokenType.function,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "call") {
                     tokens.push({
                         type: TokenType.callFunction,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "string") {
                     tokens.push({
                         type: TokenType.typeString,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "return") {
                     tokens.push({
                         type: TokenType.return,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "null") {
                     tokens.push({
                         type: TokenType.null,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "minusequal") {
                     tokens.push({
                         type: TokenType.minusEqual,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "while") {
                     tokens.push({
                         type: TokenType.while,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "for") {
                     tokens.push({
                         type: TokenType.for,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "import") {
                     tokens.push({
                         type: TokenType.import,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "asm") {
                     tokens.push({
                         type: TokenType.assembly,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "pointer") {
                     tokens.push({
                         type: TokenType.typeInt,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else if (buffer === "obj") {
                     tokens.push({
                         type: TokenType.object,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 } else {
@@ -250,7 +266,7 @@ export class Tokenizer {
                     tokens.push({
                         type: TokenType.ident,
                         value: buffer,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     buffer = "";
                 }
@@ -269,28 +285,31 @@ export class Tokenizer {
                         ? TokenType.float
                         : TokenType.int_lit,
                     value: buffer,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 buffer = "";
             } else if (this.peek() === ";") {
-                tokens.push({ type: TokenType.semi, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.semi,
+                    line: { line: this.lineCount, file: this.file },
+                });
                 this.consume();
             } else if (this.peek() === "[") {
                 tokens.push({
                     type: TokenType.openBracket,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "]") {
                 tokens.push({
                     type: TokenType.closeBracket,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "(") {
                 tokens.push({
                     type: TokenType.open_paren,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "=") {
@@ -298,31 +317,31 @@ export class Tokenizer {
                 if (this.peek() === "=") {
                     tokens.push({
                         type: TokenType.double_equals,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                     this.consume();
                 } else {
                     tokens.push({
                         type: TokenType.equals,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 }
             } else if (this.peek() === ")") {
                 tokens.push({
                     type: TokenType.close_paren,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "{") {
                 tokens.push({
                     type: TokenType.open_curly,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "}") {
                 tokens.push({
                     type: TokenType.close_curly,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
                 this.consume();
             } else if (this.peek() === "+") {
@@ -331,21 +350,24 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.plusEqual,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else if (this.peek() === "+") {
                     this.consume();
                     tokens.push({
                         type: TokenType.doublePlus,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else {
-                    tokens.push({ type: TokenType.plus, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.plus,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                 }
             } else if (this.peek() === "-") {
                 tokens.push({
                     type: TokenType.minus,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                 });
             } else if (this.peek() === "/") {
                 this.consume();
@@ -373,12 +395,12 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.minusEqual,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else {
                     tokens.push({
                         type: TokenType.slash,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 }
             } else if (this.peek() === "*") {
@@ -387,10 +409,13 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.mulEqual,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else {
-                    tokens.push({ type: TokenType.star, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.star,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                 }
             } else if (this.peek() === "!") {
                 this.consume();
@@ -398,38 +423,57 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.not_equals,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else if (this.peek() === "|") {
                     this.consume();
-                    tokens.push({ type: TokenType.xor, line: this.lineCount });
+                    tokens.push({
+                        type: TokenType.xor,
+                        line: { line: this.lineCount, file: this.file },
+                    });
                 } else {
                     tokens.push({
                         type: TokenType.exclamation,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 }
             } else if (this.peek() === "|" && this.peek(1) === "|") {
                 this.consume();
                 this.consume();
-                tokens.push({ type: TokenType.or, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.or,
+                    line: { line: this.lineCount, file: this.file },
+                });
             } else if (this.peek() === "&" && this.peek(1) === "&") {
                 this.consume();
                 this.consume();
-                tokens.push({ type: TokenType.and, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.and,
+                    line: { line: this.lineCount, file: this.file },
+                });
             } else if (this.peek() === '"') {
                 this.consume();
-                tokens.push({ type: TokenType.quotes, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.quotes,
+                    line: { line: this.lineCount, file: this.file },
+                });
                 while (this.peek() !== '"' && this.peek()) {
-                    buffer += this.consume();
+                    let char = this.consume();
+                    buffer += char;
+                    if (char === "\n") {
+                        this.lineCount++;
+                    }
                 }
                 this.consume();
                 tokens.push({
                     type: TokenType.string,
-                    line: this.lineCount,
+                    line: { line: this.lineCount, file: this.file },
                     value: buffer,
                 });
-                tokens.push({ type: TokenType.quotes, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.quotes,
+                    line: { line: this.lineCount, file: this.file },
+                });
                 buffer = "";
             } else if (this.peek() === "<") {
                 this.consume();
@@ -437,12 +481,12 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.smallerEquals,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else {
                     tokens.push({
                         type: TokenType.smaller,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 }
             } else if (this.peek() === ">") {
@@ -451,17 +495,20 @@ export class Tokenizer {
                     this.consume();
                     tokens.push({
                         type: TokenType.greaterEquals,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 } else {
                     tokens.push({
                         type: TokenType.greater,
-                        line: this.lineCount,
+                        line: { line: this.lineCount, file: this.file },
                     });
                 }
             } else if (this.peek() === ",") {
                 this.consume();
-                tokens.push({ type: TokenType.comma, line: this.lineCount });
+                tokens.push({
+                    type: TokenType.comma,
+                    line: { line: this.lineCount, file: this.file },
+                });
             } else if (this.peek() === "\n") {
                 this.consume();
                 this.lineCount++;
@@ -470,7 +517,10 @@ export class Tokenizer {
             else if ([" ", "\f", "\r", "\t", "\v"].includes(this.peek())) {
                 this.consume();
             } else {
-                error("Invalid token", this.lineCount);
+                error("Invalid token", {
+                    line: this.lineCount,
+                    file: this.file,
+                });
             }
         }
         this.index = 0;

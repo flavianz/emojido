@@ -8,12 +8,13 @@ import { assemblify, Optimizer } from "./optimizer";
  *
  * @param {string} source the source code
  * @param debug
+ * @param file
  * @returns {string} the asm
  * */
-export function compile(source: string, debug: boolean): string {
+export function compile(source: string, debug: boolean, file: string): string {
     const start = Date.now();
     source = demoji(source);
-    const tokenizer = new Tokenizer(source);
+    const tokenizer = new Tokenizer(source, file);
     const tokens = tokenizer.tokenize();
 
     const parser = new Parser(tokens);

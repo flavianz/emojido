@@ -1,5 +1,5 @@
 import { Expression } from "./Expressions";
-import { LiteralType, Token } from "../types";
+import { LineCount, LiteralType, Token } from "../types";
 import { checkLiteralType } from "../parser";
 import { Scope } from "./Scope";
 import { IfPredicate } from "./IfPredicates";
@@ -7,9 +7,9 @@ import { Term } from "./Terms";
 import { StatementFunctionDefinition } from "./Functions";
 
 export class Statement {
-    readonly line: number;
+    readonly line: LineCount;
 
-    constructor(line: number) {
+    constructor(line: LineCount) {
         this.line = line;
     }
 }
@@ -18,7 +18,7 @@ export class StatementLet extends Statement {
     readonly expression: Expression;
     readonly identifier: string;
 
-    constructor(expression: Expression, identifier: Token, line: number) {
+    constructor(expression: Expression, identifier: Token, line: LineCount) {
         super(line);
         this.expression = expression;
         this.identifier = identifier.value;
@@ -27,7 +27,7 @@ export class StatementLet extends Statement {
 export class StatementExit extends Statement {
     readonly expression: Expression;
 
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(line);
         this.expression = expression;
         checkLiteralType(
@@ -40,7 +40,7 @@ export class StatementExit extends Statement {
 export class StatementPrint extends Statement {
     readonly expression: Expression;
 
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(line);
         this.expression = expression;
         checkLiteralType(
@@ -59,7 +59,7 @@ export class StatementAssign extends Statement {
     readonly expression: Expression;
     readonly identifier: string;
 
-    constructor(expression: Expression, identifier: Token, line: number) {
+    constructor(expression: Expression, identifier: Token, line: LineCount) {
         super(line);
         this.expression = expression;
         this.identifier = identifier.value;
@@ -68,7 +68,7 @@ export class StatementAssign extends Statement {
 export class StatementScope extends Statement {
     readonly scope: Scope;
 
-    constructor(scope: Scope, line: number) {
+    constructor(scope: Scope, line: LineCount) {
         super(line);
         this.scope = scope;
     }
@@ -82,7 +82,7 @@ export class StatementIf extends Statement {
     constructor(
         expression: Expression,
         scope: Scope,
-        line: number,
+        line: LineCount,
         predicate?: IfPredicate,
     ) {
         super(line);
@@ -100,7 +100,7 @@ export class StatementWhile extends Statement {
     readonly expression: Expression;
     readonly scope: Scope;
 
-    constructor(expression: Expression, scope: Scope, line: number) {
+    constructor(expression: Expression, scope: Scope, line: LineCount) {
         super(line);
         this.expression = expression;
         this.scope = scope;
@@ -122,7 +122,7 @@ export class StatementFor extends Statement {
         expression: Expression,
         statementModify: StatementAssign,
         scope: Scope,
-        line: number,
+        line: LineCount,
     ) {
         super(line);
         this.expression = expression;
@@ -140,7 +140,7 @@ export class StatementFor extends Statement {
 export class StatementTerm extends Statement {
     readonly term: Term;
 
-    constructor(line: number, term: Term) {
+    constructor(line: LineCount, term: Term) {
         super(line);
         this.term = term;
     }
@@ -149,7 +149,7 @@ export class StatementTerm extends Statement {
 export class StatementReturn extends Statement {
     readonly expression: Expression;
 
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(line);
         this.expression = expression;
     }
@@ -160,7 +160,7 @@ export class StatementImport extends Statement {
     constructor(
         functions: StatementFunctionDefinition[],
         vars: StatementLet[],
-        line: number,
+        line: LineCount,
     ) {
         super(line);
         this.vars = vars;
@@ -173,7 +173,7 @@ export class StatementAssembly extends Statement {
     readonly data: string;
     readonly bss: string;
 
-    constructor(text: string, data: string, bss: string, line: number) {
+    constructor(text: string, data: string, bss: string, line: LineCount) {
         super(line);
         this.text = text;
         this.data = data;
@@ -185,7 +185,7 @@ export class StatementMemoryModification extends Statement {
     readonly address: Expression;
     readonly expression: Expression;
 
-    constructor(address: Expression, expression: Expression, line: number) {
+    constructor(address: Expression, expression: Expression, line: LineCount) {
         super(line);
         this.address = address;
         this.expression = expression;

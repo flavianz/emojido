@@ -1,11 +1,11 @@
 import { Expression } from "./Expressions";
 import { Scope } from "./Scope";
 import { checkLiteralType } from "../parser";
-import { LiteralType } from "../types";
+import { LineCount, LiteralType } from "../types";
 
 export class IfPredicate {
-    readonly line: number;
-    constructor(line: number) {
+    readonly line: LineCount;
+    constructor(line: LineCount) {
         this.line = line;
     }
 }
@@ -18,7 +18,7 @@ export class ElseIfPredicate extends IfPredicate {
     constructor(
         expression: Expression,
         scope: Scope,
-        line: number,
+        line: LineCount,
         predicate?: IfPredicate,
     ) {
         super(line);
@@ -36,7 +36,7 @@ export class ElseIfPredicate extends IfPredicate {
 export class ElsePredicate extends IfPredicate {
     readonly scope: Scope;
 
-    constructor(scope: Scope, line: number) {
+    constructor(scope: Scope, line: LineCount) {
         super(line);
         this.scope = scope;
     }

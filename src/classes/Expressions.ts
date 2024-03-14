@@ -1,10 +1,10 @@
-import { LiteralType } from "../types";
+import { LineCount, LiteralType } from "../types";
 
 export class Expression {
     readonly literalType: LiteralType;
-    readonly line: number;
+    readonly line: LineCount;
 
-    constructor(literalType: LiteralType, line: number) {
+    constructor(literalType: LiteralType, line: LineCount) {
         this.literalType = literalType;
         this.line = line;
     }

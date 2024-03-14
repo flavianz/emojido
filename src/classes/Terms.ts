@@ -1,4 +1,4 @@
-import { LiteralType } from "../types";
+import { LineCount, LiteralType } from "../types";
 import { Expression } from "./Expressions";
 import { checkLiteralType } from "../parser";
 import { StatementFunctionDefinition } from "./Functions";
@@ -6,7 +6,7 @@ import { StatementLet } from "./Statements";
 import { VariableObject } from "./Object";
 
 export class Term extends Expression {
-    constructor(literalType: LiteralType, line: number) {
+    constructor(literalType: LiteralType, line: LineCount) {
         super(literalType, line);
     }
 }
@@ -14,7 +14,7 @@ export class Term extends Expression {
 export class TermInteger extends Term {
     readonly integerValue: string;
 
-    constructor(line: number, integerValue: string) {
+    constructor(line: LineCount, integerValue: string) {
         super(LiteralType.integerLiteral, line);
         this.integerValue = integerValue;
     }
@@ -23,7 +23,7 @@ export class TermInteger extends Term {
 export class TermFloat extends Term {
     readonly floatValue: string;
 
-    constructor(line: number, floatValue: string) {
+    constructor(line: LineCount, floatValue: string) {
         super(LiteralType.floatLiteral, line);
         this.floatValue = floatValue;
     }
@@ -32,7 +32,7 @@ export class TermFloat extends Term {
 export class TermBoolean extends Term {
     readonly booleanValue: string;
 
-    constructor(line: number, booleanValue: string) {
+    constructor(line: LineCount, booleanValue: string) {
         super(LiteralType.booleanLiteral, line);
         this.booleanValue = booleanValue;
     }
@@ -41,7 +41,7 @@ export class TermBoolean extends Term {
 export class TermString extends Term {
     readonly stringValue: string;
 
-    constructor(line: number, stringValue: string) {
+    constructor(line: LineCount, stringValue: string) {
         super(LiteralType.stringLiteral, line);
         this.stringValue = stringValue;
     }
@@ -50,7 +50,7 @@ export class TermString extends Term {
 export class TermIdentifier extends Term {
     readonly identifier: string;
 
-    constructor(line: number, identifier: string, literalType: LiteralType) {
+    constructor(line: LineCount, identifier: string, literalType: LiteralType) {
         super(literalType, line);
         this.identifier = identifier;
     }
@@ -58,14 +58,14 @@ export class TermIdentifier extends Term {
 
 export class TermParens extends Term {
     readonly expression: Expression;
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(expression.literalType, line);
         this.expression = expression;
     }
 }
 
 export class TermNull extends Term {
-    constructor(line: number) {
+    constructor(line: LineCount) {
         super(LiteralType.nullLiteral, line);
     }
 }
@@ -74,7 +74,7 @@ export class TermArray extends Term {
     readonly values: Term[];
     readonly valueType: LiteralType;
 
-    constructor(valueType: LiteralType, values: Term[], line: number) {
+    constructor(valueType: LiteralType, values: Term[], line: LineCount) {
         super(LiteralType.arrayLiteral, line);
         this.values = values;
         this.valueType = valueType;
@@ -87,7 +87,7 @@ export class TermArrayAccess extends TermIdentifier {
         identifier: string,
         literalType: LiteralType,
         expression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         super(line, identifier, literalType);
         this.expression = expression;
@@ -105,7 +105,7 @@ export class TermObject extends Term implements VariableObject {
         literalType: LiteralType,
         values: Map<string, StatementLet>,
         functionDefinitions: Map<string, StatementFunctionDefinition>,
-        line: number,
+        line: LineCount,
     ) {
         super(literalType, line);
         this.vars = values;
@@ -114,7 +114,7 @@ export class TermObject extends Term implements VariableObject {
 }
 export class TermParseToFloat extends Term {
     readonly expression: Expression;
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(LiteralType.floatLiteral, line);
         checkLiteralType(
             expression.literalType,
@@ -127,7 +127,7 @@ export class TermParseToFloat extends Term {
 
 export class TermParseToInt extends Term {
     readonly expression: Expression;
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(LiteralType.integerLiteral, line);
         checkLiteralType(
             expression.literalType,
@@ -139,7 +139,7 @@ export class TermParseToInt extends Term {
 }
 export class TermParseToString extends Term {
     readonly expression: Expression;
-    constructor(expression: Expression, line: number) {
+    constructor(expression: Expression, line: LineCount) {
         super(LiteralType.stringLiteral, line);
         checkLiteralType(
             expression.literalType,
@@ -152,7 +152,7 @@ export class TermParseToString extends Term {
 
 export class TermPointer extends Term {
     readonly expressionPointedTo: Expression;
-    constructor(expressionPointedTo: Expression, line: number) {
+    constructor(expressionPointedTo: Expression, line: LineCount) {
         super(LiteralType.integerLiteral, line);
         this.expressionPointedTo = expressionPointedTo;
     }
@@ -160,7 +160,11 @@ export class TermPointer extends Term {
 
 export class TermMemoryAccess extends Term {
     readonly address: Expression;
-    constructor(literalType: LiteralType, address: Expression, line: number) {
+    constructor(
+        literalType: LiteralType,
+        address: Expression,
+        line: LineCount,
+    ) {
         super(literalType, line);
         this.address = address;
     }

@@ -1,5 +1,5 @@
 import { Expression } from "./Expressions";
-import { LiteralType } from "../types";
+import { LineCount, LiteralType } from "../types";
 import { TermIdentifier } from "./Terms";
 import { Statement } from "./Statements";
 import { Scope } from "./Scope";
@@ -14,7 +14,7 @@ export class StatementFunctionDefinition extends Statement {
         returnType: LiteralType,
         identifier: string,
         arguments_: FunctionArgument[],
-        line: number,
+        line: LineCount,
         scope: Scope,
     ) {
         super(line);
@@ -31,7 +31,7 @@ export class TermFunctionCall extends TermIdentifier {
         identifier: string,
         literalType: LiteralType,
         arguments_: Expression[],
-        line: number,
+        line: LineCount,
     ) {
         super(line, identifier, literalType);
         this.arguments = arguments_;

@@ -1,5 +1,5 @@
 import { Expression } from "./Expressions";
-import { LiteralType } from "../types";
+import { LineCount, LiteralType } from "../types";
 import { checkLiteralType, getEmojiFromLiteralType } from "../parser";
 import { error } from "../tokenization";
 
@@ -11,7 +11,7 @@ export class BinaryExpression extends Expression {
         literalType: LiteralType,
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         super(literalType, line);
         this.lhsExpression = lhsExpression;
@@ -23,7 +23,7 @@ export class BinaryExpressionAdd extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         if (lhsExpression.literalType === LiteralType.stringLiteral) {
             checkLiteralType(
@@ -58,7 +58,7 @@ export class BinaryExpressionSub extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -85,7 +85,7 @@ export class BinaryExpressionMul extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -112,7 +112,7 @@ export class BinaryExpressionDiv extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -132,7 +132,7 @@ export class BooleanBinaryExpressionCompare extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -151,7 +151,7 @@ export class BooleanBinaryExpressionNotCompare extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         if (lhsExpression.literalType !== rhsExpression.literalType) {
             error(
@@ -171,7 +171,7 @@ export class BooleanBinaryExpressionGreaterEquals extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -190,7 +190,7 @@ export class BooleanBinaryExpressionLessThan extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -209,7 +209,7 @@ export class BooleanBinaryExpressionLessEquals extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -228,7 +228,7 @@ export class BooleanBinaryExpressionGreaterThan extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -247,7 +247,7 @@ export class BooleanBinaryExpressionAnd extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -266,7 +266,7 @@ export class BooleanBinaryExpressionOr extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,
@@ -285,7 +285,7 @@ export class BooleanBinaryExpressionXor extends BinaryExpression {
     constructor(
         lhsExpression: Expression,
         rhsExpression: Expression,
-        line: number,
+        line: LineCount,
     ) {
         checkLiteralType(
             lhsExpression.literalType,

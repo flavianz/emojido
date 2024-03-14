@@ -70,7 +70,7 @@ export enum LiteralType {
 export interface Token {
     type: TokenType;
     value?: string;
-    line: number;
+    line: LineCount;
 }
 
 export interface Var {
@@ -81,4 +81,8 @@ export interface VarFunction {
     returnType: LiteralType;
     arguments: FunctionArgument[];
     scopeDefinitionOffset?: number;
+}
+export interface LineCount {
+    line: number;
+    file: string;
 }
