@@ -272,7 +272,9 @@ enough_capacity_array:
             ),
         );
         this.push("rbp");
-        this.writeText(new AssemblyMovToken("rbp", "rsp"));
+        this.writeText(
+            new AssemblyMovToken("rbp", "rsp", "adjust base pointer"),
+        );
 
         this.scopes.push({
             vars: new Map(),
@@ -292,7 +294,9 @@ enough_capacity_array:
         );
 
         this.scopes.pop();
-        this.writeText(new AssemblyMovToken("rsp", "rbp"));
+        this.writeText(
+            new AssemblyMovToken("rsp", "rbp", "reset stack pointer"),
+        );
         this.pop("rbp");
     }
 
@@ -304,8 +308,14 @@ enough_capacity_array:
             );
         } else if (term instanceof TermFloat) {
             const ident = this.generateIdentifier();
-            this.data += `    ${ident} dq ${term.floatValue} ; generate term float ${term.floatValue}\n`; //store value in memory
-            this.writeText(new AssemblyMovToken("rax", `[${ident}]`)); //mov float into sse reg
+            this.data += `    ${ident} dq ${term.floatValue}\n`; //store value in memory
+            this.writeText(
+                new AssemblyMovToken(
+                    "rax",
+                    `[${ident}]`,
+                    "generate term float",
+                ),
+            ); //mov float into sse reg
             this.push("rax");
         } else if (term instanceof TermIdentifier) {
             if (term instanceof TermFunctionCall) {
@@ -315,12 +325,14 @@ enough_capacity_array:
                 this.writeText(
                     new AssemblyUnoptimizedToken(
                         `    call _${term.identifier}`,
+                        "call function",
                     ),
                 );
                 this.writeText(
                     new AssemblyAddToken(
                         "rsp",
                         (term.arguments.length * 8).toString(),
+                        "pop function arguments",
                     ),
                 );
                 this.push("r14", "push return value to stack");
@@ -345,17 +357,16 @@ enough_capacity_array:
         } else if (term instanceof TermParens) {
             this.generateExpr(term.expression);
         } else if (term instanceof TermBoolean) {
-            this.writeText(
-                new AssemblyMovToken("rax", term.booleanValue.toString()),
+            this.push(
+                term.booleanValue.toString(),
+                "generate boolean from term",
             );
-            this.push("rax");
         } else if (term instanceof TermString) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident} db "${term.stringValue}", 0\n`;
-            this.writeText(new AssemblyMovToken("rax", ident));
-            this.push("rax");
+            this.push(ident, "generate string from term");
         } else if (term instanceof TermNull) {
-            this.push("0");
+            this.push("0", "generate null from term");
         } else if (term instanceof TermArray) {
             const ident = this.generateIdentifier();
             this.data += `    ${ident}_ptr dq 0\n    ${ident}_capacity dq 0\n    ${ident}_size dq 0\n`;
@@ -410,17 +421,22 @@ enough_capacity_array:
             this.generateExpr(term.expression);
             this.pop("rax");
             this.writeText(
-                new AssemblyUnoptimizedToken("    cvtsi2sd xmm0, rax"),
+                new AssemblyUnoptimizedToken(
+                    "    cvtsi2sd xmm0, rax",
+                    "convert int to float",
+                ),
             );
             this.writeText(new AssemblyUnoptimizedToken("    movq rax, xmm0"));
             this.push("rax");
         } else if (term instanceof TermParseToInt) {
             this.generateExpr(term.expression);
             this.pop("rax");
-            this.writeText(new AssemblyUnoptimizedToken("    mov rax, [rax]"));
-            this.generateExpr(term.expression);
-            this.pop("rax");
-            this.writeText(new AssemblyUnoptimizedToken("    movq xmm0, rax"));
+            this.writeText(
+                new AssemblyUnoptimizedToken(
+                    "    movq xmm0, rax",
+                    "convert float to int",
+                ),
+            );
             this.writeText(
                 new AssemblyUnoptimizedToken("    cvtsd2si rax, xmm0"),
             );
@@ -432,12 +448,18 @@ enough_capacity_array:
             this.generateExpr(term.expressionPointedTo);
             this.data += `    ${ident} dq 0\n`;
             this.pop("rax");
-            this.writeText(new AssemblyMovToken(`qword [${ident}]`, "rax"));
+            this.writeText(
+                new AssemblyMovToken(
+                    `qword [${ident}]`,
+                    "rax",
+                    "generate pointer to value",
+                ),
+            );
             this.push(`${ident}`);
         } else if (term instanceof TermMemoryAccess) {
             this.generateExpr(term.address);
             this.pop("rax");
-            this.push("qword [rax]");
+            this.push("qword [rax]", "create term from memory access");
         } else if (term instanceof TermObject) {
         }
     }

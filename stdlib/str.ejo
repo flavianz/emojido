@@ -18,15 +18,7 @@ function int stringLength function string input {
 ";
 }
 
-function null println function string input {
-    let length = stringLength call input call;
-    asm "    mov rax, 1
-    mov rdi, 1
-    mov rsi, [rbp + 16]
-    mov rdx, [rbp - 8]
-    syscall
-    ";
-}
+
 
 function string fromBool function bool input {
     if input if {
@@ -64,6 +56,21 @@ function string concat function string prefix string suffix {
     return string point;
 }
 
+function null println function string input {
+    let endline = "n";
+    asm "    mov rax, [rbp - 8]
+    mov byte [rax], 10
+";
+    input = concat call input, endline call;
+    let length = stringLength call input call;
+    asm "    mov rax, 1
+    mov rdi, 1
+    mov rsi, [rbp + 16]
+    mov rdx, [rbp - 8]
+    syscall
+    ";
+}
+
 function string fromInt function int number {
     let result = "";
     if number == 0 if {
@@ -74,19 +81,36 @@ function string fromInt function int number {
             isNeg = true;
             number = -1 * number;
         }
+        print "nigger";
+        print number > 0;
         while number > 0 while {
-            let val = int mod call float number, float 10 call + 48; //used in asm
-            let stringified = ""; // used in asm
-            asm "    mov qword [rbp - 16], [rbp - 8]
-    "; //moves the ascii value calculated above into stringified
+            print "hello";
+            let val = int mod call float number, 10.0 call + 48; //used in asm
+            print 1;
+            let stringified = "  "; // used in asm
+            print 2;
+            asm "    mov r13, [rbp - 8]
+    mov qword rax, qword [rbp - 16]
+    mov [rax], r13
+    mov byte [rax + 1], 0
+"; //moves the ascii value calculated above into stringified
+print 3;
+            print stringified;
+            print 4;
             result = concat call stringified, result call;
+            print result;
+            print 57;
+            print number;
+            print int (number / 10);
             number = floor call number / 10 call;
+            print number;
+            print 6;
         }
 
         if isNeg if {
             result = concat call "-", result call;
         }
-
+        println call result call;
         return result;
     }
 }
