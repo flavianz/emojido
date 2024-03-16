@@ -20,7 +20,7 @@ function float mod function float dividend float divisor {
 
 
 function int round function float roundInput {
-    return int roundInput + 0.000000000000000000001;
+    return int roundInput + 0.00000001;
 }
 
 function int floor function float floorInput {

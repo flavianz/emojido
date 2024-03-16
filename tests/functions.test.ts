@@ -3,88 +3,98 @@ import { execute } from "../src/assemble";
 
 describe("Compiler", () => {
     it("exits", async () => {
-        const result = await execute(compile("🚪21🚀", false));
+        const result = await execute(compile("🚪21🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(21);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("prints strings", async () => {
-        const result = await execute(compile("🖨️🔠Hello, World!🔠🚀", false));
+        const result = await execute(
+            compile("🖨️🔠Hello, World!🔠🚀", false, "test.ejo"),
+        );
         expect(result.exitCode).toBe(0);
         expect(result.standardOut).toEqual([{ text: "Hello, World!" }]);
         expect(result.standardErr).toEqual([]);
     });
     it("prints integers", async () => {
-        const result = await execute(compile("🖨️69🚀", false));
+        const result = await execute(compile("🖨️69🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(0);
         expect(result.standardOut).toEqual([{ text: "\u000069" }]);
         expect(result.standardErr).toEqual([]);
     });
     it("prints integers", async () => {
-        const result = await execute(compile("🖨️69🚀", false));
+        const result = await execute(compile("🖨️69🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(0);
         expect(result.standardOut).toEqual([{ text: "\u000069" }]);
         expect(result.standardErr).toEqual([]);
     });
     it("prints booleans", async () => {
-        const result = await execute(compile("🖨️✅🚀", false));
+        const result = await execute(compile("🖨️✅🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(0);
         expect(result.standardOut).toEqual([{ text: "true" }]);
         expect(result.standardErr).toEqual([]);
     });
     it("defines variables", async () => {
-        const result = await execute(compile("📦x🪢17🚀🚪x🚀", false));
+        const result = await execute(
+            compile("📦x🪢17🚀🚪x🚀", false, "test.ejo"),
+        );
         expect(result.exitCode).toBe(17);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("reassigns variables", async () => {
-        const result = await execute(compile("📦x🪢17🚀x🪢69🚀🚪x🚀", false));
+        const result = await execute(
+            compile("📦x🪢17🚀x🪢69🚀🚪x🚀", false, "test.ejo"),
+        );
         expect(result.exitCode).toBe(69);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("adds", async () => {
-        const result = await execute(compile("🚪5➕3🚀", false));
+        const result = await execute(compile("🚪5➕3🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(8);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("subtracts", async () => {
-        const result = await execute(compile("🚪5➖3🚀", false));
+        const result = await execute(compile("🚪5➖3🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(2);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("multiplies", async () => {
-        const result = await execute(compile("🚪5✖️3🚀", false));
+        const result = await execute(compile("🚪5✖️3🚀", false, "test.ejo"));
         expect(result.exitCode).toBe(15);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("divides", async () => {
-        const result = await execute(compile("📦x🪢5➗2🚀🚪0🚀", false));
+        const result = await execute(
+            compile("📦x🪢5➗2🚀🚪0🚀", false, "test.ejo"),
+        );
         expect(result.exitCode).toBe(0);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("executes shorthand math", async () => {
         const result = await execute(
-            compile("📦x🪢5🚀x➕🪢5🚀x✖️🪢5🚀x➖🪢5🚀🚪x🚀", false),
+            compile("📦x🪢5🚀x➕🪢5🚀x✖️🪢5🚀x➖🪢5🚀🚪x🚀", false, "test.ejo"),
         );
         expect(result.exitCode).toBe(45);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("executes if-statements", async () => {
-        const result = await execute(compile("✂️✅✂️⚽🚪10🚀🥅", false));
+        const result = await execute(
+            compile("✂️✅✂️⚽🚪10🚀🥅", false, "test.ejo"),
+        );
         expect(result.exitCode).toBe(10);
         expect(result.standardOut).toEqual([]);
         expect(result.standardErr).toEqual([]);
     });
     it("executes else-statements", async () => {
         const result = await execute(
-            compile("✂️❌✂️⚽🚪10🚀🥅🗑️⚽🚪11🚀🥅", false),
+            compile("✂️❌✂️⚽🚪10🚀🥅🗑️⚽🚪11🚀🥅", false, "test.ejo"),
         );
         expect(result.exitCode).toBe(11);
         expect(result.standardOut).toEqual([]);
@@ -92,7 +102,11 @@ describe("Compiler", () => {
     });
     it("executes elseif-statements", async () => {
         const result = await execute(
-            compile("✂️❌✂️⚽🚪9🚀🥅📐✅📐⚽🚪10🚀🥅🗑️⚽🚪11🚀🥅", false),
+            compile(
+                "✂️❌✂️⚽🚪9🚀🥅📐✅📐⚽🚪10🚀🥅🗑️⚽🚪11🚀🥅",
+                false,
+                "test.ejo",
+            ),
         );
         expect(result.exitCode).toBe(10);
         expect(result.standardOut).toEqual([]);
@@ -140,6 +154,7 @@ describe("Compiler", () => {
                     "print 1.0 >= -2.0;\n" +
                     "print -1.0 >= 0.0;",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(0);
@@ -184,6 +199,7 @@ describe("Compiler", () => {
             compile(
                 "🛒🔢multiply🛒🔢value1🔢value2 ⚽🪃value1✖️value2🚀🥅🚪multiply🔫3🌶️4🔫🚀",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(12);
@@ -197,6 +213,7 @@ describe("Compiler", () => {
                     "    🖨️ i🚀\n" +
                     "🥅",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(0);
@@ -218,6 +235,7 @@ describe("Compiler", () => {
                     "    🖨️i🚀\n" +
                     "🥅",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(0);
@@ -235,6 +253,7 @@ describe("Compiler", () => {
             compile(
                 "📦a🪢2🚀📦b🪢3🚀🛒🔢multiply🛒🔢value1🔢value2 ⚽📦c🪢4🚀📦d🪢5🚀🛒🔢subtract🛒🔢value3🔢value4 ⚽📦e🪢6🚀📦f🪢7🚀✂️❌✂️⚽🪃1🚀🥅📐✅📐⚽🪃value4✖️e🚀🥅🗑️⚽🪃10🚀🥅🪃value4✖️e🚀🥅📦result🪢subtract🔫value1🌶️c🔫🚀🖨️result🚀🪃result✖️value2🚀🥅🖨️a🚀🚪multiply🔫b🌶️8🔫🚀",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(192);
@@ -276,6 +295,7 @@ describe("Compiler", () => {
                     "🖨️a🚀\n" +
                     "🚪multiply🔫b🌶️8🔫🚀",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(144);
@@ -304,6 +324,7 @@ describe("Compiler", () => {
                     "\n" +
                     "exit x;",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(36);
@@ -321,6 +342,7 @@ describe("Compiler", () => {
                     "print fn call 7 call;\n" +
                     "exit a;\n",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(2);
@@ -343,6 +365,7 @@ describe("Compiler", () => {
                     "    🖨️ modify 🔫 i 🔫 ✖️ a🚀\n" +
                     "🥅",
                 false,
+                "test.ejo",
             ),
         );
         expect(result.exitCode).toBe(0);
