@@ -141,8 +141,6 @@ function string fromFloat function float number {
             fractionalPart minusequal digit minus 48;
         }
     }
-    println call fractionalString call;
-    println call "aa" call;
     let combined = concat call integralString, fractionalString call;
     return concat call prefix, combined call;
 }

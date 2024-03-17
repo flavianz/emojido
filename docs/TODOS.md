@@ -1,32 +1,23 @@
 # TODOs
 
+### Fixes
+
+- Make println work
+- imported files of imported files end up in asm but not vars / functions map in parsing
+
 ### Functions
 - Check that every path of function returns something
 
-### Binary Operations
-- convert float to int (possibly implemented in the math standard library)
-- convert string to int / float
-
-### Print
-- print negative numbers
-- print floats
-
 ### Features
 - proper error handling
-- pointers
-- malloc
-- free
 - automatic int to float conversion
 - accept null for every type
 - Objects
 - Classes?
 - Standard library
   - Strings
-    - string concatenation
     - string comparison
-    - get string length
   - Time
-    - getMillis
     - get date string
 - constant variables
 - enums
