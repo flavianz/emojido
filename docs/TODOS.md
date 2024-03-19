@@ -2,7 +2,7 @@
 
 ### Fixes
 
-- Make println work
+- Make println with fromFloat and fromString work
 - imported files of imported files end up in asm but not vars / functions map in parsing
 
 ### Functions
