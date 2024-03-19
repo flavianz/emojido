@@ -155,10 +155,8 @@ export class StatementReturn extends Statement {
     }
 }
 export class StatementImport extends Statement {
-    readonly statements: Statement[];
-    constructor(statements: Statement[], line: LineCount) {
+    constructor(line: LineCount) {
         super(line);
-        this.statements = statements;
     }
 }
 

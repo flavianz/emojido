@@ -113,6 +113,7 @@ export function checkLiteralType(
 }
 
 export class Parser {
+    private program: Program = new Program([]);
     private index: number = 0;
     private readonly tokens: Token[];
     private scopes: {
@@ -1011,6 +1012,7 @@ export class Parser {
             const program = parser.parseProgram();
 
             for (const statement of program.statements) {
+                this.program.statements.push(statement);
                 if (statement instanceof StatementLet) {
                     if (
                         this.getVars().has(statement.identifier) ||
@@ -1041,8 +1043,7 @@ export class Parser {
                     );
                 }
             }
-
-            return new StatementImport(program.statements, line);
+            return new StatementImport(line);
         } else if (this.peek()?.type === TokenType.assembly) {
             const line = this.consume().line;
             const string = this.parseExpr();
@@ -1118,15 +1119,15 @@ export class Parser {
             return new StatementMemoryModification(address, expression, line);
         } else {
             //check for StatementExpression
-            try {
-                const term = this.parseTerm();
-                //error caught locally
+
+            const term = this.parseTerm();
+            if (term) {
                 this.tryConsume(TokenType.semi, {
                     error: "",
                     line: { line: 0, file: "" },
                 });
                 return new StatementTerm(term.line, term);
-            } catch (e) {
+            } else {
                 return null;
             }
         }
@@ -1259,15 +1260,14 @@ export class Parser {
      * @returns {Program | null} the root node of the parse tree
      * */
     parseProgram(): Program | null {
-        let program: Program = new Program([]);
         while (this.peek()) {
             const statement = this.parseStatement();
             if (statement) {
-                program.statements.push(statement);
+                this.program.statements.push(statement);
             } else {
                 error("Invalid statement", statement?.line);
             }
         }
-        return program;
+        return this.program;
     }
 }

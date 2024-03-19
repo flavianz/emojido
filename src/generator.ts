@@ -1053,9 +1053,7 @@ enough_capacity_array:
                 );
             }
         } else if (statement instanceof StatementImport) {
-            for (const stmt of statement.statements) {
-                this.generateStatement(stmt);
-            }
+            // move on
         } else if (statement instanceof StatementAssembly) {
             this.writeText(
                 new AssemblyUnoptimizedToken(
