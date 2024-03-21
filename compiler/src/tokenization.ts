@@ -36,21 +36,21 @@ export function error(error: string, line: LineCount) {
  * @returns {boolean} true if provided string is alphanumeric
  * */
 function isAlphanumeric(str: string): boolean {
-    return /^[a-zA-Z0-9]+$/.test(str);
+    return str ? /^[a-zA-Z0-9]+$/.test(str) : false;
 }
 /**Check if string is numeric
  * @param {string} str the char
  * @returns {boolean} true if provided string is numeric
  * */
 function isNumeric(str: string): boolean {
-    return /^[\d-.]+$/.test(str);
+    return str ? /^[\d-.]+$/.test(str) : false;
 }
 /**Check if string is alphabetic
  * @param {string} str the char
  * @returns {boolean} true if provided string is alphabetic
  * */
 function isAlphabetic(str: string): boolean {
-    return /[a-z]/i.test(str);
+    return str ? /[a-z]/i.test(str) : false;
 }
 
 export class Tokenizer {

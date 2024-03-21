@@ -1,9 +1,0 @@
-/$let abba = 🗃️
-    nikki = "10"
-    donald = "20"
-🗃️
-
-print abba➡️donald;/$
-import "str";
-
-concat call "Hello,", "World!" call;

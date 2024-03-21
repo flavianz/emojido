@@ -1,7 +1,7 @@
-import { post } from "axios";
+import axios from "axios";
 
 export async function execute(source: string) {
-    const result = await post(
+    const result = await axios.post(
         "https://godbolt.org/api/compiler/nasm21601/compile",
         {
             allowStoreDebug: true,

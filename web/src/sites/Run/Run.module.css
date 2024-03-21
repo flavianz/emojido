@@ -1,0 +1,65 @@
+.container {
+    max-width: 100%;
+    max-height: 100vh;
+    padding: 4vh 2vw;
+    overflow: hidden;
+}
+
+.title {
+    font-size: 2.3rem;
+}
+
+.windows {
+    height: 60vh;
+    display: flex;
+    width: 100%;
+}
+
+.field {
+    width: calc(100% - 2vw);
+    border-radius: 0.8vw;
+    background: #e3e3e3;
+    border-width: 0;
+    padding: 1vw;
+    font-size: 1.4vw;
+    font-family: "Fira Code", monospace;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    resize: none;
+    flex: 1;
+    margin-top: 1vw;
+}
+.output:focus {
+    outline: none;
+}
+
+.fieldContainer {
+    flex: 1;
+    margin: 0 1vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4vw 3vw 1vw;
+}
+.buttonRun {
+    padding: 1vw 2vw;
+    background-color: #84bff3;
+    font-size: 1.6rem;
+    border-width: 0;
+    border-radius: 0.5vw;
+    cursor: pointer;
+}
+.loader {
+    width: 60px;
+    aspect-ratio: 4;
+    background: radial-gradient(circle closest-side,#000 90%,#0000) 0/calc(100%/3) 100% space;
+    clip-path: inset(0 100% 0 0);
+    animation: l1 1s steps(4) infinite;
+}
+@keyframes l1 {to{clip-path: inset(0 -34% 0 0)}}

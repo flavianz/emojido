@@ -63,8 +63,9 @@ import {
     StatementFunctionDefinition,
     TermFunctionCall,
 } from "./classes/Functions";
-import fs from "node:fs";
 import { demoji } from "./demoji";
+import fs from "node:fs";
+import { math, str, sys } from "./stdlib";
 
 const literalTypeToEmoji = {
     [LiteralType.integerLiteral]: "🔢",
@@ -993,16 +994,33 @@ export class Parser {
             ) {
                 ident = string.value[i] + ident;
             }
-            if (string.value === "math") {
-                string.value = "stdlib/math.ejo";
-            } else if (string.value === "sys") {
-                string.value = "stdlib/sys.ejo";
-            } else if (string.value === "str") {
-                string.value = "stdlib/str.ejo";
+            const online = true; //set to false if stdlib should be read from file instead of stdlib.ts
+            let source: string;
+            if (!online) {
+                if (string.value === "math") {
+                    string.value = "stdlib/math.ejo";
+                } else if (string.value === "sys") {
+                    string.value = "stdlib/sys.ejo";
+                } else if (string.value === "str") {
+                    string.value = "stdlib/str.ejo";
+                } else {
+                    string.value += ".ejo";
+                }
+                source = fs.readFileSync(string.value).toString();
             } else {
-                string.value += ".ejo";
+                if (string.value === "math") {
+                    source = math;
+                } else if (string.value === "sys") {
+                    source = sys;
+                } else if (string.value === "str") {
+                    source = str;
+                } else {
+                    error(
+                        "Only standard library available for import in online shell",
+                        line,
+                    );
+                }
             }
-            let source = fs.readFileSync(string.value).toString();
 
             source = demoji(source);
             const tokenizer = new Tokenizer(source, string.value);
