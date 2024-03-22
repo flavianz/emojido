@@ -21,6 +21,6 @@
     "tabWidth": 4
   },
   "dependencies": {
-    "redaxios": "^0.5.1"
+    "got": "^14.2.1"
   }
 }
