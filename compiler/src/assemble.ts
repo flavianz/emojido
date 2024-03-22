@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "redaxios";
 
 export async function execute(source: string) {
     const result = await axios.post(
