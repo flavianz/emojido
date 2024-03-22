@@ -56,7 +56,7 @@
     cursor: pointer;
 }
 .loader {
-    width: 60px;
+    width: 30px;
     aspect-ratio: 4;
     background: radial-gradient(circle closest-side,#000 90%,#0000) 0/calc(100%/3) 100% space;
     clip-path: inset(0 100% 0 0);
