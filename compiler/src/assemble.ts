@@ -1,7 +1,7 @@
-import got from "got";
+import ky from "ky";
 
 export async function execute(source: string) {
-    const { data } = await got
+    const result = (await ky
         .post("https://godbolt.org/api/compiler/nasm21601/compile", {
             json: {
                 allowStoreDebug: true,
@@ -43,25 +43,36 @@ export async function execute(source: string) {
                 },
             },
         })
-        .json();
+        .json()) as {
+        execResult: {
+            stdout: { text: string }[];
+            stderr: { text: string }[];
+            code: number;
+        };
+    };
 
+    if (!result) {
+        console.log("Error while running asm");
+    }
+    if (!result.execResult) {
+        console.log("Error while running asm");
+    }
     console.log("Standard Output:");
-    console.log(data);
     console.log(
-        ...result.data.execResult.stdout.map((text) => {
+        ...result.execResult.stdout.map((text) => {
             return text.text;
         }),
     );
     console.log(
         "Standard Error: ",
-        ...result.data.execResult.stderr.map((text) => {
+        ...result.execResult.stderr.map((text) => {
             return text.text;
         }),
     );
-    console.log("Exit Code: " + result.data.execResult.code);
+    console.log("Exit Code: " + result.execResult.code);
     return {
-        exitCode: result.data.execResult.code,
-        standardOut: result.data.execResult.stdout,
-        standardErr: result.data.execResult.stderr,
+        exitCode: result.execResult.code,
+        standardOut: result.execResult.stdout,
+        standardErr: result.execResult.stderr,
     };
 }
