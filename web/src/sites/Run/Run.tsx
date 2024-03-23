@@ -73,6 +73,10 @@ export default function Run() {
                     />
                 </div>
             </div>
+            <div className={styles.footerContainer}>
+                <p style={{ marginRight: "2vw" }}>Need help?</p>
+                <a href="/#/docs">See Documentation</a>
+            </div>
         </div>
     );
 }
