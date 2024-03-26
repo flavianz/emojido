@@ -9,9 +9,12 @@ import {
 import Run from "./sites/Run/Run.tsx";
 import Home from "./sites/Home/Home.tsx";
 import Error from "./sites/Error/Error.tsx";
+import Wrapper from "./sites/Docs/Wrapper/Wrapper.tsx";
+import Intro from "./sites/Docs/Intro.mdx";
 
 const router = createHashRouter([
     { path: "/run", element: <Run /> },
+    { path: "/docs/intro", element: <Wrapper doc={<Intro />} /> },
     { path: "/", element: <Home />, errorElement: <Error /> },
 ]);
 
