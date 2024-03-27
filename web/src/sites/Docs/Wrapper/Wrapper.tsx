@@ -5,29 +5,23 @@ export default function Wrapper({ doc }) {
     const nav = [
         {
             name: "Getting Started",
-            link: "/#/docs/getting-started",
             children: [
                 {
                     name: "Introduction",
-                    link: "/#/docs/intro",
+                    link: "/#/docs/",
                 },
                 {
-                    name: "Introduction",
-                    link: "/#/docs/intro",
-                },
-                {
-                    name: "Introduction",
-                    link: "/#/docs/intro",
+                    name: "Hello, World!",
+                    link: "/#/docs/hello-world",
                 },
             ],
         },
         {
-            name: "Getting Started",
-            link: "/#/docs/getting-started",
+            name: "Common Concepts",
             children: [
                 {
-                    name: "Introduction",
-                    link: "/#/docs/intro",
+                    name: "Variables",
+                    link: "/#/docs/variables",
                 },
                 {
                     name: "Introduction",
@@ -44,19 +38,16 @@ export default function Wrapper({ doc }) {
         <MDXProvider>
             <div className={styles.container}>
                 <div className={styles.headerContainer}>
-                    <h1 className={styles.title}>Emojido 📖</h1>
+                    <h1 className={styles.title}>EmojiDo 📖</h1>
                 </div>
                 <div className={styles.contentContainer}>
                     <div className={styles.navbarContainer}>
                         {nav.map((sections, key) => {
                             return (
                                 <div key={key} className={styles.navbarSection}>
-                                    <a
-                                        href={sections.link}
-                                        className={styles.navbarSectionHeader}
-                                    >
+                                    <p className={styles.navbarSectionHeader}>
                                         {sections.name}
-                                    </a>
+                                    </p>
                                     <div className={styles.navbarLinkContainer}>
                                         {sections.children.map(
                                             (link, subkey) => {
