@@ -1,0 +1,48 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Loops 🔁
+<br/>
+Loops are practical for repeating a task for a given amount of times.
+For this, EmojiDo provides two kinds of loops: <Code inline={true}>while</Code> and <Code inline={true}>for</Code>-loops.
+Let's look at each one.
+<br/>
+## The for-loop
+<br/>
+A for-loop in EmojiDo consist of four separate parts, and is identified with the <Code inline={true}>☎️</Code> emoji.
+<br/>
+&ensp;1. Initialization of a counter <br/>
+&ensp;2. Condition <br/>
+&ensp;3. Modifier <br/>
+&ensp;4. Logic to be repeated
+<br/>
+In code, this would look something like this:
+<br/>
+<Code toCopy={"☎️📦i🪢0🚀i↘️10🚀i➕➕🚀☎️ ⚽\n  🖨️i🚀\n🥅"}>
+    ☎️📦i🪢0🚀i↘️10🚀i➕➕🚀☎️ ⚽<br/>
+&ensp;&ensp; 🖨️i🚀<br/>
+    🥅
+</Code>
+<br/>
+<br/>
+The first part, <Code inline={true}>📦i🪢0🚀</Code>, initializes a local variable to the value 0.
+Next up is the condition, <Code inline={true}>i↘️10🚀</Code>, which is checked **before** every iteration of the loop.
+Last is the modifier, <Code inline={true}>i➕➕🚀</Code>. The operation provided there is executed **after** every iteration.
+<br/>
+Each of these steps can be left empty for a particular loop by just providing a <Code inline={true}>🚀</Code>, assuming they are handled differently.
+<br/>
+## The while-loop
+<br/>
+The while loop is very similar to the for-loop. It consists of only two parts:
+<br/>
+&ensp;1. Condition <br/>
+&ensp;2. Logic to be repeated <br/>
+<br/>
+In EmojiDo, this looks like this:
+<br/>
+<Code>
+    📦i🪢0🚀<br/>
+    🥏i↘️10🥏 ⚽<br/>
+    &ensp;&ensp; 🖨️i🚀<br/>
+    &ensp;&ensp; i➕➕🚀<br/>
+    🥅
+</Code>

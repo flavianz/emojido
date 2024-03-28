@@ -24,8 +24,8 @@ export default function Wrapper({ doc }) {
                     link: "/#/docs/variables",
                 },
                 {
-                    name: "Introduction",
-                    link: "/#/docs/intro",
+                    name: "Loops",
+                    link: "/#/docs/loops",
                 },
                 {
                     name: "Introduction",
