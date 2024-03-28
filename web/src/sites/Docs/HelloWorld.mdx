@@ -1,3 +1,5 @@
+import Code from "../../components/Code/Code.tsx";
+
 # A basic "Hello, World" 👋
 <br/>
 To start off your journey of learning EmojiDo, we'll start with a small program that prints "Hello, World!", a traditional thing to do when learning a new programming language.
@@ -6,25 +8,21 @@ To start off your journey of learning EmojiDo, we'll start with a small program 
 <br/>
 *If you are using the [online executor](/#/run), you can skip this step*
 <br/>
-To create an EmojiDo program, create a file ending in ``` .ejo ```. This will be the main file of your program.
+To create an EmojiDo program, create a file ending in <Code inline={true}> .ejo</Code>. This will be the main file of your program.
 <br/>
 ## The program
 <br/>
-EmojiDo starts executing in the global scope, so there is no need for things like ```public static void main(String[] args)``` and main functions in general.
+EmojiDo starts executing in the global scope, so there is no need for things like <Code inline={true}>public static void main(String[] args)</Code> and main functions in general.
 <br/>
-There are two ways to print to the standard output. We are going to use the legacy built-in ```🖨️``` which should usually be avoided, but is enough for demonstration purposes.
-The ```🖨️``` is immediately followed by the string to be printed. Strings are indicated using the ```🔠``` emoji.
-In EmojiDo, all instructions are followed by a ```🚀``` emoji, which is the equivalent to the semi-colon in some programming languages.
+There are two ways to print to the standard output. We are going to use the legacy built-in<Code inline={true}>🖨️</Code> which should usually be avoided, but is enough for demonstration purposes.
+The <Code inline={true}>🖨️</Code> is immediately followed by the string to be printed. Strings are indicated using the <Code inline={true}>🔠</Code> emoji.
+In EmojiDo, all instructions are followed by a <Code inline={true}>🚀</Code>emoji, which is the equivalent to the semi-colon in some programming languages.
 <br/>
 With everything put together, your program should look something like this:
 <br/>
-```
-🖨️🔠Hello, World!🔠🚀
-```
+<Code toCopy={"🖨️🔠Hello, World!🔠🚀"}>🖨️🔠Hello, World!🔠🚀</Code>
 <br/>
 Expected Output:
 <br/>
-```
-Hello, World!
-```
+<Code toCopy={"Hello, World!"}>Hello, World!</Code>
 <br/>

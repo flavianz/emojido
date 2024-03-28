@@ -1,30 +1,33 @@
+import Code from "../../components/Code/Code.tsx"
+
 # Variables 📦
 <br/>
-Variables in EmojiDo are mutable by default and at the time, there is no way to make variables immutable. The type of a variable cannot be changed and is automatically inferred from the type of the initial value of the variable.
+
+Variables in EmojiDo are mutable by default, and at the time, there is no way to make variables immutable.
+The type of variables cannot be changed
+and is automatically inferred from the type of the initial value provided for the variable.
 <br/>
-You can define variables using the ```📦``` emoji, followed by the identifier and a ```🪢``` representing equals and the variables initial value like this:
+You can define variables using the <Code inline={true}>📦</Code> emoji, followed by the identifier and a <Code inline={true}>🪢</Code> representing equals and the variables initial value like this:
 <br/>
-```
-📦age🪢17🚀
-```
+<Code toCopy={"📦age🪢17🚀"}>📦age🪢17🚀</Code>
 <br/>
-You can change a variable's value by providing the variable's identifier, followed by a ```🪢``` and the new value:
+You can change a variable's value by providing the variable's identifier, followed by a <Code inline={true}>🪢</Code> and the new value:
 <br/>
-```
+<Code toCopy={"age🪢33🚀"}>
 age🪢33🚀
-```
+</Code>
 <br/>
-Variables of type ```🧮``` or ```🔢``` can also be directly modified with mathematical operators like in these examples:
+Variables of type <Code inline={true}>🧮</Code> or <Code inline={true}>🔢</Code> can also be directly modified with mathematical operators like in these examples:
 <br/>
-```
-age➕🪢5🚀
-age➖🪢5🚀
-age✖️🪢5🚀
+<Code toCopy={"age➕🪢5🚀\nage➖🪢5🚀\nage✖️🪢5🚀\nage➗🪢5🚀"}>
+age➕🪢5🚀<br/>
+age➖🪢5🚀<br/>
+age✖️🪢5🚀<br/>
 age➗🪢5🚀
-```
+</Code>
 <br/>
 To access a variable, simply provide its identifier like so:
 <br/>
-```
+<Code toCopy={"🖨️age🚀"}>
 🖨️age🚀
-```
+</Code>

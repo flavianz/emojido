@@ -1,0 +1,28 @@
+.block, .inline {
+    background-color: var(--code);
+    font-family: monospace;
+    font-size: 1rem;
+    position: relative;
+}
+.block {
+    overflow-x: auto;
+    padding: 1.5rem;
+    border-radius: 1rem;
+}
+.inline {
+    padding: 0.25rem 0.4rem;
+    border-radius: 0.3rem;
+}
+.copy {
+    background: var(--code);
+    cursor: pointer;
+    font-family: Inter, system-ui;
+    position: absolute;
+    top: 0.6rem;
+    right: 1.3rem;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+.copy:hover {
+    color: var(--text);
+}
