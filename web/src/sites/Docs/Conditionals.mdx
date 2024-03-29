@@ -1,0 +1,29 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Conditionals 🎭
+<br/>
+Conditionals allow you to change the flow of your program based on certain conditions. In EmojiDo, this is implemented the traditional way, using <Code inline={true}>if</Code>-Statements.
+<br/>
+The following is a basic example:
+<br/>
+<Code toCopy={"📦i🪢5🚀✂️i↘️3✂️ ⚽\n   🖨️🔠Smaller🔠🚀\n🥅📐i🔗3📐⚽\n    🖨️🔠Equal🔠🚀\n🥅🗑️⚽\n    🖨️🔠Greater🔠🚀\n🥅"}>
+    📦i🪢5🚀<br/>
+    ✂️i↘️3✂️ ⚽<br/>
+    &ensp;🖨️🔠Smaller🔠🚀<br/>
+    🥅📐i🔗3📐⚽<br/>
+    &ensp;🖨️🔠Equal🔠🚀<br/>
+    🥅🗑️⚽<br/>
+    &ensp;🖨️🔠Greater🔠🚀<br/>
+    🥅
+</Code>
+<br/>
+Let's break it down:
+<br/>
+The first block, indicated by the <Code inline={true}>✂️</Code> is a if-statement.
+This means, that its content will only be executed if the expression provided evaluates to <Code inline={true}>✅</Code>.
+<br/>
+Following, indicated with <Code inline={true}>📐</Code>, is an else if-statement.
+Its content is only executed if the expression provided evaluates to <Code inline={true}>✅</Code> and the expression of the if-statement before evaluated to <Code inline={true}>❌</Code>.
+There can be an infinite number of else if-statements after an if-statement.
+<br/>
+Finally, there is an else-statement declared using <Code inline={true}>🗑️</Code>. It is executed only if all the if and else if-statements before were skipped.

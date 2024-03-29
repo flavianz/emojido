@@ -24,12 +24,16 @@ export default function Wrapper({ doc }) {
                     link: "/#/docs/variables",
                 },
                 {
+                    name: "Conditionals",
+                    link: "/#/docs/conditionals",
+                },
+                {
                     name: "Loops",
                     link: "/#/docs/loops",
                 },
                 {
-                    name: "Introduction",
-                    link: "/#/docs/intro",
+                    name: "Comments",
+                    link: "/#/docs/comments",
                 },
             ],
         },

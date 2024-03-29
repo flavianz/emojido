@@ -19,5 +19,5 @@
 .divider {
     width: 2px;
     height: 50vh;
-    background-color: #1e1e1e;
+    background-color: var(--text);
 }

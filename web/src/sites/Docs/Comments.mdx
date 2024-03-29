@@ -1,0 +1,28 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Comments 📜
+<br/>
+There are two ways to have comments in EmojiDo.
+<br/>
+## Single-line comments
+<br/>
+Single-line comments are started using the <Code inline={true}>📣</Code> emoji and end at the end of the line.
+They can be on a line by themselves or after another instruction like this:
+<br/>
+<Code toCopy={"📣 This is a comment.\n🖨️🔠Hello, World!🔠🚀 📣 This is also a comment!"}>
+    📣 This is a comment. <br/>
+    🖨️🔠Hello, World!🔠🚀 📣 This is also a comment!
+</Code>
+<br/>
+## Multi-line comments
+<br/>
+Other than single-line comments, multi-line comments are started **and** ended with the <Code inline={true}>📯</Code> emoji.
+This means, they can span over multiple lines, but also implemented inside of instructions like this:
+<br/>
+<Code toCopy={"📯 This \nis \na \ncomment! \n🖨️📯This is also a comment!📯🔠Hello, World!🔠🚀"}>
+    📯 This <br/>
+    is <br/>
+    a <br/>
+    comment!📯 <br/>
+    🖨️📯This is also a comment!📯🔠Hello, World!🔠🚀<br/>
+</Code>
