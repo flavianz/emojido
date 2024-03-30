@@ -1,0 +1,75 @@
+.title {
+    font-size: 10rem;
+}
+.container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.content {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    flex: 1;
+    padding-top: 2rem;
+}
+.subtitle {
+    opacity: 0;
+    color: var(--text-light);
+    animation-delay: 1.3s;
+    animation-name: fadeIn;
+    animation-fill-mode: forwards;
+    animation-duration: 0.6s;
+    font-size: 1.3rem;
+    margin: 2rem;
+}
+.actionsContainer {
+    opacity: 0;
+    animation-delay: 2s;
+    animation-name: fadeIn;
+    animation-fill-mode: forwards;
+    animation-duration: 0.6s;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    justify-content: space-evenly;
+    width: 100%;
+    padding-bottom: 10vh;
+}
+.action {
+    background-color: var(--link);
+    padding: 1rem 10rem;
+    font-size: 1.3rem;
+    border-radius: 0.3rem;
+    color: var(--background);
+    font-weight: 500;
+    text-decoration: none;
+}
+a {
+
+}
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+
+@media (max-aspect-ratio: 1.5/1) {
+    .title {
+        font-size: 8rem
+    }
+}
+@media (max-aspect-ratio: 1/1) {
+    .title {
+        font-size: 3rem;
+    }
+    .actionsContainer {
+        flex-direction: column;
+    }
+    .action {
+        padding: 2rem 0;
+        text-align: center;
+        width: 80%;
+    }
+}

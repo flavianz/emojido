@@ -1,0 +1,20 @@
+.headerContainer {
+    padding: 1rem 2rem;
+    border-bottom: solid var(--light) 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.github {
+    fill: var(--text-light);
+    height: 2rem;
+    width: 2rem;
+}
+.githubContainer:hover .github {
+    fill: var(--text);
+}
+.githubContainer {
+    height: 2rem;
+    width: 2rem;
+    cursor: pointer;
+}
