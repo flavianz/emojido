@@ -1,5 +1,6 @@
 .title {
-    font-size: 10rem;
+    font-size: 10vw;
+    font-family: monospace;
 }
 .container {
     height: 100vh;
