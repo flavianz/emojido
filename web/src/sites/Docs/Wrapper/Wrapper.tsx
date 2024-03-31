@@ -33,8 +33,25 @@ export default function Wrapper({ doc }) {
                     link: "/#/docs/loops",
                 },
                 {
+                    name: "Functions",
+                    link: "/#/docs/functions",
+                },
+                {
                     name: "Comments",
                     link: "/#/docs/comments",
+                },
+                {
+                    name: "Data Types",
+                    link: "/#/docs/data-types",
+                },
+            ],
+        },
+        {
+            name: "Low Level Features",
+            children: [
+                {
+                    name: "Pointers",
+                    link: "/#/docs/pointers",
                 },
             ],
         },
