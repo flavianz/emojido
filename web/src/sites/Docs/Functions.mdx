@@ -1,0 +1,28 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Functions 🛒
+<br/>
+Functions are a great way to modularize your code to avoid repetition and speed up your work.
+<br/>
+## Structure
+<br/>
+They are created with a <Code inline>🛒</Code> emoji, followed by the functions return type.
+After this comes the identifier of the function, followed by another <Code inline>🛒</Code>. <br/>
+Next up are the function arguments.
+Every argument is defined by its type and identifier.
+You do not have to separate the arguments with commas or similar things. You can access these arguments like any other locally scopes variable. <br/>
+In the end, the scope to be executed is provided. Put together, this could look something like this:
+<br/>
+<Code toCopy={"🛒🔢doSomething🛒🔢value1🔢value2 ⚽\n     📣 Your logic\n🥅"}>
+    🛒🔢doSomething🛒🔢value1🔢value2 ⚽ <br/>
+    &ensp; 📣 Your logic <br/>
+    🥅
+</Code>
+<br/>
+## Returning
+<br/>
+You can return values from a function using the <Code inline>🪃</Code> emoji,
+followed by the expression to return.
+The returned expression has to match the specified return type of the function.
+Except for functions with a <Code inline>🫥</Code> return type,
+you should **always** return something from a function, although this is not enforced by the compiler.

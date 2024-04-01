@@ -1,0 +1,49 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Data Types 🏷️
+<br/>
+There are five native data types in EmojiDo. These include integers, floats, strings, booleans and a null type.
+<br/>
+## Integers
+<br/>
+Integers can hold any full number.
+Under the hood, they are always signed 64-bit values.
+They're indication is the <Code inline={true}>🔢</Code> emoji.
+Integer values can be parsed to floats by prefixing them with the <Code inline={true}>🧮</Code> emoji.
+<br/>
+## Floats
+<br/>
+Floating point values (or 'floats' for short) are numbers that can also hold fractions and irrational numbers.
+Under the hood, they are represented using a scalar double-precision floating point, hence using 64 bits.
+Floats are indicated using the <Code inline={true}>🧮</Code> emoji.
+They can be parsed (by rounding-half-to-even) to integers by prefixing them with a <Code inline={true}>🔢</Code> emoji.
+<br/>
+## Strings
+<br/>
+Strings are a sequence of characters.
+Effectively, they are represented using a pointer to the first character of a string.
+All strings end with a null character (0 in ascii).
+Their indication is the <Code inline={true}>📜</Code> emoji.
+<br/>
+To use the standard string library, import it like this:
+<br/>
+<Code toCopy={"🪤🔢str🔢🚀"}>
+    🪤🔢str🔢🚀
+</Code>
+<br/>
+The standard library provides functions to concatenate strings using <Code inline={true}>concat</Code>,
+to get the length of string with <Code inline={true}>stringLength</Code>,
+to get a string from a int or float using <Code inline={true}>fromInt</Code>
+or <Code inline={true}>fromFloat</Code> respectively and
+to move a string to a certain memory location using <Code inline={true}>stringCopy</Code>.
+<br/>
+## Booleans
+<br/>
+Booleans have only two states: <Code inline>✅</Code> (true) and <Code inline>❌</Code> (false).
+These are internally represented with <Code inline>0</Code> for <Code inline>❌</Code> and
+<Code inline>1</Code> for <Code inline>✅</Code>.
+<br/>
+## Null type
+<br/>
+Only the <Code inline>🫥</Code> (null) value has the <Code inline>🫥</Code> type.
+It represents a non-existent value.

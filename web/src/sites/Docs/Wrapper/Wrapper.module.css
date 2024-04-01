@@ -16,11 +16,12 @@
     border-right: solid 1px var(--light);
     padding: 1rem 2rem;
     min-width: 15vw;
+    overflow-y: auto;
 }
 .contentContainer {
     display: flex;
     flex: 1;
-    height: 95vh;
+    height: calc(100vh - 6rem);
 }
 .mdxContainer {
     h1 {

@@ -1,0 +1,39 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Memory Management 📂
+<br/>
+EmojiDo provides two functions to manage the programs memory.
+To use these, import the system standard library like this:
+<br/>
+<Code toCopy={"🪤🔠sys🔠🚀"}>
+    🪤🔠sys🔠🚀
+</Code>
+<br/>
+## Allocating Memory
+<br/>
+To allocate memory, simply call the <Code inline>malloc</Code> function and the memories' size in bytes.
+Please notice that the bytes will always be rounded to the next multiple of 4096.
+So it does not matter if you specify <Code inline>2</Code> bytes or <Code inline>4023</Code> bytes,
+both will allocate one page of memory (4096 bytes).
+The function returns the address of the first byte in the allocated space as a pointer.
+An example usage could look something like this:
+<br/>
+<Code toCopy={"🪤🔠sys🔠🚀\n📦address🪢malloc🔫10🔫🚀\n🎯🚧address + 33🧱🪢345🚀\n🖨️🎯🔢🚧address + 33🧱🚀 📣 Expected Output: '345'"}>
+    🪤🔠sys🔠🚀 <br/>
+    📦address🪢malloc🔫10🔫🚀 <br/>
+    🎯🚧address + 33🧱🪢345🚀 <br/>
+    🖨️🎯🔢🚧address + 33🧱🚀 📣 Expected Output: '345'
+</Code>
+<br/>
+## Freeing memory
+<br/>
+Allocated memory has to always be freed, otherwise the program could contain memory leaks.
+To free memory, call the <Code inline>free</Code>
+function with the size to be freed in bytes as the first argument.
+Freeing the memory allocated above would look like this:
+<br/>
+<Code toCopy={"free🔫10🔫🚀\n📣 Accessing 🎯address + 33 would now segfault."}>
+    free🔫10🔫🚀 <br/>
+    📣 Accessing 🎯address + 33 would now segfault.
+</Code>
+

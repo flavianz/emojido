@@ -1,0 +1,30 @@
+import Code from "../../components/Code/Code.tsx";
+
+# Pointers 🏹
+<br/>
+A pointer is essentially a address in the programs heap memory.
+Pointers in EmojiDo do not have a type of their own, but are just simple integers.
+<br/>
+## Creating a pointer
+<br/>
+In EmojiDo, pointers can be created by simply prefixing them with a <Code inline>🏹</Code>.
+A pointer can point to any data type, even another pointer.
+This returns a simple integer that can be stored or changed, like in this example:
+<br/>
+<Code toCopy={"📦pi🪢3.14🚀\n📦address🪢🏹pi🚀"}>
+    📦pi🪢3.14🚀 <br/>
+    📦address🪢🏹pi🚀
+</Code>
+<br/>
+## Dereferencing a pointer
+<br/>
+Dereferencing essentially means getting the value that a pointer pointed to.
+This can be done by simply prefixing a pointer (so a integer) value with the <Code inline>🎯</Code> emoji.
+If it is not clear what type the pointer is pointing to,
+you have to specify the type of the dereferenced value in between.
+<br/>
+<Code toCopy={"📣 Assuming the code from before is here\n🖨️ 🎯address🚀 📣 compiler knows type\n🖨️🎯🔢🚧address🧱🚀 📣 compiler does not know type"}>
+    📣 Assuming the code from before is here <br/>
+    🖨️ 🎯address🚀 📣 compiler knows type <br/>
+    🖨️ 🎯🔢🚧address➕1🧱🚀 📣 compiler does not know type
+</Code>
