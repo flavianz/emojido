@@ -15,6 +15,7 @@ import Comments from "./sites/Docs/Comments.mdx";
 import DataTypes from "./sites/Docs/DataTypes.mdx";
 import Functions from "./sites/Docs/Functions.mdx";
 import Pointers from "./sites/Docs/Pointers.mdx";
+import MemoryManagement from "./sites/Docs/MemoryManagement.mdx";
 
 const router = createHashRouter([
     { path: "/run", element: <Run /> },
@@ -27,6 +28,10 @@ const router = createHashRouter([
     { path: "/docs/functions", element: <Wrapper doc={<Functions />} /> },
     { path: "/docs/data-types", element: <Wrapper doc={<DataTypes />} /> },
     { path: "/docs/pointers", element: <Wrapper doc={<Pointers />} /> },
+    {
+        path: "/docs/memory-management",
+        element: <Wrapper doc={<MemoryManagement />} />,
+    },
     { path: "/", element: <Home />, errorElement: <Error /> },
 ]);
 

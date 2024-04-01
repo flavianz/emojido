@@ -53,6 +53,10 @@ export default function Wrapper({ doc }) {
                     name: "Pointers",
                     link: "/#/docs/pointers",
                 },
+                {
+                    name: "Memory Management",
+                    link: "/#/docs/memory-management",
+                },
             ],
         },
     ];
