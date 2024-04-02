@@ -3,6 +3,7 @@ import styles from "./Wrapper.module.css";
 import Header from "../../../components/Header/Header.tsx";
 
 export default function Wrapper({ doc }) {
+    document.title = "EmojiDo | Docs";
     const nav = [
         {
             name: "Getting Started",
@@ -93,7 +94,7 @@ export default function Wrapper({ doc }) {
                             );
                         })}
                     </div>
-                    <div className={styles.mdxContainer}>{doc}</div>
+                    <article className={styles.mdxContainer}>{doc}</article>
                 </div>
             </div>
         </MDXProvider>
