@@ -21,11 +21,11 @@ export default function Header({ docs }: { docs?: boolean }) {
         <div className={styles.headerContainer}>
             <h1 className={styles.title}>EmojiDo {docs ? "📖" : ""}</h1>
             <a
-                aria-describedby="GitHub Repository"
                 className={styles.githubContainer}
                 href="https://www.github.com/flavianz/emojido"
                 target="_blank"
             >
+                Github Logo{/*for seo (not visible)*/}
                 <GitHubLogo />
             </a>
         </div>

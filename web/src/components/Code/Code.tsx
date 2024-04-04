@@ -3,10 +3,11 @@ import { useState } from "react";
 
 export default function Code({ children, inline, toCopy }) {
     const [copied, setCopied] = useState("Copy!");
+    console.log(children);
     return inline ? (
         <span className={styles.inline}>{children}</span>
     ) : (
-        <p className={styles.block}>
+        <div className={styles.block}>
             {children}
             <span
                 className={styles.copy}
@@ -18,6 +19,6 @@ export default function Code({ children, inline, toCopy }) {
             >
                 {copied}
             </span>
-        </p>
+        </div>
     );
 }
