@@ -39,7 +39,10 @@
 .output:focus {
     outline: none;
 }
-
+label {
+    font-size: 1.6rem;
+    font-weight: 600;
+}
 .fieldContainer {
     flex: 1;
     margin: 0 1vw;
