@@ -57,6 +57,7 @@ export default function Run() {
                 <div className={styles.fieldContainer}>
                     <h2>Code</h2>
                     <textarea
+                        aria-label={"Code"}
                         value={input}
                         className={styles.field}
                         onChange={(e) => setInput(e.target.value)}
@@ -66,6 +67,7 @@ export default function Run() {
                 <div className={styles.fieldContainer}>
                     <h2>Output</h2>
                     <textarea
+                        aria-label={"Output"}
                         className={`${styles.field} ${styles.output}`}
                         spellCheck={false}
                         readOnly={true}
