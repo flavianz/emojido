@@ -4,4 +4,7 @@
     <option name="show" value="ASK" />
     <option name="description" value="" />
   </component>
+  <component name="ProjectResources">
+    <resource url="http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" location="$USER_HOME$/AppData/Local/JetBrains/WebStorm2023.3/extResources/19efb6d3_sitemap.xsd" />
+  </component>
 </project>
