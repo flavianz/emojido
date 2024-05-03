@@ -1,4 +1,4 @@
-# Emojido - code in 🚀💥📦
+# Emojido - code in 🚀💥📦 
 
 🚀 - Emojido is a full programming language, just all in emojis.
 
